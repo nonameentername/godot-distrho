@@ -16,6 +16,7 @@ class GodotDistrhoUI : public UI,
 {
 
 private:
+    godot::GodotInstance *instance;
 
 public:
     GodotDistrhoUI();

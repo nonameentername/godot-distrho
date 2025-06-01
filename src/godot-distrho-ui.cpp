@@ -7,7 +7,6 @@ GodotDistrhoUI::GodotDistrhoUI() : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAU
 {
 }
 
-
 void GodotDistrhoUI::parameterChanged(const uint32_t index, const float value)
 {
 }

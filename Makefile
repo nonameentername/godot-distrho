@@ -4,7 +4,8 @@ godot:
 	cd modules/godot && scons platform=linux dev_build=yes debug_symbols=yes
 
 godot_library:
-	cd modules/godot && scons platform=linux dev_build=yes debug_symbols=yes library_type=static_library
+	#cd modules/godot && scons platform=linux dev_build=yes debug_symbols=yes library_type=shared_library verbose=yes
+	cd modules/godot && scons platform=linux debug_symbols=yes library_type=shared_library verbose=yes
 
 #check if this is really needed
 godot_dump_api:

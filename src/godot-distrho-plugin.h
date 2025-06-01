@@ -8,6 +8,9 @@ START_NAMESPACE_DISTRHO
 
 class GodotDistrhoPlugin : public Plugin
 {
+private:
+    godot::GodotInstance *instance;
+
 public:
     GodotDistrhoPlugin();
 
