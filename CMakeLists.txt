@@ -23,15 +23,17 @@ dpf_add_plugin(godot-distrho
   #TARGETS au lv2 vst2 vst3
   TARGETS jack
   #NO_SHARED_RESOURCES
-  UI_TYPE opengl
+  UI_TYPE vulkan
   # NO_USE_FILE_BROWSER
   FILES_DSP
     src/godot-distrho-plugin.cpp
-    src/libgodot_distrho.cpp
   FILES_UI
-    src/godot-distrho-ui.cpp)
+    src/godot-distrho-ui.cpp
+    src/godot-distrho-utils.cpp
+    src/libgodot_distrho.cpp
+)
 
-target_compile_definitions(dgl-opengl PUBLIC
+target_compile_definitions(dgl-vulkan PUBLIC
   DGL_NAMESPACE=GodotDGL
   DGL_WINDOWS_ICON_ID=401
   NVG_FONT_TEXTURE_FLAGS=NVG_IMAGE_NEAREST
@@ -52,39 +54,6 @@ target_link_directories(godot-distrho PUBLIC
 )
 
 target_link_libraries(godot-distrho PUBLIC
-  ${CMAKE_THREAD_LIBS_INIT}
-  godot.linuxbsd.editor.x86_64
-  godot-cpp.linux.template_debug.dev.x86_64
-)
-
-
-
-dpf_add_plugin(godot-distrho-standalone
-  TARGETS jack
-  #NO_SHARED_RESOURCES
-  UI_TYPE opengl
-  # NO_USE_FILE_BROWSER
-  FILES_DSP
-    src/godot-distrho-plugin.cpp
-    src/libgodot_distrho.cpp
-  FILES_UI
-    src/godot-distrho-ui.cpp)
-
-target_include_directories(godot-distrho-standalone PUBLIC
-  src
-  modules/godot/core/extension
-  godot-cpp/include
-  godot-cpp/gen/src
-  godot-cpp/gen/include
-  ${CMAKE_BINARY_DIR}
-)
-
-target_link_directories(godot-distrho-standalone PUBLIC
-  modules/godot/bin
-  godot-cpp/bin
-)
-
-target_link_libraries(godot-distrho-standalone PUBLIC
   ${CMAKE_THREAD_LIBS_INIT}
   godot.linuxbsd.editor.x86_64
   godot-cpp.linux.template_debug.dev.x86_64

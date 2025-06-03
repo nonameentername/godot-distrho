@@ -1,4 +1,4 @@
-all: godot godot_library godot_dump_api godot_cpp
+all: godot godot_dump_api godot_cpp godot_library
 
 godot:
 	cd modules/godot && scons platform=linux dev_build=yes debug_symbols=yes

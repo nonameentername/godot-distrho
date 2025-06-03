@@ -7,19 +7,26 @@
 #include "DistrhoStandaloneUtils.hpp"
 
 #include "libgodot_distrho.h"
+#include <thread>
 
 START_NAMESPACE_DISTRHO
 
-class GodotDistrhoUI : public UI,
-                        public ButtonEventHandler::Callback,
-                        public KnobEventHandler::Callback
+class GodotDistrhoUI : public UI
 {
 
 private:
+    std::thread godot_thread;
+    uintptr_t window_id;
+
+public:
     godot::GodotInstance *instance;
 
 public:
     GodotDistrhoUI();
+
+    ~GodotDistrhoUI();
+
+    void create_godot_instance();
 
 protected:
     void parameterChanged(const uint32_t index, const float value) override;
@@ -30,17 +37,7 @@ protected:
 
     void onDisplay() override;
 
-    void buttonClicked(SubWidget* const widget, int) override;
-
     void requestStateFile(const char* const stateKey, const String& lastDir, const char* const title);
-
-    void knobDragStarted(SubWidget* const widget) override;
-
-    void knobDragFinished(SubWidget* const widget) override;
-
-    void knobValueChanged(SubWidget* const widget, float value) override;
-
-    void knobDoubleClicked(SubWidget* const widget) override;
 
     void uiIdle() override;
 
