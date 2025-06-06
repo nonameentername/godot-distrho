@@ -1,6 +1,7 @@
 #include "godot-distrho-ui.h"
 #include "godot-distrho-plugin.h"
 #include "godot-distrho-utils.h"
+#include "godot_cpp/classes/display_server.hpp"
 #include "libgodot_distrho.h"
 
 #include "godot_cpp/classes/display_server_embedded.hpp"
@@ -11,6 +12,7 @@
 
 
 START_NAMESPACE_DISTRHO
+
 
 void run_godot(uintptr_t window_id) {
     godot::GodotInstance *instance = NULL;
@@ -24,19 +26,26 @@ void run_godot(uintptr_t window_id) {
 
 GodotDistrhoUI::GodotDistrhoUI() : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAULT_HEIGHT)
 {
-    uintptr_t window_id = getWindow().getNativeWindowHandle();
-    printf("window_id = %ld\n", window_id);
+    //uintptr_t window_id = getWindow().getNativeWindowHandle();
+    //printf("window_id = %ld\n", window_id);
 
-    if (instance == NULL) {
+     if (instance == NULL) {
         //open default display
         Display *display = GodotDistrhoUtils::get_x11_display();
-        //get default root window of display
-        //Window window = DefaultRootWindow(display);
 
         printf("display = %ld\n", (long)display);
 
-        //uintptr_t window = getWindow().getNativeWindowHandle();
-        //printf("window = %ld\n", (long)window);
+        //get default root window of display
+        ::Window window_id = GodotDistrhoUtils::get_x11_window(display);
+
+        printf("window_id = %ld\n", (long)window_id);
+
+
+        //uintptr_t window_handle = getWindow().getNativeWindowHandle();
+        //printf("window_handle = %ld\n", (long)window_handle);
+
+        //uintptr_t window_handle = UI::getNextWindowId();
+        //printf("window_handle = %ld\n", (long)window_handle);
 
         /*
         if (window == NULL) {
@@ -50,7 +59,7 @@ GodotDistrhoUI::GodotDistrhoUI() : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAU
         //std::vector<std::string> args = { "program", "--editor", "--rendering-method", "gl_compatibility", "--rendering-driver", "opengl3", "--display-driver", "embedded" };
         //std::vector<std::string> args = { "program", "--path", "/home/wmendiza/source/godot-csound", "--rendering-method", "gl_compatibility", "--rendering-driver", "opengl3", "--display-driver", "x11" };
         //std::vector<std::string> args = { "program", "--editor", "--rendering-method", "forward_plus", "--rendering-driver", "vulkan", "--display-driver", "x11" };
-        std::vector<std::string> args = { "program", "--path", "/home/wmendiza/source/godot-csound", "--rendering-method", "forward_plus", "--rendering-driver", "vulkan", "--display-driver", "x11" };
+        std::vector<std::string> args = { "program", "--rendering-method", "forward_plus", "--rendering-driver", "vulkan", "--display-driver", "x11", "--wid", std::to_string(window_id) };
 
         std::vector<char*> argvs;
         for (const auto& arg : args) {
@@ -64,10 +73,11 @@ GodotDistrhoUI::GodotDistrhoUI() : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAU
             fprintf(stderr, "Error creating Godot instance\n");
         } else {
             if(instance != NULL && !instance->is_started()) {
+
                 /*
                 printf("creating x11 surface\n");
 
-                godot::Ref<godot::RenderingNativeSurfaceX11> x11_surface = godot::RenderingNativeSurfaceX11::create((const void*)window_id, display);
+                godot::Ref<godot::RenderingNativeSurfaceX11> x11_surface = godot::RenderingNativeSurfaceX11::create((const void*)window_handle, display);
 
                 if (x11_surface == NULL) {
                     printf("null x11_surface\n");
@@ -80,10 +90,16 @@ GodotDistrhoUI::GodotDistrhoUI() : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAU
             }
 
             instance->start();
+
+            uintptr_t godot_window_id = godot::DisplayServer::get_singleton()->window_get_native_handle(godot::DisplayServer::WINDOW_HANDLE, 0);
+            printf("godot_window_id = %ld\n", (long)godot_window_id);
+
         }
     } else {
         //instance->iteration();
     }
+
+   
 
     //godot_thread = std::thread(run_godot, window_id);
 }
@@ -98,6 +114,7 @@ void GodotDistrhoUI::parameterChanged(const uint32_t index, const float value)
 {
 }
 
+/*
 void GodotDistrhoUI::stateChanged(const char* const key, const char* const value)
 {
 }
@@ -105,13 +122,12 @@ void GodotDistrhoUI::stateChanged(const char* const key, const char* const value
 void GodotDistrhoUI::onResize(const ResizeEvent& event)
 {
 }
+*/
 
 void GodotDistrhoUI::onDisplay()
 {
     const uint width = getWidth();
     const uint height = getHeight();
-
-
 
 
     if (instance != NULL) {
@@ -132,7 +148,7 @@ void GodotDistrhoUI::requestStateFile(const char* const stateKey, const String& 
 
 void GodotDistrhoUI::uiIdle()
 {
-    repaint();
+    //repaint();
 
     if (instance != NULL) {
         if(!instance->is_started()) {

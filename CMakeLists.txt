@@ -20,10 +20,10 @@ find_package(Threads REQUIRED)
 
 dpf_add_plugin(godot-distrho
   #TARGETS au clap lv2 vst2 vst3
-  #TARGETS au lv2 vst2 vst3
+  #TARGETS au lv2 vst2 vst3 jack
   TARGETS jack
   #NO_SHARED_RESOURCES
-  UI_TYPE vulkan
+  UI_TYPE opengl
   # NO_USE_FILE_BROWSER
   FILES_DSP
     src/godot-distrho-plugin.cpp
@@ -33,7 +33,7 @@ dpf_add_plugin(godot-distrho
     src/libgodot_distrho.cpp
 )
 
-target_compile_definitions(dgl-vulkan PUBLIC
+target_compile_definitions(dgl-opengl PUBLIC
   DGL_NAMESPACE=GodotDGL
   DGL_WINDOWS_ICON_ID=401
   NVG_FONT_TEXTURE_FLAGS=NVG_IMAGE_NEAREST

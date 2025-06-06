@@ -19,7 +19,7 @@ private:
     uintptr_t window_id;
 
 public:
-    godot::GodotInstance *instance;
+    godot::GodotInstance *instance = NULL;
 
 public:
     GodotDistrhoUI();
@@ -31,17 +31,17 @@ public:
 protected:
     void parameterChanged(const uint32_t index, const float value) override;
 
-    void stateChanged(const char* const key, const char* const value) override;
+    void stateChanged(const char* const key, const char* const value);// override;
 
-    void onResize(const ResizeEvent& event) override;
+    //void onResize(const ResizeEvent& event);// override;
 
-    void onDisplay() override;
+    void onDisplay();// override;
 
     void requestStateFile(const char* const stateKey, const String& lastDir, const char* const title);
 
     void uiIdle() override;
 
-    void uiFileBrowserSelected(const char* const filename) override;
+    void uiFileBrowserSelected(const char* const filename);// override;
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GodotDistrhoUI)
 };

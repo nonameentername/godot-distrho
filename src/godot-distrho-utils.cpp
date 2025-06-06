@@ -8,4 +8,9 @@ Display *GodotDistrhoUtils::get_x11_display() {
     return display;
 }
 
+Window GodotDistrhoUtils::get_x11_window(Display *display) {
+    Window window = DefaultRootWindow(display);
+    return window;
+}
+
 END_NAMESPACE_DISTRHO
