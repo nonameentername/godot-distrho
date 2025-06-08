@@ -59,7 +59,11 @@ GodotDistrhoUI::GodotDistrhoUI() : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAU
         //std::vector<std::string> args = { "program", "--editor", "--rendering-method", "gl_compatibility", "--rendering-driver", "opengl3", "--display-driver", "embedded" };
         //std::vector<std::string> args = { "program", "--path", "/home/wmendiza/source/godot-csound", "--rendering-method", "gl_compatibility", "--rendering-driver", "opengl3", "--display-driver", "x11" };
         //std::vector<std::string> args = { "program", "--editor", "--rendering-method", "forward_plus", "--rendering-driver", "vulkan", "--display-driver", "x11" };
-        std::vector<std::string> args = { "program", "--rendering-method", "forward_plus", "--rendering-driver", "vulkan", "--display-driver", "x11", "--wid", std::to_string(window_id) };
+        //std::vector<std::string> args = { "program", "--path", "/home/wmendiza/source/godot-distrho", "--rendering-method", "forward_plus", "--rendering-driver", "vulkan", "--display-driver", "x11" };
+        std::vector<std::string> args = { "program",
+            //"--path", "/home/wmendiza/source/godot-distrho",
+            "--main-pack", "/home/wmendiza/source/godot-distrho/build/linux/distrhogodot.pck",
+            "--rendering-method", "forward_plus", "--rendering-driver", "vulkan", "--display-driver", "x11" };
 
         std::vector<char*> argvs;
         for (const auto& arg : args) {
@@ -135,7 +139,7 @@ void GodotDistrhoUI::onDisplay()
             //printf("string instance\n");
             //instance->start();
         } else {
-            //instance->iteration();
+            instance->iteration();
         }
     }
 }

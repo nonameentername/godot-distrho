@@ -1,4 +1,16 @@
+UNAME := $(shell uname)
+
+ifeq ($(UNAME), Linux)
+PLATFORM=linux
+else ifeq ($(UNAME), Darwin)
+PLATFORM=osx
+else
+PLATFORM=windows
+endif
+
 all: godot godot_dump_api godot_cpp godot_library
+
+#distrho plugin
 
 godot:
 	cd modules/godot && scons platform=linux dev_build=yes debug_symbols=yes
@@ -16,3 +28,8 @@ godot_cpp:
 
 build:
 	cd build && make && rm -rf ~/.lv2/godot-distrho.lv2/ && cp -r bin/godot-distrho.lv2/ ~/.lv2/ && jalv.gtk https://github.com/nonameentername/godot-distrho
+
+#godot library
+
+dev-build:
+	scons platform=$(PLATFORM) target=template_debug dev_build=yes debug_symbols=yes

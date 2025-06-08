@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b6dypp4qpoog8"]
+
+[ext_resource type="Script" uid="uid://bcsdejpgq6c54" path="res://addons/distrho/main.gd" id="1_xeome"]
+
+[node name="main" type="DistrhoLauncher"]
+script = ExtResource("1_xeome")

@@ -22,15 +22,15 @@ dpf_add_plugin(godot-distrho
   #TARGETS au clap lv2 vst2 vst3
   #TARGETS au lv2 vst2 vst3 jack
   TARGETS jack
-  #NO_SHARED_RESOURCES
+  NO_SHARED_RESOURCES
   UI_TYPE opengl
-  # NO_USE_FILE_BROWSER
+  NO_USE_FILE_BROWSER
   FILES_DSP
-    src/godot-distrho-plugin.cpp
+    src/plugin/godot-distrho-plugin.cpp
   FILES_UI
-    src/godot-distrho-ui.cpp
-    src/godot-distrho-utils.cpp
-    src/libgodot_distrho.cpp
+    src/plugin/godot-distrho-ui.cpp
+    src/plugin/godot-distrho-utils.cpp
+    src/plugin/libgodot_distrho.cpp
 )
 
 target_compile_definitions(dgl-opengl PUBLIC
@@ -40,6 +40,7 @@ target_compile_definitions(dgl-opengl PUBLIC
 )
 
 target_include_directories(godot-distrho PUBLIC
+  src/plugin
   src
   modules/godot/core/extension
   godot-cpp/include
@@ -61,14 +62,15 @@ target_link_libraries(godot-distrho PUBLIC
 
 
 
-set(SOURCE src/libgodot_distrho.cpp src/main.cpp)
-set(HEADER src/libgodot_distrho.h)
+set(SOURCE src/plugin/libgodot_distrho.cpp src/plugin/main.cpp)
+set(HEADER src/plugin/libgodot_distrho.h)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g3")
 
 add_executable(godot ${SOURCE} ${HEADER})
 
 target_include_directories(godot PUBLIC
+  src/plugin
   src
   modules/godot/core/extension
   godot-cpp/include
