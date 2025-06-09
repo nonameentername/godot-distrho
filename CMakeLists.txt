@@ -21,12 +21,14 @@ find_package(Threads REQUIRED)
 dpf_add_plugin(godot-distrho
   #TARGETS au clap lv2 vst2 vst3
   #TARGETS au lv2 vst2 vst3 jack
-  TARGETS jack
+  TARGETS lv2
   NO_SHARED_RESOURCES
   UI_TYPE opengl
   NO_USE_FILE_BROWSER
   FILES_DSP
     src/plugin/godot-distrho-plugin.cpp
+    src/plugin/godot-distrho-utils.cpp
+    src/plugin/libgodot_distrho.cpp
   FILES_UI
     src/plugin/godot-distrho-ui.cpp
     src/plugin/godot-distrho-utils.cpp

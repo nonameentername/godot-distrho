@@ -14,7 +14,6 @@ class DistrhoConfig : public Object {
 private:
     ConfigFile *config_file;
     HashMap<String, String> plugin_values;
-    HashMap<String, String> ui_values;
 
 protected:
 
@@ -23,6 +22,10 @@ public:
     ~DistrhoConfig();
 
     String get_plugin_main_scene();
+
+    String get_plugin_width();
+
+    String get_plugin_height();
 
     String get_plugin_label();
 
@@ -37,8 +40,6 @@ public:
     String get_plugin_version();
 
     String get_plugin_unique_id();
-
-    String get_ui_main_scene();
 
     static void _bind_methods();
 };

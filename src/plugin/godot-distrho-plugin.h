@@ -4,12 +4,15 @@
 #include "DistrhoPlugin.hpp"
 #include "libgodot_distrho.h"
 
+#include <thread>
+
 START_NAMESPACE_DISTRHO
 
 class GodotDistrhoPlugin : public Plugin
 {
 private:
     godot::GodotInstance *instance = NULL;
+    std::thread godot_thread;
 
 public:
     GodotDistrhoPlugin();

@@ -26,8 +26,11 @@ public:
 
     void destroy_godot_instance(godot::GodotInstance* instance);
 
+    char *get_absolute_path();
+
 private:
     void *handle = nullptr;
+    char *absolute_path = nullptr;
 
 	GDExtensionObjectPtr (*func_libgodot_create_godot_instance)(int, char *[], GDExtensionInitializationFunction, InvokeCallbackFunction, ExecutorData, InvokeCallbackFunction, ExecutorData);
 

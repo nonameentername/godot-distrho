@@ -2,6 +2,7 @@
 #define DISTRHO_SERVER_H
 
 #include "distrho_config.h"
+#include "distrho_launcher.h"
 #include "distrho_plugin_instance.h"
 #include <godot_cpp/classes/node.hpp>
 
@@ -14,6 +15,7 @@ class DistrhoServer : public Object {
 private:
     DistrhoConfig *distrho_config;
     DistrhoPluginInstance *distrho_plugin;
+	DistrhoLauncher *distrho_launcher;
 
 protected:
     static DistrhoServer *singleton;
@@ -32,6 +34,9 @@ public:
 
     String get_version();
     String get_build();
+
+	void set_distrho_launcher(DistrhoLauncher *p_distrho_launcher);
+	DistrhoLauncher *get_distrho_launcher();
 };
 }
 

@@ -37,6 +37,14 @@ String DistrhoServer::get_build() {
     return GODOT_DISTRHO_BUILD;
 }
 
+void DistrhoServer::set_distrho_launcher(DistrhoLauncher *p_distrho_launcher) {
+	distrho_launcher = p_distrho_launcher;
+}
+
+DistrhoLauncher *DistrhoServer::get_distrho_launcher() {
+	return distrho_launcher;
+}
+
 void DistrhoServer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("initialize"), &DistrhoServer::initialize);
 
