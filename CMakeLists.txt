@@ -18,6 +18,97 @@ add_subdirectory(modules/dpf)
 
 find_package(Threads REQUIRED)
 
+set(GODOT_LIBRARIES_SUFFIX ".linuxbsd.editor.x86_64")
+
+set(GODOT_LINK_DIRECTORIES
+  modules/godot/bin
+  modules/godot/core
+  modules/godot/drivers
+  modules/godot/editor
+  modules/godot/main
+  modules/godot/modules
+  modules/godot/modules/freetype
+  modules/godot/modules/msdfgen
+  modules/godot/modules/text_server_adv
+  modules/godot/platform
+  modules/godot/scene
+  modules/godot/servers
+)
+
+set(GODOT_LIBRARIES_NAMES
+  main
+  modules
+  platform
+  drivers
+  editor
+  scene
+  servers
+  core
+  module_mbedtls
+  module_astcenc
+  module_basis_universal
+  module_bcdec
+  module_betsy
+  module_bmp
+  module_camera
+  module_csg
+  module_cvtt
+  module_dds
+  module_enet
+  module_etcpak
+  module_fbx
+  module_freetype
+  module_gdscript
+  module_glslang
+  module_gltf
+  module_godot_physics_2d
+  module_godot_physics_3d
+  module_gridmap
+  module_hdr
+  module_interactive_music
+  module_jolt_physics
+  module_jpg
+  module_jsonrpc
+  module_ktx
+  module_lightmapper_rd
+  module_meshoptimizer
+  module_minimp3
+  module_mobile_vr
+  module_msdfgen
+  module_multiplayer
+  module_navigation
+  module_noise
+  module_ogg
+  module_openxr
+  module_raycast
+  module_regex
+  module_svg
+  module_text_server_adv
+  module_tga
+  module_theora
+  module_tinyexr
+  module_upnp
+  module_vhacd
+  module_vorbis
+  module_webp
+  module_webrtc
+  module_websocket
+  module_webxr
+  module_xatlas_unwrap
+  module_zip
+  freetype_builtin
+  graphite_builtin
+  harfbuzz_builtin
+  icu_builtin
+  msdfgen_builtin
+  godot
+)
+
+set(GODOT_LIBRARIES "")
+foreach(lib IN LISTS GODOT_LIBRARIES_NAMES)
+    list(APPEND GODOT_LIBRARIES "${lib}${GODOT_LIBRARIES_SUFFIX}")
+endforeach()
+
 dpf_add_plugin(godot-distrho
   #TARGETS au clap lv2 vst2 vst3
   #TARGETS au lv2 vst2 vst3 jack
@@ -52,17 +143,16 @@ target_include_directories(godot-distrho PUBLIC
 )
 
 target_link_directories(godot-distrho PUBLIC
-  modules/godot/bin
   godot-cpp/bin
+  ${GODOT_LINK_DIRECTORIES}
 )
 
 target_link_libraries(godot-distrho PUBLIC
   ${CMAKE_THREAD_LIBS_INIT}
   godot.linuxbsd.editor.x86_64
-  godot-cpp.linux.template_debug.dev.x86_64
+  godot-cpp.linux.template_debug.x86_64
+  ${GODOT_LIBRARIES}
 )
-
-
 
 set(SOURCE src/plugin/libgodot_distrho.cpp src/plugin/main.cpp)
 set(HEADER src/plugin/libgodot_distrho.h)
@@ -70,6 +160,8 @@ set(HEADER src/plugin/libgodot_distrho.h)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g3")
 
 add_executable(godot ${SOURCE} ${HEADER})
+
+set(CMAKE_SKIP_RPATH TRUE)
 
 target_include_directories(godot PUBLIC
   src/plugin
@@ -81,13 +173,14 @@ target_include_directories(godot PUBLIC
   ${CMAKE_BINARY_DIR}
 )
 
-target_link_directories(godot PUBLIC
-  modules/godot/bin
+target_link_directories(godot PRIVATE
   godot-cpp/bin
+  ${GODOT_LINK_DIRECTORIES}
 )
 
-target_link_libraries(godot PUBLIC
+target_link_libraries(godot PRIVATE
   ${CMAKE_THREAD_LIBS_INIT}
   godot.linuxbsd.editor.x86_64
-  godot-cpp.linux.template_debug.dev.x86_64
+  godot-cpp.linux.template_debug.x86_64
+  ${GODOT_LIBRARIES}
 )

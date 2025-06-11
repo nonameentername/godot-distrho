@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <dlfcn.h>
 #include <link.h>
-#include <string>
-#include <vector>
 
 #include "libgodot_distrho.h"
 
@@ -35,57 +33,14 @@ GDExtensionBool GDE_EXPORT gdextension_default_init(GDExtensionInterfaceGetProcA
 
 }
 
-LibGodot::LibGodot(std::string p_path) {
-	handle = dlopen(p_path.c_str(), RTLD_LAZY);
-	if (handle == nullptr) {
-		fprintf(stderr, "Error opening libgodot: %s\n", dlerror());
-		return;
-	}
-
-	struct link_map *map;
-	if (dlinfo(handle, RTLD_DI_LINKMAP, &map) == 0) {
-		absolute_path = realpath(map->l_name, NULL);
-		if (!absolute_path) {
-			perror("Error acquiring realpath");
-		}
-	} else {
-		fprintf(stderr, "dlinfo error\n");
-	}
-
-	*(void**)(&func_libgodot_create_godot_instance) = dlsym(handle, "libgodot_create_godot_instance");
-	if (func_libgodot_create_godot_instance == nullptr) {
-		fprintf(stderr, "Error acquiring function: %s\n", dlerror());
-		dlclose(handle);
-		handle == nullptr;
-		return;
-	}
-	*(void**)(&func_libgodot_destroy_godot_instance) = dlsym(handle, "libgodot_destroy_godot_instance");
-	if (func_libgodot_destroy_godot_instance == nullptr) {
-		fprintf(stderr, "Error acquiring function: %s\n", dlerror());
-		dlclose(handle);
-		handle == nullptr;
-		return;
-	}
+LibGodot::LibGodot() {
 }
 
 LibGodot::~LibGodot() {
-	if (is_open()) {
-		dlclose(handle);
-	}
-    if (absolute_path) {
-        free(absolute_path);
-    }
-}
-
-bool LibGodot::is_open() {
-	return handle != nullptr && func_libgodot_create_godot_instance != nullptr;
 }
 
 godot::GodotInstance* LibGodot::create_godot_instance(int p_argc, char *p_argv[]) {
-	if (!is_open()) {
-		return nullptr;
-	}
-    GDExtensionObjectPtr instance = func_libgodot_create_godot_instance(p_argc, p_argv, gdextension_default_init, NULL, NULL, NULL, NULL);
+    GDExtensionObjectPtr instance = libgodot_create_godot_instance(p_argc, p_argv, gdextension_default_init, NULL, NULL, NULL, NULL);
     if (instance == nullptr) {
         return nullptr;
     }
@@ -94,7 +49,7 @@ godot::GodotInstance* LibGodot::create_godot_instance(int p_argc, char *p_argv[]
 
 void LibGodot::destroy_godot_instance(godot::GodotInstance* instance) {
     GDExtensionObjectPtr obj = godot::internal::gdextension_interface_object_get_instance_from_id(instance->get_instance_id());
-    func_libgodot_destroy_godot_instance(obj);
+    libgodot_destroy_godot_instance(obj);
 }
 
 char *LibGodot::get_absolute_path() {

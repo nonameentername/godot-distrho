@@ -7,20 +7,12 @@
 #include <godot_cpp/godot.hpp>
 #include <godot_cpp/classes/godot_instance.hpp>
 
-#ifdef __APPLE__
-#define LIBGODOT_LIBRARY_NAME "libgodot.dylib"
-#else
-#define LIBGODOT_LIBRARY_NAME "./libgodot.so"
-#endif
-
 
 class LibGodot {
 public:
-    LibGodot(std::string p_path = LIBGODOT_LIBRARY_NAME);
+    LibGodot();
 
     ~LibGodot();
-
-	bool is_open();
 
     godot::GodotInstance *create_godot_instance(int p_argc, char *p_argv[]);
 
@@ -32,9 +24,9 @@ private:
     void *handle = nullptr;
     char *absolute_path = nullptr;
 
-	GDExtensionObjectPtr (*func_libgodot_create_godot_instance)(int, char *[], GDExtensionInitializationFunction, InvokeCallbackFunction, ExecutorData, InvokeCallbackFunction, ExecutorData);
+	//GDExtensionObjectPtr (*func_libgodot_create_godot_instance)(int, char *[], GDExtensionInitializationFunction, InvokeCallbackFunction, ExecutorData, InvokeCallbackFunction, ExecutorData);
 
-    void (*func_libgodot_destroy_godot_instance)(GDExtensionObjectPtr) = nullptr;
+    //void (*func_libgodot_destroy_godot_instance)(GDExtensionObjectPtr) = nullptr;
 };
 
 extern LibGodot libgodot;
