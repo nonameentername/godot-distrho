@@ -1,5 +1,5 @@
-#include "godot-distrho-plugin.h"
-#include "godot-distrho-utils.h"
+#include "godot_distrho_plugin.h"
+#include "godot_distrho_utils.h"
 #include <string>
 
 
@@ -30,6 +30,7 @@ void run_godot() {
             "--display-driver", "x11",
             "--rendering-method", "gl_compatibility",
             "--rendering-driver", "opengl3",
+            //"--audio-driver", "Dummy",
 			"--wid", std::to_string(window_id),
             "--", "--distrho-plugin"
         };

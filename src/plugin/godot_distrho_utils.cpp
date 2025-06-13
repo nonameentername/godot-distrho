@@ -1,4 +1,4 @@
-#include "godot-distrho-utils.h"
+#include "godot_distrho_utils.h"
 #include <X11/Xlib.h>
 
 START_NAMESPACE_DISTRHO

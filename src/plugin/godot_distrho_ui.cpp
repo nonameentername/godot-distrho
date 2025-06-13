@@ -1,6 +1,6 @@
-#include "godot-distrho-ui.h"
-#include "godot-distrho-plugin.h"
-#include "godot-distrho-utils.h"
+#include "godot_distrho_ui.h"
+#include "godot_distrho_plugin.h"
+#include "godot_distrho_utils.h"
 #include "godot_cpp/classes/display_server.hpp"
 #include "libgodot_distrho.h"
 
