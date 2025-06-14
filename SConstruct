@@ -88,6 +88,8 @@ elif env["platform"] == "web":
         env.Append(CPPFLAGS=["-g"])
         env.Append(LINKFLAGS=["-g", "-s", "ERROR_ON_UNDEFINED_SYMBOLS=1"])
 
+env.Append(CPPFLAGS=["-fexceptions"])
+
 env.Append(CPPPATH=["src/"])
 sources = Glob("src/*.cpp")
 

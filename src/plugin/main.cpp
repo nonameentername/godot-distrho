@@ -12,7 +12,13 @@ int main(int argc, char **argv) {
         return EXIT_SUCCESS;
     }
 
-    std::vector<std::string> args = { program, "--rendering-method", "gl_compatibility", "--rendering-driver", "opengl3", "--display-driver", "x11" };
+    std::vector<std::string> args = {
+        program,
+        "--rendering-method", "gl_compatibility",
+        "--rendering-driver", "opengl3",
+        "--display-driver", "x11",
+        "--path", "/home/wmendiza/source/godot-distrho",
+    };
 
     std::vector<char*> argvs;
     for (const auto& arg : args) {

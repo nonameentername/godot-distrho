@@ -6,7 +6,7 @@
 #include "DistrhoPluginUtils.hpp"
 #include "DistrhoStandaloneUtils.hpp"
 
-#include "libgodot_distrho.h"
+//#include "libgodot_distrho.h"
 #include <thread>
 
 START_NAMESPACE_DISTRHO
@@ -19,7 +19,7 @@ private:
     uintptr_t window_id;
 
 public:
-    godot::GodotInstance *instance = NULL;
+    //godot::GodotInstance *instance = NULL;
 
 public:
     GodotDistrhoUI();

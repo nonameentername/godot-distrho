@@ -1,11 +1,11 @@
 #include "godot_distrho_ui.h"
 #include "godot_distrho_plugin.h"
 #include "godot_distrho_utils.h"
-#include "godot_cpp/classes/display_server.hpp"
-#include "libgodot_distrho.h"
+//#include "godot_cpp/classes/display_server.hpp"
+//#include "libgodot_distrho.h"
 
-#include "godot_cpp/classes/display_server_embedded.hpp"
-#include "godot_cpp/classes/rendering_native_surface_x11.hpp"
+//#include "godot_cpp/classes/display_server_embedded.hpp"
+//#include "godot_cpp/classes/rendering_native_surface_x11.hpp"
 
 #include <string>
 //#include <X11/Xlib.h>
@@ -15,7 +15,7 @@ START_NAMESPACE_DISTRHO
 
 
 void run_godot(uintptr_t window_id) {
-    godot::GodotInstance *instance = NULL;
+    //godot::GodotInstance *instance = NULL;
 
 
 
@@ -54,6 +54,7 @@ void GodotDistrhoUI::onDisplay()
     const uint height = getHeight();
 
 
+    /*
     if (instance != NULL) {
         if(!instance->is_started()) {
             //printf("string instance\n");
@@ -62,7 +63,7 @@ void GodotDistrhoUI::onDisplay()
             instance->iteration();
         }
     }
-}
+    */
 
 }
 
@@ -74,6 +75,7 @@ void GodotDistrhoUI::uiIdle()
 {
     //repaint();
 
+    /*
     if (instance != NULL) {
         if(!instance->is_started()) {
             //printf("string instance\n");
@@ -82,6 +84,7 @@ void GodotDistrhoUI::uiIdle()
             instance->iteration();
         }
     }
+    */
 
     /*
     if (GodotDistrhoPlugin* const pluginPtr = (GodotDistrhoPlugin*)getPluginInstancePointer())

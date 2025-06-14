@@ -9,6 +9,7 @@
 #include <godot_cpp/godot.hpp>
 
 #include "distrho_config.h"
+#include "distrho_shared_memory.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_launcher.h"
 #include "distrho_server.h"
@@ -23,10 +24,12 @@ void initialize_godot_distrho_module(ModuleInitializationLevel p_level) {
     }
 
     ClassDB::register_class<DistrhoConfig>();
+    ClassDB::register_class<DistrhoSharedMemory>();
     ClassDB::register_class<DistrhoPluginInstance>();
     ClassDB::register_class<DistrhoLauncher>();
     ClassDB::register_class<DistrhoServer>();
     distrho_server = memnew(DistrhoServer);
+    distrho_server->start();
     Engine::get_singleton()->register_singleton("DistrhoServer", DistrhoServer::get_singleton());
 }
 
@@ -36,6 +39,7 @@ void uninitialize_godot_distrho_module(ModuleInitializationLevel p_level) {
     }
 
     Engine::get_singleton()->unregister_singleton("DistrhoServer");
+    distrho_server->finish();
     memdelete(distrho_server);
 }
 

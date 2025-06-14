@@ -119,11 +119,12 @@ dpf_add_plugin(godot-distrho
   FILES_DSP
     src/plugin/godot_distrho_plugin.cpp
     src/plugin/godot_distrho_utils.cpp
-    src/plugin/libgodot_distrho.cpp
+    src/godot_distrho_shared_memory.cpp
+    #src/plugin/libgodot_distrho.cpp
   FILES_UI
     src/plugin/godot_distrho_ui.cpp
     src/plugin/godot_distrho_utils.cpp
-    src/plugin/libgodot_distrho.cpp
+    #src/plugin/libgodot_distrho.cpp
 )
 
 target_compile_definitions(dgl-opengl PUBLIC
@@ -135,23 +136,23 @@ target_compile_definitions(dgl-opengl PUBLIC
 target_include_directories(godot-distrho PUBLIC
   src/plugin
   src
-  modules/godot/core/extension
-  godot-cpp/include
-  godot-cpp/gen/src
-  godot-cpp/gen/include
+  #modules/godot/core/extension
+  #godot-cpp/include
+  #godot-cpp/gen/src
+  #godot-cpp/gen/include
   ${CMAKE_BINARY_DIR}
 )
 
 target_link_directories(godot-distrho PUBLIC
-  godot-cpp/bin
-  ${GODOT_LINK_DIRECTORIES}
+    #godot-cpp/bin
+  #${GODOT_LINK_DIRECTORIES}
 )
 
 target_link_libraries(godot-distrho PUBLIC
   ${CMAKE_THREAD_LIBS_INIT}
-  godot.linuxbsd.editor.x86_64
-  godot-cpp.linux.template_debug.x86_64
-  ${GODOT_LIBRARIES}
+  #godot.linuxbsd.editor.x86_64
+  #godot-cpp.linux.template_debug.x86_64
+  #${GODOT_LIBRARIES}
 )
 
 set(SOURCE src/plugin/libgodot_distrho.cpp src/plugin/main.cpp)

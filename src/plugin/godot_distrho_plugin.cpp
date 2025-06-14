@@ -1,13 +1,17 @@
 #include "godot_distrho_plugin.h"
+#include "godot_distrho_shared_memory.h"
 #include "godot_distrho_utils.h"
-#include <string>
+#include "DistrhoPluginInfo.h"
+#include <chrono>
+#include <thread>
 
 
 START_NAMESPACE_DISTRHO
 
-std::atomic<bool> keep_running(true);
+//std::atomic<bool> keep_running(true);
 
 void run_godot() {
+    /*
     godot::GodotInstance *instance = NULL;
 
 	//open default display
@@ -53,16 +57,19 @@ void run_godot() {
     while (keep_running && !instance->iteration()) {}
 
     libgodot.destroy_godot_instance(instance);
+    */
 }
 
 GodotDistrhoPlugin::GodotDistrhoPlugin() : Plugin(0, 0, 0) // parameters, programs, states
 {
     godot_thread = std::thread(run_godot);
+
+    godot_distrho_shared_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
 }
 
 GodotDistrhoPlugin::~GodotDistrhoPlugin()
 {
-	keep_running = false;
+	//keep_running = false;
     godot_thread.join();
 }
 
@@ -131,6 +138,21 @@ void GodotDistrhoPlugin::activate()
 
 void GodotDistrhoPlugin::run(const float** inputs, float** outputs, uint32_t numSamples)
 {
+    while(godot_distrho_shared_memory.get_sync_flag() != godot::SYNC_FLAG::HOST_TURN) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    godot_distrho_shared_memory.write_input_channel(inputs, numSamples);
+
+    godot_distrho_shared_memory.set_sync_flag(godot::SYNC_FLAG::PLUGIN_TURN);
+
+    while(godot_distrho_shared_memory.get_sync_flag() != godot::SYNC_FLAG::HOST_TURN) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    godot_distrho_shared_memory.read_output_channel(outputs, numSamples);
+
+    godot_distrho_shared_memory.advance_write_index(numSamples);
 }
 
 Plugin* createPlugin()
