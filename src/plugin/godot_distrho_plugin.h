@@ -2,7 +2,7 @@
 #define GODOT_DISTRHO_PLUGIN_H
 
 #include "DistrhoPlugin.hpp"
-#include "godot_distrho_shared_memory.h"
+#include "distrho_shared_memory.h"
 //#include "libgodot_distrho.h"
 
 #include <thread>
@@ -12,7 +12,7 @@ START_NAMESPACE_DISTRHO
 class GodotDistrhoPlugin : public Plugin
 {
 private:
-    godot::GodotDistrhoSharedMemory godot_distrho_shared_memory;
+    godot::DistrhoSharedMemory godot_distrho_shared_memory;
     //godot::GodotInstance *instance = NULL;
     std::thread godot_thread;
 

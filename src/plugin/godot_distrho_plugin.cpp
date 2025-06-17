@@ -1,5 +1,5 @@
 #include "godot_distrho_plugin.h"
-#include "godot_distrho_shared_memory.h"
+#include "distrho_shared_memory.h"
 #include "godot_distrho_utils.h"
 #include "DistrhoPluginInfo.h"
 #include <chrono>
@@ -138,21 +138,29 @@ void GodotDistrhoPlugin::activate()
 
 void GodotDistrhoPlugin::run(const float** inputs, float** outputs, uint32_t numSamples)
 {
-    while(godot_distrho_shared_memory.get_sync_flag() != godot::SYNC_FLAG::HOST_TURN) {
+    /*
+    while(godot_distrho_shared_memory.get_output_flag() != godot::OUTPUT_SYNC::OUTPUT_READY) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+    */
 
-    godot_distrho_shared_memory.write_input_channel(inputs, numSamples);
+    godot_distrho_shared_memory.read_output_channel(outputs, godot::BUFFER_FRAME_SIZE);
+    godot_distrho_shared_memory.advance_output_read_index(godot::BUFFER_FRAME_SIZE);
 
-    godot_distrho_shared_memory.set_sync_flag(godot::SYNC_FLAG::PLUGIN_TURN);
+    godot_distrho_shared_memory.write_input_channel(inputs, godot::BUFFER_FRAME_SIZE);
+    godot_distrho_shared_memory.advance_input_write_index(godot::BUFFER_FRAME_SIZE);
 
-    while(godot_distrho_shared_memory.get_sync_flag() != godot::SYNC_FLAG::HOST_TURN) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
+    godot_distrho_shared_memory.set_input_flag(godot::INPUT_SYNC::INPUT_READY);
 
-    godot_distrho_shared_memory.read_output_channel(outputs, numSamples);
+    godot_distrho_shared_memory.read_output_channel(outputs, godot::BUFFER_FRAME_SIZE);
+    godot_distrho_shared_memory.advance_output_read_index(godot::BUFFER_FRAME_SIZE);
 
-    godot_distrho_shared_memory.advance_write_index(numSamples);
+    godot_distrho_shared_memory.write_input_channel(inputs, godot::BUFFER_FRAME_SIZE);
+    godot_distrho_shared_memory.advance_input_write_index(godot::BUFFER_FRAME_SIZE);
+
+    godot_distrho_shared_memory.set_input_flag(godot::INPUT_SYNC::INPUT_READY);
+
+    godot_distrho_shared_memory.set_output_flag(godot::OUTPUT_SYNC::OUTPUT_WAIT);
 }
 
 Plugin* createPlugin()

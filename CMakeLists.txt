@@ -119,7 +119,7 @@ dpf_add_plugin(godot-distrho
   FILES_DSP
     src/plugin/godot_distrho_plugin.cpp
     src/plugin/godot_distrho_utils.cpp
-    src/godot_distrho_shared_memory.cpp
+    src/distrho_shared_memory.cpp
     #src/plugin/libgodot_distrho.cpp
   FILES_UI
     src/plugin/godot_distrho_ui.cpp

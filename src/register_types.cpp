@@ -8,8 +8,9 @@
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 
+#include "audio_stream_distrho.h"
+#include "audio_stream_player_distrho.h"
 #include "distrho_config.h"
-#include "distrho_shared_memory.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_launcher.h"
 #include "distrho_server.h"
@@ -23,8 +24,9 @@ void initialize_godot_distrho_module(ModuleInitializationLevel p_level) {
         return;
     }
 
+    ClassDB::register_class<AudioStreamDistrho>();
+    ClassDB::register_class<AudioStreamPlaybackDistrho>();
     ClassDB::register_class<DistrhoConfig>();
-    ClassDB::register_class<DistrhoSharedMemory>();
     ClassDB::register_class<DistrhoPluginInstance>();
     ClassDB::register_class<DistrhoLauncher>();
     ClassDB::register_class<DistrhoServer>();

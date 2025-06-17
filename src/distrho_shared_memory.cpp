@@ -1,49 +1,142 @@
+#include <boost/interprocess/managed_shared_memory.hpp>
+#include <boost/interprocess/shared_memory_object.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+
 #include "distrho_shared_memory.h"
-#include "godot_distrho_shared_memory.h"
 
 using namespace godot;
 
+namespace bip = boost::interprocess;
 
-DistrhoSharedMemory::DistrhoSharedMemory(String p_shared_memory_name) {
-    godot_distrho_shared_memory = new GodotDistrhoSharedMemory();
-    godot_distrho_shared_memory->initialize(0, 0, std::string(p_shared_memory_name.utf8()));
+
+DistrhoSharedMemory::DistrhoSharedMemory() {
 }
 
 DistrhoSharedMemory::~DistrhoSharedMemory() {
-    delete godot_distrho_shared_memory;
+    if (is_host) {
+        bip::shared_memory_object::remove(shared_memory_name.c_str());
+    }
 }
 
-void DistrhoSharedMemory::write_input_channel(float **p_buffer, int p_frames) {
-    godot_distrho_shared_memory->write_input_channel((const float **)p_buffer, p_frames);
+void DistrhoSharedMemory::initialize(int p_number_of_input_channels, int p_number_of_output_channels, std::string p_shared_memory_name) {
+    if (p_shared_memory_name.length() == 0) {
+		is_host = true;
+		boost::uuids::uuid uuid = generator();
+		shared_memory_name = boost::uuids::to_string(uuid);
+		shared_memory_name = "godot-distrho";
+
+    	bip::shared_memory_object::remove(shared_memory_name.c_str());
+		shared_memory = std::make_unique<boost::interprocess::managed_shared_memory>(
+				bip::create_only, shared_memory_name.c_str(), SIZE_SHARED_MEMORY * 2);
+
+    	buffer = shared_memory->construct<AudioBuffer>("AudioBuffer")();
+		buffer->num_input_channels = p_number_of_input_channels;
+		buffer->num_output_channels = p_number_of_output_channels;
+
+        //TODO: remove these variables?
+        num_input_channels = p_number_of_input_channels;
+        num_output_channels = p_number_of_output_channels;
+
+    } else {
+		is_host = false;
+    	shared_memory_name = p_shared_memory_name;
+
+		shared_memory = std::make_unique<bip::managed_shared_memory>(
+				bip::open_only, shared_memory_name.c_str());
+		buffer = shared_memory->find<AudioBuffer>("AudioBuffer").first;
+
+		if (!buffer) {
+			num_input_channels = p_number_of_input_channels;
+			num_output_channels = p_number_of_output_channels;
+		} else {
+			num_input_channels = buffer->num_input_channels;
+			num_output_channels = buffer->num_output_channels;
+		}
+	}
+}
+
+void DistrhoSharedMemory::write_input_channel(const float **p_buffer, int p_frames) {
+    for (int channel = 0; channel < num_input_channels; channel++) {
+        for (int frame = 0; frame < p_frames; frame++) {
+            buffer->input[channel * BUFFER_SIZE + (buffer->input_write_index + frame) % BUFFER_SIZE] = p_buffer[channel][frame];
+        }
+    }
 }
 
 void DistrhoSharedMemory::read_input_channel(float **p_buffer, int p_frames) {
-    godot_distrho_shared_memory->read_input_channel(p_buffer, p_frames);
+    for (int channel = 0; channel < num_input_channels; channel++) {
+        for (int frame = 0; frame < p_frames; frame++) {
+ 			p_buffer[channel][frame] = buffer->input[channel * BUFFER_SIZE + (buffer->input_read_index + frame) % BUFFER_SIZE];
+        }
+    }
 }
 
 void DistrhoSharedMemory::write_output_channel(float **p_buffer, int p_frames) {
-    godot_distrho_shared_memory->write_output_channel(p_buffer, p_frames);
+    for (int channel = 0; channel < num_output_channels; channel++) {
+        for (int frame = 0; frame < p_frames; frame++) {
+            buffer->output[channel * BUFFER_SIZE + (buffer->output_write_index + frame) % BUFFER_SIZE] = p_buffer[channel][frame];
+        }
+    }
 }
 
 void DistrhoSharedMemory::read_output_channel(float **p_buffer, int p_frames) {
-    godot_distrho_shared_memory->read_output_channel(p_buffer, p_frames);
+    for (int channel = 0; channel < num_output_channels; channel++) {
+        for (int frame = 0; frame < p_frames; frame++) {
+ 			p_buffer[channel][frame] = buffer->output[channel * BUFFER_SIZE + (buffer->output_read_index + frame) % BUFFER_SIZE];
+        }
+    }
 }
 
-void DistrhoSharedMemory::advance_write_index(int p_frames) {
-    godot_distrho_shared_memory->advance_write_index(p_frames);
+void DistrhoSharedMemory::advance_input_write_index(int p_frames) {
+  	buffer->input_write_index = (buffer->input_write_index + p_frames) % BUFFER_SIZE;
 }
 
-void DistrhoSharedMemory::advance_read_index(int p_frames) {
-    godot_distrho_shared_memory->advance_read_index(p_frames);
+void DistrhoSharedMemory::advance_input_read_index(int p_frames) {
+  	buffer->input_read_index = (buffer->input_read_index + p_frames) % BUFFER_SIZE;
 }
 
-void DistrhoSharedMemory::set_sync_flag(SYNC_FLAG p_sync_flag) {
-    godot_distrho_shared_memory->set_sync_flag(p_sync_flag);
+void DistrhoSharedMemory::advance_output_write_index(int p_frames) {
+  	buffer->output_write_index = (buffer->output_write_index + p_frames) % BUFFER_SIZE;
 }
 
-SYNC_FLAG DistrhoSharedMemory::get_sync_flag() {
-    return godot_distrho_shared_memory->get_sync_flag();
+void DistrhoSharedMemory::advance_output_read_index(int p_frames) {
+  	buffer->output_read_index = (buffer->output_read_index + p_frames) % BUFFER_SIZE;
 }
 
-void DistrhoSharedMemory::_bind_methods() {
+void DistrhoSharedMemory::set_input_flag(INPUT_SYNC p_sync_flag) {
+    boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(buffer->mutex);
+    buffer->input_sync = p_sync_flag;
+}
+
+INPUT_SYNC DistrhoSharedMemory::get_input_flag() {
+    if (!buffer) {
+        return INPUT_SYNC::INPUT_WAIT;
+    }
+    boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(buffer->mutex);
+    return (INPUT_SYNC)buffer->input_sync;
+}
+
+void DistrhoSharedMemory::set_output_flag(OUTPUT_SYNC p_sync_flag) {
+    boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(buffer->mutex);
+    buffer->output_sync = p_sync_flag;
+}
+
+OUTPUT_SYNC DistrhoSharedMemory::get_output_flag() {
+    if (!buffer) {
+        return OUTPUT_SYNC::OUTPUT_WAIT;
+    }
+    boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(buffer->mutex);
+    return (OUTPUT_SYNC)buffer->output_sync;
+}
+
+int DistrhoSharedMemory::get_num_input_channels() {
+    return buffer->num_input_channels;
+}
+
+int DistrhoSharedMemory::get_num_output_channels() {
+    return buffer->num_output_channels;
+}
+
+std::string DistrhoSharedMemory::get_shared_memory_name() {
+	return shared_memory_name;
 }

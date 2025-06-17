@@ -2,10 +2,11 @@
 #include "distrho_config.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_shared_memory.h"
+#include "distrho_circular_buffer.h"
 #include "godot_cpp/core/memory.hpp"
 #include "godot_cpp/variant/utility_functions.hpp"
 #include "godot_cpp/classes/os.hpp"
-#include "godot_distrho_shared_memory.h"
+#include "distrho_shared_memory.h"
 #include "version_generated.gen.h"
 #include <godot_cpp/core/mutex_lock.hpp>
 #include <godot_cpp/classes/mutex.hpp>
@@ -18,16 +19,39 @@ DistrhoServer::DistrhoServer() {
     exit_thread = false;
     distrho_config = memnew(DistrhoConfig);
     distrho_plugin = memnew(DistrhoPluginInstance);
-	distrho_shared_memory = new GodotDistrhoSharedMemory();
+	distrho_shared_memory = new DistrhoSharedMemory();
 	distrho_shared_memory->initialize(0, 0, "godot-distrho");
     singleton = this;
 
-	for (int i = 0; i < num_channels; ++i)
-		buffer[i] = data[i];
+    //TODO: use the correct number of channels instad of num_channels (16)
+	for (int i = 0; i < num_channels; ++i) {
+		input_buffer[i] = input_data[i];
+		output_buffer[i] = output_data[i];
+    }
+
+    input_channels.resize(distrho_shared_memory->get_num_input_channels());
+    output_channels.resize(distrho_shared_memory->get_num_output_channels());
+
+    for (int channel = 0; channel < distrho_shared_memory->get_num_input_channels(); channel++) {
+        input_channels.write[channel] = distrhoCreateCircularBuffer(CIRCULAR_BUFFER_SIZE, sizeof(float));
+    }
+
+    for (int channel = 0; channel < distrho_shared_memory->get_num_output_channels(); channel++) {
+        output_channels.write[channel] = distrhoCreateCircularBuffer(CIRCULAR_BUFFER_SIZE, sizeof(float));
+    }
 }
 
 DistrhoServer::~DistrhoServer() {
-	//delete distrho_shared_memory;
+	delete distrho_shared_memory;
+
+    for (int channel = 0; channel < input_channels.size(); channel++) {
+        distrhoDestroyCircularBuffer(input_channels[channel]);
+    }
+
+    for (int channel = 0; channel < output_channels.size(); channel++) {
+        distrhoDestroyCircularBuffer(output_channels[channel]);
+    }
+
     singleton = NULL;
 }
 
@@ -39,41 +63,90 @@ void DistrhoServer::initialize() {
 }
 
 void DistrhoServer::thread_func() {
-	GodotDistrhoSharedMemory *local_distrho_shared_memory;
-	local_distrho_shared_memory = new GodotDistrhoSharedMemory();
-	//local_distrho_shared_memory->initialize(0, 0, distrho_shared_memory->get_shared_memory_name());
-	local_distrho_shared_memory->initialize(0, 0, "godot-distrho");
-
     while (!exit_thread) {
+		while(distrho_shared_memory->get_input_flag() != godot::INPUT_SYNC::INPUT_READY) {
+			OS::get_singleton()->delay_usec(1);
+		}
+
+        //semaphore->wait();
+
         lock();
 
-		while(local_distrho_shared_memory->get_sync_flag() != godot::SYNC_FLAG::PLUGIN_TURN) {
-			OS::get_singleton()->delay_msec(1);
-		}
+		distrho_shared_memory->read_input_channel(input_buffer, BUFFER_FRAME_SIZE);
+		distrho_shared_memory->advance_input_read_index(BUFFER_FRAME_SIZE);
+		distrho_shared_memory->set_input_flag(godot::INPUT_SYNC::INPUT_WAIT);
 
-		local_distrho_shared_memory->read_input_channel(buffer, 1024);
+        //write to internal ring buffer
 
-		//TODO: Process the audio.  For now just forward it.
+        for (int channel = 0; channel < distrho_shared_memory->get_num_input_channels(); channel++) {
+            distrhoWriteCircularBuffer(input_channels.write[channel], input_buffer[channel], BUFFER_FRAME_SIZE);
+        }
 
-		for (int channel = 0; channel < 2; channel++) {
-			for (int frame = 0; frame < BUFFER_SIZE; frame++) {
-				buffer[channel][frame] = buffer[channel][frame];
-			}
-		}
+        unlock();
 
-		local_distrho_shared_memory->write_output_channel(buffer, 1024);
+        //semaphore->wait();
 
-		local_distrho_shared_memory->set_sync_flag(godot::SYNC_FLAG::HOST_TURN);
+        lock();
+
+        for (int channel = 0; channel < distrho_shared_memory->get_num_output_channels(); channel++) {
+            distrhoReadCircularBuffer(output_buffer[channel], output_channels[channel], BUFFER_FRAME_SIZE);
+        }
+
+		distrho_shared_memory->write_output_channel(output_buffer, BUFFER_FRAME_SIZE);
+		distrho_shared_memory->advance_output_write_index(BUFFER_FRAME_SIZE);
+		distrho_shared_memory->set_output_flag(godot::OUTPUT_SYNC::OUTPUT_READY);
 
         unlock();
     }
 	delete distrho_shared_memory;
 }
 
+int DistrhoServer::process_sample(AudioFrame *p_buffer, float p_rate, int p_frames) {
+    lock();
+
+    if (distrho_shared_memory->get_num_input_channels() == 0) {
+        for (int frame = 0; frame < p_frames; frame++) {
+            p_buffer[frame].left = 0;
+            p_buffer[frame].right = 0;
+        }
+    } else if (distrho_shared_memory->get_num_input_channels() == 1) {
+        distrhoReadCircularBuffer(input_channels[0], temp_buffer, p_frames);
+        for (int frame = 0; frame < p_frames; frame++) {
+            p_buffer[frame].left = temp_buffer[frame];
+            p_buffer[frame].right = temp_buffer[frame];
+        }
+    } else {
+        distrhoReadCircularBuffer(input_channels[0], temp_buffer, p_frames);
+        for (int frame = 0; frame < p_frames; frame++) {
+            p_buffer[frame].left = temp_buffer[frame];
+        }
+
+        distrhoReadCircularBuffer(input_channels[1], temp_buffer, p_frames);
+        for (int frame = 0; frame < p_frames; frame++) {
+            p_buffer[frame].right = temp_buffer[frame];
+        }
+    }
+
+    unlock();
+
+    //semaphore->post();
+
+    return p_frames;
+}
+
+void DistrhoServer::set_channel_sample(AudioFrame *p_buffer, float p_rate, int p_frames, int left, int right) {
+}
+
+int DistrhoServer::get_channel_sample(AudioFrame *p_buffer, float p_rate, int p_frames, int left, int right) {
+    return p_frames;
+}
+
 Error DistrhoServer::start() {
     thread.instantiate();
     mutex.instantiate();
-    thread->start(callable_mp(this, &DistrhoServer::thread_func), Thread::PRIORITY_NORMAL);
+    semaphore.instantiate();
+
+    thread->start(callable_mp(this, &DistrhoServer::thread_func), Thread::PRIORITY_HIGH);
     return OK;
 }
 
