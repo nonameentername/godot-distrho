@@ -1,3 +1,4 @@
+#include <boost/interprocess/sync/scoped_lock.hpp>
 #include "distrho_server.h"
 #include "distrho_config.h"
 #include "distrho_plugin_instance.h"
@@ -16,6 +17,7 @@ using namespace godot;
 DistrhoServer *DistrhoServer::singleton = NULL;
 
 DistrhoServer::DistrhoServer() {
+	active = false;
     exit_thread = false;
     distrho_config = memnew(DistrhoConfig);
     distrho_plugin = memnew(DistrhoPluginInstance);
@@ -63,40 +65,79 @@ void DistrhoServer::initialize() {
 }
 
 void DistrhoServer::thread_func() {
+    // Set the "ready" flag
+    boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> shared_memory_lock(distrho_shared_memory->buffer->mutex);
+    distrho_shared_memory->buffer->godot_ready = true;
+    shared_memory_lock.unlock();
+
+	active = true;
+
     while (!exit_thread) {
-		while(distrho_shared_memory->get_input_flag() != godot::INPUT_SYNC::INPUT_READY) {
-			OS::get_singleton()->delay_usec(1);
-		}
+        // Acquire the mutex
+        boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> shared_memory_lock(distrho_shared_memory->buffer->mutex);
 
         //semaphore->wait();
 
-        lock();
+        //lock();
+
+        // Log before read
+        //UtilityFunctions::print("Plugin: Before Read - input_read_index: ", distrho_shared_memory->buffer->input_read_index);
+        //UtilityFunctions::print("Plugin: Before Read - input_write_index: ", distrho_shared_memory->buffer->input_write_index);
+
+        // Wait for input data (release the mutex while waiting)
+        distrho_shared_memory->buffer->input_condition.wait(shared_memory_lock);
 
 		distrho_shared_memory->read_input_channel(input_buffer, BUFFER_FRAME_SIZE);
 		distrho_shared_memory->advance_input_read_index(BUFFER_FRAME_SIZE);
-		distrho_shared_memory->set_input_flag(godot::INPUT_SYNC::INPUT_WAIT);
+
+          // Log after read
+        //UtilityFunctions::print("Plugin: After Read - input_read_index: ", distrho_shared_memory->buffer->input_read_index);
+        //UtilityFunctions::print("Plugin: After Read - input_write_index: ", distrho_shared_memory->buffer->input_write_index);
 
         //write to internal ring buffer
+
+		//lock();
 
         for (int channel = 0; channel < distrho_shared_memory->get_num_input_channels(); channel++) {
             distrhoWriteCircularBuffer(input_channels.write[channel], input_buffer[channel], BUFFER_FRAME_SIZE);
         }
 
-        unlock();
+        //unlock();
 
         //semaphore->wait();
 
-        lock();
+        //lock();
 
         for (int channel = 0; channel < distrho_shared_memory->get_num_output_channels(); channel++) {
-            distrhoReadCircularBuffer(output_buffer[channel], output_channels[channel], BUFFER_FRAME_SIZE);
+            distrhoReadCircularBuffer(output_channels[channel], output_buffer[channel], BUFFER_FRAME_SIZE);
+
+            //for (int frame = 0; frame < BUFFER_FRAME_SIZE; frame++) {
+            //    output_buffer[channel][frame] = input_buffer[channel][frame];
+            //}
         }
+
+		//unlock();
+
+		// Log before write
+        //UtilityFunctions::print("Plugin: Before Write - output_read_index: ", distrho_shared_memory->buffer->output_read_index);
+        //UtilityFunctions::print("Plugin: Before Write - output_write_index: ", distrho_shared_memory->buffer->output_write_index);
+
 
 		distrho_shared_memory->write_output_channel(output_buffer, BUFFER_FRAME_SIZE);
 		distrho_shared_memory->advance_output_write_index(BUFFER_FRAME_SIZE);
-		distrho_shared_memory->set_output_flag(godot::OUTPUT_SYNC::OUTPUT_READY);
 
-        unlock();
+        // Log after write
+        //UtilityFunctions::print("Plugin: After Write - output_read_index: ", distrho_shared_memory->buffer->output_read_index);
+        //UtilityFunctions::print("Plugin: After Write - output_write_index: ", distrho_shared_memory->buffer->output_write_index);
+
+        // Signal the output condition (wake up the host)
+        distrho_shared_memory->buffer->output_condition.notify_one();
+
+        // The mutex is automatically released when the scoped_lock goes out of scope
+
+        //unlock();
+
+        //semaphore->wait();
     }
 	delete distrho_shared_memory;
 }
@@ -135,10 +176,60 @@ int DistrhoServer::process_sample(AudioFrame *p_buffer, float p_rate, int p_fram
 }
 
 void DistrhoServer::set_channel_sample(AudioFrame *p_buffer, float p_rate, int p_frames, int left, int right) {
+	bool has_left_channel = left >= 0 && left < output_channels.size();
+	bool has_right_channel = right >= 0 && right < output_channels.size();
+
+	if (!has_left_channel && !has_right_channel && !active) {
+		return;
+	}
+
+	lock();
+
+	if (has_left_channel) {
+        for (int frame = 0; frame < p_frames; frame++) {
+ 			temp_buffer[frame] = p_buffer[frame].left;
+        }
+		distrhoWriteCircularBuffer(output_channels.write[left], temp_buffer, p_frames);
+	}
+
+	if (has_right_channel) {
+        for (int frame = 0; frame < p_frames; frame++) {
+ 			temp_buffer[frame] = p_buffer[frame].right;
+        }
+		distrhoWriteCircularBuffer(output_channels.write[right], temp_buffer, p_frames);
+	}
+
+	unlock();
 }
 
 int DistrhoServer::get_channel_sample(AudioFrame *p_buffer, float p_rate, int p_frames, int left, int right) {
-    return p_frames;
+	bool has_left_channel = left >= 0 && left < input_channels.size();
+	bool has_right_channel = right >= 0 && right < input_channels.size();
+
+	lock();
+	if (has_left_channel && active) {
+		distrhoReadCircularBuffer(input_channels[left], temp_buffer, p_frames);
+		for (int frame = 0; frame < p_frames; frame++) {
+			p_buffer[frame].left = temp_buffer[frame];
+		}
+	} else {
+		for (int frame = 0; frame < p_frames; frame++) {
+			p_buffer[frame].left = 0;
+		}
+	}
+	if (has_right_channel && active) {
+		distrhoReadCircularBuffer(input_channels[right], temp_buffer, p_frames);
+		for (int frame = 0; frame < p_frames; frame++) {
+			p_buffer[frame].right = temp_buffer[frame];
+		}
+	} else {
+		for (int frame = 0; frame < p_frames; frame++) {
+			p_buffer[frame].right = 0;
+		}
+	}
+	unlock();
+
+	return p_frames;
 }
 
 Error DistrhoServer::start() {

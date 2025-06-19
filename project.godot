@@ -10,10 +10,15 @@ config_version=5
 
 [application]
 
-config/name="GodotDistrho"
+config/name="GodotDistrho:godot"
 run/main_scene="uid://b6dypp4qpoog8"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[audio]
+
+driver/output_latency=1
+driver/mix_rate=48000
 
 [display]
 

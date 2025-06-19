@@ -19,7 +19,7 @@ const int num_channels = 16;
 const int buffer_size = 2048;
 
 //static const int BUFFER_FRAME_SIZE = 512;
-static const int CIRCULAR_BUFFER_SIZE = BUFFER_SIZE + 10;
+static const int CIRCULAR_BUFFER_SIZE = BUFFER_SIZE;
     
 class DistrhoServer : public Object {
     GDCLASS(DistrhoServer, Object);
@@ -37,6 +37,8 @@ private:
 
 	float output_data[num_channels][buffer_size];
 	float *output_buffer[num_channels];
+
+	bool active;
 
     mutable bool exit_thread;
     Ref<Thread> thread;

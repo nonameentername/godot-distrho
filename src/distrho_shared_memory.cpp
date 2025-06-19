@@ -55,34 +55,34 @@ void DistrhoSharedMemory::initialize(int p_number_of_input_channels, int p_numbe
 	}
 }
 
-void DistrhoSharedMemory::write_input_channel(const float **p_buffer, int p_frames) {
+void DistrhoSharedMemory::write_input_channel(const float **p_buffer, int p_frames, int offset) {
     for (int channel = 0; channel < num_input_channels; channel++) {
         for (int frame = 0; frame < p_frames; frame++) {
-            buffer->input[channel * BUFFER_SIZE + (buffer->input_write_index + frame) % BUFFER_SIZE] = p_buffer[channel][frame];
+            buffer->input[channel * BUFFER_SIZE + (buffer->input_write_index + frame) % BUFFER_SIZE] = p_buffer[channel][offset + frame ];
         }
     }
 }
 
-void DistrhoSharedMemory::read_input_channel(float **p_buffer, int p_frames) {
+void DistrhoSharedMemory::read_input_channel(float **p_buffer, int p_frames, int offset) {
     for (int channel = 0; channel < num_input_channels; channel++) {
         for (int frame = 0; frame < p_frames; frame++) {
- 			p_buffer[channel][frame] = buffer->input[channel * BUFFER_SIZE + (buffer->input_read_index + frame) % BUFFER_SIZE];
+ 			p_buffer[channel][offset + frame] = buffer->input[channel * BUFFER_SIZE + (buffer->input_read_index + frame) % BUFFER_SIZE];
         }
     }
 }
 
-void DistrhoSharedMemory::write_output_channel(float **p_buffer, int p_frames) {
+void DistrhoSharedMemory::write_output_channel(float **p_buffer, int p_frames, int offset) {
     for (int channel = 0; channel < num_output_channels; channel++) {
         for (int frame = 0; frame < p_frames; frame++) {
-            buffer->output[channel * BUFFER_SIZE + (buffer->output_write_index + frame) % BUFFER_SIZE] = p_buffer[channel][frame];
+            buffer->output[channel * BUFFER_SIZE + (buffer->output_write_index + frame) % BUFFER_SIZE] = p_buffer[channel][offset + frame];
         }
     }
 }
 
-void DistrhoSharedMemory::read_output_channel(float **p_buffer, int p_frames) {
+void DistrhoSharedMemory::read_output_channel(float **p_buffer, int p_frames, int offset) {
     for (int channel = 0; channel < num_output_channels; channel++) {
         for (int frame = 0; frame < p_frames; frame++) {
- 			p_buffer[channel][frame] = buffer->output[channel * BUFFER_SIZE + (buffer->output_read_index + frame) % BUFFER_SIZE];
+ 			p_buffer[channel][offset + frame] = buffer->output[channel * BUFFER_SIZE + (buffer->output_read_index + frame) % BUFFER_SIZE];
         }
     }
 }
@@ -101,32 +101,6 @@ void DistrhoSharedMemory::advance_output_write_index(int p_frames) {
 
 void DistrhoSharedMemory::advance_output_read_index(int p_frames) {
   	buffer->output_read_index = (buffer->output_read_index + p_frames) % BUFFER_SIZE;
-}
-
-void DistrhoSharedMemory::set_input_flag(INPUT_SYNC p_sync_flag) {
-    boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(buffer->mutex);
-    buffer->input_sync = p_sync_flag;
-}
-
-INPUT_SYNC DistrhoSharedMemory::get_input_flag() {
-    if (!buffer) {
-        return INPUT_SYNC::INPUT_WAIT;
-    }
-    boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(buffer->mutex);
-    return (INPUT_SYNC)buffer->input_sync;
-}
-
-void DistrhoSharedMemory::set_output_flag(OUTPUT_SYNC p_sync_flag) {
-    boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(buffer->mutex);
-    buffer->output_sync = p_sync_flag;
-}
-
-OUTPUT_SYNC DistrhoSharedMemory::get_output_flag() {
-    if (!buffer) {
-        return OUTPUT_SYNC::OUTPUT_WAIT;
-    }
-    boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(buffer->mutex);
-    return (OUTPUT_SYNC)buffer->output_sync;
 }
 
 int DistrhoSharedMemory::get_num_input_channels() {

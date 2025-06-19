@@ -5,10 +5,10 @@
 static constexpr const char* const kVersionString = "v0.0.1";
 static constexpr const uint32_t kVersionNumber = d_version(0, 0, 1);
 
-#define DISTRHO_PLUGIN_BRAND   "godot-distrho"
-#define DISTRHO_PLUGIN_NAME    "godot-distrho"
+#define DISTRHO_PLUGIN_BRAND   "GodotDistrho"
+#define DISTRHO_PLUGIN_NAME    "GodotDistrho"
 #define DISTRHO_PLUGIN_URI     "https://github.com/nonameentername/godot-distrho"
-#define DISTRHO_PLUGIN_CLAP_ID "godot-distrho"
+#define DISTRHO_PLUGIN_CLAP_ID "GodotDistrho"
 
 #define DISTRHO_PLUGIN_HAS_UI          1
 #define DISTRHO_PLUGIN_HAS_EMBED_UI    1

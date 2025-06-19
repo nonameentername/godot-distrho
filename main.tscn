@@ -16,6 +16,7 @@ text = "hello"
 [node name="DistrhoPlayer" type="AudioStreamPlayer" parent="."]
 stream = SubResource("AudioStreamDistrho_0xm2m")
 autoplay = true
+playback_type = 1
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("2_0xm2m")
