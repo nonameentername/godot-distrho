@@ -25,6 +25,8 @@ class DistrhoServer : public Object {
     GDCLASS(DistrhoServer, Object);
 
 private:
+    bool initialized;
+
     DistrhoConfig *distrho_config;
     DistrhoPluginInstance *distrho_plugin;
 	DistrhoLauncher *distrho_launcher;

@@ -8,7 +8,7 @@ else
 PLATFORM=windows
 endif
 
-all: godot godot_dump_api godot_cpp godot_static_library
+all: godot godot_dump_api godot_cpp godot_static_library dev-build
 
 #distrho plugin
 
@@ -29,7 +29,7 @@ godot_dump_api:
 
 godot_cpp:
 	#cd godot-cpp && scons platform=linux dev_build=yes debug_symbols=yes
-	cd godot-cpp && scons platform=linux debug_symbols=yes
+	cd godot-cpp && scons platform=linux dev_build=yes debug_symbols=yes
 
 build:
 	cd build && make && rm -rf ~/.lv2/godot-distrho.lv2/ && cp -r bin/godot-distrho.lv2/ ~/.lv2/ && jalv.gtk https://github.com/nonameentername/godot-distrho

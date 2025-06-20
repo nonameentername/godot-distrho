@@ -1,6 +1,6 @@
 [submodule "modules/godot"]
 	path = modules/godot
-	url = https://github.com/zorbathut/godot.git
+	url = https://github.com/nonameentername/godot.git
 [submodule "modules/dpf"]
 	path = modules/dpf
 	url = https://github.com/DISTRHO/DPF.git

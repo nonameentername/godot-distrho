@@ -4,6 +4,7 @@
 #include "distrho_plugin_instance.h"
 #include "distrho_shared_memory.h"
 #include "distrho_circular_buffer.h"
+#include "godot_cpp/classes/audio_server.hpp"
 #include "godot_cpp/core/memory.hpp"
 #include "godot_cpp/variant/utility_functions.hpp"
 #include "godot_cpp/classes/os.hpp"
@@ -17,6 +18,7 @@ using namespace godot;
 DistrhoServer *DistrhoServer::singleton = NULL;
 
 DistrhoServer::DistrhoServer() {
+    initialized = false;
 	active = false;
     exit_thread = false;
     distrho_config = memnew(DistrhoConfig);
@@ -41,6 +43,8 @@ DistrhoServer::DistrhoServer() {
     for (int channel = 0; channel < distrho_shared_memory->get_num_output_channels(); channel++) {
         output_channels.write[channel] = distrhoCreateCircularBuffer(CIRCULAR_BUFFER_SIZE, sizeof(float));
     }
+
+    call_deferred("initialize");
 }
 
 DistrhoServer::~DistrhoServer() {
@@ -62,6 +66,7 @@ DistrhoServer *DistrhoServer::get_singleton() {
 }
 
 void DistrhoServer::initialize() {
+    initialized = true;
 }
 
 void DistrhoServer::thread_func() {
@@ -75,6 +80,10 @@ void DistrhoServer::thread_func() {
     while (!exit_thread) {
         // Acquire the mutex
         boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> shared_memory_lock(distrho_shared_memory->buffer->mutex);
+
+        if (initialized) {
+            AudioServer::get_singleton()->process_external(BUFFER_FRAME_SIZE);
+        }
 
         //semaphore->wait();
 

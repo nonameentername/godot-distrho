@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
         "--rendering-method", "gl_compatibility",
         "--rendering-driver", "opengl3",
         "--display-driver", "x11",
-        //"--audio-driver", "Dummy",
+        "--audio-driver", "Distrho",
         "--path", "/home/wmendiza/source/godot-distrho",
     };
 
