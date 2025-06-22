@@ -40,10 +40,10 @@ class DistrhoSharedMemory {
 private:
     boost::uuids::random_generator generator;
 	std::unique_ptr<boost::interprocess::managed_shared_memory> shared_memory;
-    std::string shared_memory_name;
 public:
 	AudioBuffer* buffer;
 
+    std::string shared_memory_name;
 	int num_input_channels;
 	int num_output_channels;
 	bool is_host;

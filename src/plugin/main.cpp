@@ -4,13 +4,17 @@ extern LibGodot libgodot;
 
 int main(int argc, char **argv) {
     std::string program;
+    std::string shared_memory_id;
     if (argc > 0) {
         program = std::string(argv[0]);
     }
 
-    if (argc > 2) {
+    if (argc != 2) {
         return EXIT_SUCCESS;
     }
+
+    shared_memory_id = std::string(argv[1]);
+
 
     std::vector<std::string> args = {
         program,
@@ -19,6 +23,8 @@ int main(int argc, char **argv) {
         "--display-driver", "x11",
         "--audio-driver", "Distrho",
         "--path", "/home/wmendiza/source/godot-distrho",
+        "--",
+        shared_memory_id
     };
 
     std::vector<char*> argvs;

@@ -12,7 +12,7 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISTRHO_NAMESPACE=GodotDISTRHO -DDGL_NAMESPACE=GodotDGL")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISTRHO_NAMESPACE=GodotDISTRHO -DDGL_NAMESPACE=GodotDGL -DDISTRHO_PLUGIN_ENABLE_SUBPROCESS=1")
 
 add_subdirectory(modules/dpf)
 
@@ -160,11 +160,11 @@ set(HEADER src/plugin/libgodot_distrho.h)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g3")
 
-add_executable(godot ${SOURCE} ${HEADER})
+add_executable(godot-plugin ${SOURCE} ${HEADER})
 
 set(CMAKE_SKIP_RPATH TRUE)
 
-target_include_directories(godot PUBLIC
+target_include_directories(godot-plugin PUBLIC
   src/plugin
   src
   modules/godot/core/extension
@@ -174,12 +174,12 @@ target_include_directories(godot PUBLIC
   ${CMAKE_BINARY_DIR}
 )
 
-target_link_directories(godot PRIVATE
+target_link_directories(godot-plugin PRIVATE
   godot-cpp/bin
   ${GODOT_LINK_DIRECTORIES}
 )
 
-target_link_libraries(godot PRIVATE
+target_link_libraries(godot-plugin PRIVATE
   ${CMAKE_THREAD_LIBS_INIT}
   godot.linuxbsd.editor.x86_64
   godot-cpp.linux.template_debug.x86_64

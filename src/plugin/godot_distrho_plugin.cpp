@@ -1,9 +1,8 @@
 #include <boost/interprocess/sync/scoped_lock.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "godot_distrho_plugin.h"
 #include "distrho_shared_memory.h"
-#include "godot_distrho_utils.h"
 #include "DistrhoPluginInfo.h"
-#include <chrono>
 #include <thread>
 
 
@@ -65,7 +64,7 @@ GodotDistrhoPlugin::GodotDistrhoPlugin() : Plugin(0, 0, 0) // parameters, progra
 {
     godot_thread = std::thread(run_godot);
 
-    godot_distrho_shared_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
+    distrho_shared_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
 }
 
 GodotDistrhoPlugin::~GodotDistrhoPlugin()
@@ -139,31 +138,65 @@ void GodotDistrhoPlugin::activate()
 
 void GodotDistrhoPlugin::run(const float** inputs, float** outputs, uint32_t numSamples)
 {
+    bool reinitialize = false;
+
+#if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
+    if (plugin == NULL) {
+#if defined(_WIN32)
+        plugin = new boost::process::child("godot-plugin.exe", distrho_shared_memory.shared_memory_name);
+#else
+        plugin = new boost::process::child("godot-plugin", distrho_shared_memory.shared_memory_name);
+#endif
+    }
+#endif
+
     // Wait for Godot to be ready
-    while (!godot_distrho_shared_memory.buffer->godot_ready) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    if (distrho_shared_memory.buffer->godot_ready) {
+        // Acquire the mutex
+        boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(distrho_shared_memory.buffer->mutex);
+
+        // Write input from the correct segment
+        distrho_shared_memory.write_input_channel(inputs, godot::BUFFER_FRAME_SIZE);
+        distrho_shared_memory.advance_input_write_index(godot::BUFFER_FRAME_SIZE);
+
+        // Signal input ready
+        distrho_shared_memory.buffer->input_condition.notify_one();
+
+        //printf("Plugin: Input written, waiting for output...\n");
+
+        boost::posix_time::ptime timeout = boost::posix_time::microsec_clock::universal_time() 
+            + boost::posix_time::milliseconds(100);
+
+        // Set output flag to wait
+        bool result = distrho_shared_memory.buffer->output_condition.timed_wait(lock, timeout);
+
+        if (result) {
+            // Read processed output into the correct segment
+            distrho_shared_memory.read_output_channel(outputs, godot::BUFFER_FRAME_SIZE);
+            distrho_shared_memory.advance_output_read_index(godot::BUFFER_FRAME_SIZE);
+        } else {
+            reinitialize = true;
+        }
+
+        // The mutex is automatically released when the scoped_lock goes out of scope
+    } else {
+        for (int channel = 0; channel < DISTRHO_PLUGIN_NUM_OUTPUTS; channel++) {
+            for (int frame = 0; frame < godot::BUFFER_FRAME_SIZE; frame++) {
+                outputs[channel][frame] = 0;
+            }
+        }
     }
 
-    // Acquire the mutex
-    boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(godot_distrho_shared_memory.buffer->mutex);
-
-    // Write input from the correct segment
-    godot_distrho_shared_memory.write_input_channel(inputs, godot::BUFFER_FRAME_SIZE);
-    godot_distrho_shared_memory.advance_input_write_index(godot::BUFFER_FRAME_SIZE);
-
-    // Signal input ready
-    godot_distrho_shared_memory.buffer->input_condition.notify_one();
-
-    //printf("Plugin: Input written, waiting for output...\n");
-
-    // Set output flag to wait
-    godot_distrho_shared_memory.buffer->output_condition.wait(lock);
-
-    // Read processed output into the correct segment
-    godot_distrho_shared_memory.read_output_channel(outputs, godot::BUFFER_FRAME_SIZE);
-    godot_distrho_shared_memory.advance_output_read_index(godot::BUFFER_FRAME_SIZE);
-
-    // The mutex is automatically released when the scoped_lock goes out of scope
+    if (reinitialize) {
+#if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
+        if(plugin->running()) {
+            plugin->terminate();
+        }
+        delete plugin;
+        plugin = NULL;
+#endif
+        distrho_shared_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
+    }
 }
 
 Plugin* createPlugin()

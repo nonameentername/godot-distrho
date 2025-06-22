@@ -1,6 +1,7 @@
 #include "distrho_launcher.h"
 #include "distrho_server.h"
 #include "distrho_config.h"
+#include "godot_cpp/classes/display_server.hpp"
 #include "godot_cpp/classes/window.hpp"
 #include "godot_cpp/core/memory.hpp"
 #include "godot_cpp/variant/utility_functions.hpp"
@@ -32,6 +33,8 @@ DistrhoLauncher::~DistrhoLauncher() {
 }
 
 void DistrhoLauncher::_ready() {
+    DisplayServer::get_singleton()->window_set_flag(DisplayServer::WINDOW_FLAG_TRANSPARENT, true);
+
 	//call_deferred("initialize");
 	initialize();
     DistrhoServer::get_singleton()->set_distrho_launcher(this);

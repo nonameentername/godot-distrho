@@ -23,7 +23,10 @@ void DistrhoSharedMemory::initialize(int p_number_of_input_channels, int p_numbe
 		is_host = true;
 		boost::uuids::uuid uuid = generator();
 		shared_memory_name = boost::uuids::to_string(uuid);
-		shared_memory_name = "godot-distrho";
+
+#if !DISTRHO_PLUGIN_ENABLE_SUBPROCESS
+        printf("shared_memory_name %s", shared_memory_name.c_str());
+#endif
 
     	bip::shared_memory_object::remove(shared_memory_name.c_str());
 		shared_memory = std::make_unique<boost::interprocess::managed_shared_memory>(

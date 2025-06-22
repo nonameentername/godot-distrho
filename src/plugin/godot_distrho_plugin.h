@@ -1,6 +1,7 @@
 #ifndef GODOT_DISTRHO_PLUGIN_H
 #define GODOT_DISTRHO_PLUGIN_H
 
+#include <boost/process.hpp>
 #include "DistrhoPlugin.hpp"
 #include "distrho_shared_memory.h"
 //#include "libgodot_distrho.h"
@@ -12,7 +13,8 @@ START_NAMESPACE_DISTRHO
 class GodotDistrhoPlugin : public Plugin
 {
 private:
-    godot::DistrhoSharedMemory godot_distrho_shared_memory;
+    boost::process::child *plugin;
+    godot::DistrhoSharedMemory distrho_shared_memory;
     //godot::GodotInstance *instance = NULL;
     std::thread godot_thread;
 
