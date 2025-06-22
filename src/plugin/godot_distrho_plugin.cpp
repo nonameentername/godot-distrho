@@ -1,7 +1,6 @@
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "godot_distrho_plugin.h"
-#include "distrho_shared_memory.h"
 #include "DistrhoPluginInfo.h"
 #include <thread>
 
@@ -64,7 +63,7 @@ GodotDistrhoPlugin::GodotDistrhoPlugin() : Plugin(0, 0, 0) // parameters, progra
 {
     godot_thread = std::thread(run_godot);
 
-    distrho_shared_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
+    distrho_audio_shared_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
 }
 
 GodotDistrhoPlugin::~GodotDistrhoPlugin()
@@ -143,7 +142,7 @@ void GodotDistrhoPlugin::run(const float** inputs, float** outputs, uint32_t num
 #if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
     if (plugin == NULL) {
         boost::process::environment env = boost::this_process::environment();
-        env["DISTRHO_AUDIO_SHARED_MEMORY"] = distrho_shared_memory.shared_memory_name.c_str();
+        env["DISTRHO_AUDIO_SHARED_MEMORY"] = distrho_audio_shared_memory.shared_memory_name.c_str();
 #if defined(_WIN32)
         plugin = new boost::process::child("godot-plugin.exe", env);
 #else
@@ -153,16 +152,16 @@ void GodotDistrhoPlugin::run(const float** inputs, float** outputs, uint32_t num
 #endif
 
     // Wait for Godot to be ready
-    if (distrho_shared_memory.buffer->godot_ready) {
+    if (distrho_audio_shared_memory.buffer->godot_ready) {
         // Acquire the mutex
-        boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(distrho_shared_memory.buffer->mutex);
+        boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(distrho_audio_shared_memory.buffer->mutex);
 
         // Write input from the correct segment
-        distrho_shared_memory.write_input_channel(inputs, godot::BUFFER_FRAME_SIZE);
-        distrho_shared_memory.advance_input_write_index(godot::BUFFER_FRAME_SIZE);
+        distrho_audio_shared_memory.write_input_channel(inputs, godot::BUFFER_FRAME_SIZE);
+        distrho_audio_shared_memory.advance_input_write_index(godot::BUFFER_FRAME_SIZE);
 
         // Signal input ready
-        distrho_shared_memory.buffer->input_condition.notify_one();
+        distrho_audio_shared_memory.buffer->input_condition.notify_one();
 
         //printf("Plugin: Input written, waiting for output...\n");
 
@@ -170,12 +169,12 @@ void GodotDistrhoPlugin::run(const float** inputs, float** outputs, uint32_t num
             + boost::posix_time::milliseconds(100);
 
         // Set output flag to wait
-        bool result = distrho_shared_memory.buffer->output_condition.timed_wait(lock, timeout);
+        bool result = distrho_audio_shared_memory.buffer->output_condition.timed_wait(lock, timeout);
 
         if (result) {
             // Read processed output into the correct segment
-            distrho_shared_memory.read_output_channel(outputs, godot::BUFFER_FRAME_SIZE);
-            distrho_shared_memory.advance_output_read_index(godot::BUFFER_FRAME_SIZE);
+            distrho_audio_shared_memory.read_output_channel(outputs, godot::BUFFER_FRAME_SIZE);
+            distrho_audio_shared_memory.advance_output_read_index(godot::BUFFER_FRAME_SIZE);
         } else {
             reinitialize = true;
         }
@@ -197,7 +196,7 @@ void GodotDistrhoPlugin::run(const float** inputs, float** outputs, uint32_t num
         delete plugin;
         plugin = NULL;
 #endif
-        distrho_shared_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
+        distrho_audio_shared_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
     }
 }
 

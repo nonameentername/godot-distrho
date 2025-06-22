@@ -3,7 +3,7 @@
 
 #include <boost/process.hpp>
 #include "DistrhoPlugin.hpp"
-#include "distrho_shared_memory.h"
+#include "distrho_shared_memory_audio.h"
 //#include "libgodot_distrho.h"
 
 #include <thread>
@@ -14,7 +14,7 @@ class GodotDistrhoPlugin : public Plugin
 {
 private:
     boost::process::child *plugin;
-    godot::DistrhoSharedMemory distrho_shared_memory;
+    godot::DistrhoSharedMemoryAudio distrho_audio_shared_memory;
     //godot::GodotInstance *instance = NULL;
     std::thread godot_thread;
 

@@ -4,7 +4,7 @@
 #include "distrho_config.h"
 #include "distrho_launcher.h"
 #include "distrho_plugin_instance.h"
-#include "distrho_shared_memory.h"
+#include "distrho_shared_memory_audio.h"
 #include "distrho_circular_buffer.h"
 #include <godot_cpp/classes/node.hpp>
 #include "godot_cpp/classes/thread.hpp"
@@ -28,7 +28,7 @@ private:
     DistrhoConfig *distrho_config;
     DistrhoPluginInstance *distrho_plugin;
 	DistrhoLauncher *distrho_launcher;
-	DistrhoSharedMemory *distrho_shared_memory;
+	DistrhoSharedMemoryAudio *distrho_shared_memory_audio;
 
     float temp_buffer[BUFFER_FRAME_SIZE];
 

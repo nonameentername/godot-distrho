@@ -1,5 +1,5 @@
-#ifndef DISTRHO_SHARED_MEMORY_H
-#define DISTRHO_SHARED_MEMORY_H
+#ifndef DISTRHO_SHARED_MEMORY_AUDIO_H
+#define DISTRHO_SHARED_MEMORY_AUDIO_H
 
 #include <memory>
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
@@ -35,7 +35,7 @@ struct AudioBuffer {
     boost::interprocess::interprocess_condition output_condition;
 };
 
-class DistrhoSharedMemory {
+class DistrhoSharedMemoryAudio {
 
 private:
     boost::uuids::random_generator generator;
@@ -51,8 +51,8 @@ public:
 protected:
 
 public:
-    DistrhoSharedMemory();
-    ~DistrhoSharedMemory();
+    DistrhoSharedMemoryAudio();
+    ~DistrhoSharedMemoryAudio();
 
     void initialize(int p_number_of_input_channels = 0, int p_number_of_output_channels = 0, std::string p_shared_memory_name = "");
 
