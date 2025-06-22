@@ -95,7 +95,7 @@ const char* GodotDistrhoPlugin::getHomePage() const
 
 const char* GodotDistrhoPlugin::getLicense() const
 {
-    return "LGPL";
+    return "MIT";
 }
 
 uint32_t GodotDistrhoPlugin::getVersion() const

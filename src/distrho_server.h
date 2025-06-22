@@ -5,7 +5,7 @@
 #include "distrho_launcher.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_shared_memory.h"
-//#include "distrho_shared_memory.h"
+#include "distrho_circular_buffer.h"
 #include <godot_cpp/classes/node.hpp>
 #include "godot_cpp/classes/thread.hpp"
 #include "godot_cpp/classes/mutex.hpp"
@@ -18,8 +18,6 @@ namespace godot {
 const int num_channels = 16;
 const int buffer_size = 2048;
 
-//static const int BUFFER_FRAME_SIZE = 512;
-static const int CIRCULAR_BUFFER_SIZE = BUFFER_SIZE;
     
 class DistrhoServer : public Object {
     GDCLASS(DistrhoServer, Object);
@@ -47,8 +45,8 @@ private:
     Ref<Mutex> mutex;
     Ref<Semaphore> semaphore;
 
-    Vector<void *> input_channels;
-    Vector<void *> output_channels;
+    Vector<DistrhoCircularBuffer *> input_channels;
+    Vector<DistrhoCircularBuffer *> output_channels;
 
 protected:
     static DistrhoServer *singleton;

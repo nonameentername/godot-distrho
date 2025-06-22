@@ -38,11 +38,11 @@ DistrhoServer::DistrhoServer() {
     output_channels.resize(distrho_shared_memory->get_num_output_channels());
 
     for (int channel = 0; channel < distrho_shared_memory->get_num_input_channels(); channel++) {
-        input_channels.write[channel] = distrhoCreateCircularBuffer(CIRCULAR_BUFFER_SIZE, sizeof(float));
+        input_channels.write[channel] = new DistrhoCircularBuffer();;
     }
 
     for (int channel = 0; channel < distrho_shared_memory->get_num_output_channels(); channel++) {
-        output_channels.write[channel] = distrhoCreateCircularBuffer(CIRCULAR_BUFFER_SIZE, sizeof(float));
+        output_channels.write[channel] = new DistrhoCircularBuffer();
     }
 
     call_deferred("initialize");
@@ -52,11 +52,11 @@ DistrhoServer::~DistrhoServer() {
 	delete distrho_shared_memory;
 
     for (int channel = 0; channel < input_channels.size(); channel++) {
-        distrhoDestroyCircularBuffer(input_channels[channel]);
+        delete input_channels[channel];
     }
 
     for (int channel = 0; channel < output_channels.size(); channel++) {
-        distrhoDestroyCircularBuffer(output_channels[channel]);
+        delete output_channels[channel];
     }
 
     singleton = NULL;
@@ -109,7 +109,7 @@ void DistrhoServer::thread_func() {
 		//lock();
 
         for (int channel = 0; channel < distrho_shared_memory->get_num_input_channels(); channel++) {
-            distrhoWriteCircularBuffer(input_channels.write[channel], input_buffer[channel], BUFFER_FRAME_SIZE);
+            input_channels.write[channel]->write_channel(input_buffer[channel], BUFFER_FRAME_SIZE);
         }
 
         //unlock();
@@ -119,7 +119,7 @@ void DistrhoServer::thread_func() {
         //lock();
 
         for (int channel = 0; channel < distrho_shared_memory->get_num_output_channels(); channel++) {
-            distrhoReadCircularBuffer(output_channels[channel], output_buffer[channel], BUFFER_FRAME_SIZE);
+            output_channels[channel]->read_channel(output_buffer[channel], BUFFER_FRAME_SIZE);
 
             //for (int frame = 0; frame < BUFFER_FRAME_SIZE; frame++) {
             //    output_buffer[channel][frame] = input_buffer[channel][frame];
@@ -161,18 +161,18 @@ int DistrhoServer::process_sample(AudioFrame *p_buffer, float p_rate, int p_fram
             p_buffer[frame].right = 0;
         }
     } else if (distrho_shared_memory->get_num_input_channels() == 1) {
-        distrhoReadCircularBuffer(input_channels[0], temp_buffer, p_frames);
+        input_channels[0]->read_channel(temp_buffer, p_frames);
         for (int frame = 0; frame < p_frames; frame++) {
             p_buffer[frame].left = temp_buffer[frame];
             p_buffer[frame].right = temp_buffer[frame];
         }
     } else {
-        distrhoReadCircularBuffer(input_channels[0], temp_buffer, p_frames);
+        input_channels[0]->read_channel(temp_buffer, p_frames);
         for (int frame = 0; frame < p_frames; frame++) {
             p_buffer[frame].left = temp_buffer[frame];
         }
 
-        distrhoReadCircularBuffer(input_channels[1], temp_buffer, p_frames);
+        input_channels[1]->read_channel(temp_buffer, p_frames);
         for (int frame = 0; frame < p_frames; frame++) {
             p_buffer[frame].right = temp_buffer[frame];
         }
@@ -199,14 +199,14 @@ void DistrhoServer::set_channel_sample(AudioFrame *p_buffer, float p_rate, int p
         for (int frame = 0; frame < p_frames; frame++) {
  			temp_buffer[frame] = p_buffer[frame].left;
         }
-		distrhoWriteCircularBuffer(output_channels.write[left], temp_buffer, p_frames);
+        output_channels.write[left]->write_channel(temp_buffer, p_frames);
 	}
 
 	if (has_right_channel) {
         for (int frame = 0; frame < p_frames; frame++) {
  			temp_buffer[frame] = p_buffer[frame].right;
         }
-		distrhoWriteCircularBuffer(output_channels.write[right], temp_buffer, p_frames);
+        output_channels.write[right]->write_channel(temp_buffer, p_frames);
 	}
 
 	unlock();
@@ -218,7 +218,7 @@ int DistrhoServer::get_channel_sample(AudioFrame *p_buffer, float p_rate, int p_
 
 	lock();
 	if (has_left_channel && active) {
-		distrhoReadCircularBuffer(input_channels[left], temp_buffer, p_frames);
+        input_channels[left]->read_channel(temp_buffer, p_frames);
 		for (int frame = 0; frame < p_frames; frame++) {
 			p_buffer[frame].left = temp_buffer[frame];
 		}
@@ -228,7 +228,7 @@ int DistrhoServer::get_channel_sample(AudioFrame *p_buffer, float p_rate, int p_
 		}
 	}
 	if (has_right_channel && active) {
-		distrhoReadCircularBuffer(input_channels[right], temp_buffer, p_frames);
+        input_channels[right]->read_channel(temp_buffer, p_frames);
 		for (int frame = 0; frame < p_frames; frame++) {
 			p_buffer[frame].right = temp_buffer[frame];
 		}
