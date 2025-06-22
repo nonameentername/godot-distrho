@@ -10,6 +10,7 @@
 #include "godot_cpp/classes/os.hpp"
 #include "distrho_shared_memory.h"
 #include "version_generated.gen.h"
+#include <cstdlib>
 #include <godot_cpp/core/mutex_lock.hpp>
 #include <godot_cpp/classes/mutex.hpp>
 
@@ -24,8 +25,7 @@ DistrhoServer::DistrhoServer() {
     distrho_config = memnew(DistrhoConfig);
     distrho_plugin = memnew(DistrhoPluginInstance);
 	distrho_shared_memory = new DistrhoSharedMemory();
-
-	distrho_shared_memory->initialize(0, 0, std::string(OS::get_singleton()->get_cmdline_user_args().get(0).ascii()));
+	distrho_shared_memory->initialize(0, 0, std::string(std::getenv("DISTRHO_AUDIO_SHARED_MEMORY")));
     singleton = this;
 
     //TODO: use the correct number of channels instad of num_channels (16)

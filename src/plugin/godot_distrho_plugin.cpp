@@ -142,10 +142,12 @@ void GodotDistrhoPlugin::run(const float** inputs, float** outputs, uint32_t num
 
 #if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
     if (plugin == NULL) {
+        boost::process::environment env = boost::this_process::environment();
+        env["DISTRHO_AUDIO_SHARED_MEMORY"] = distrho_shared_memory.shared_memory_name.c_str();
 #if defined(_WIN32)
-        plugin = new boost::process::child("godot-plugin.exe", distrho_shared_memory.shared_memory_name);
+        plugin = new boost::process::child("godot-plugin.exe", env);
 #else
-        plugin = new boost::process::child("godot-plugin", distrho_shared_memory.shared_memory_name);
+        plugin = new boost::process::child("godot-plugin", env);
 #endif
     }
 #endif
