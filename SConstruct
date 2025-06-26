@@ -87,6 +87,20 @@ elif env["platform"] == "web":
     if env["dev_build"]:
         env.Append(CPPFLAGS=["-g"])
         env.Append(LINKFLAGS=["-g", "-s", "ERROR_ON_UNDEFINED_SYMBOLS=1"])
+elif env["platform"] == "linux":
+
+    capnp_library = "capnp"
+    capnp_rpc_library = "capnp-rpc"
+    env.Append(LIBS=[capnp_rpc_library, capnp_library, "kj-async", "kj"])
+
+    if env["dev_build"]:
+        env.Append(LIBPATH=["modules/capnproto/build/install/lib"])
+        env.Append(CPPPATH=["modules/capnproto/build/install/include"])
+        #env.Append(RPATH=["", "."])
+    else:
+        env.Append(LIBPATH=["modules/capnproto/build/install/lib"])
+        env.Append(CPPPATH=["modules/capnproto/build/install/include"])
+        #env.Append(RPATH=["", "."])
 
 env.Append(CPPFLAGS=["-fexceptions"])
 

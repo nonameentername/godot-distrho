@@ -24,8 +24,8 @@ void DistrhoSharedMemoryAudio::initialize(int p_number_of_input_channels, int p_
 		boost::uuids::uuid uuid = generator();
 		shared_memory_name = boost::uuids::to_string(uuid);
 
-#if !DISTRHO_PLUGIN_ENABLE_SUBPROCESS
-        printf("shared_memory_name %s", shared_memory_name.c_str());
+#if !DISTRHO_PLUGIN_ENABLE_SUBPROCESS && DEBUG
+        printf("shared_memory_name %s\n", shared_memory_name.c_str());
 #endif
 
     	bip::shared_memory_object::remove(shared_memory_name.c_str());

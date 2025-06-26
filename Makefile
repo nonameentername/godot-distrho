@@ -10,6 +10,17 @@ endif
 
 all: godot godot_dump_api godot_cpp godot_static_library dev-build
 
+#common
+
+capnproto:
+	cd modules/capnproto && git co v1.2.0 && mkdir -p build && cd build && \
+		cmake .. -DCMAKE_INSTALL_PREFIX:PATH=install -DCMAKE_POSITION_INDEPENDENT_CODE=ON && make && make install
+
+schema:
+	modules/capnproto/build/install/bin/capnp compile \
+		-o modules/capnproto/build/install/bin/capnpc-c++:src \
+		distrho_schema.capnp && mv src/distrho_schema.capnp.c++ src/distrho_schema.capnp.cpp
+
 #distrho plugin
 
 godot:

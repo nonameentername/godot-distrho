@@ -5,6 +5,7 @@
 #include "distrho_launcher.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_shared_memory_audio.h"
+#include "distrho_shared_memory_rpc.h"
 #include "distrho_circular_buffer.h"
 #include <godot_cpp/classes/node.hpp>
 #include "godot_cpp/classes/thread.hpp"
@@ -29,6 +30,7 @@ private:
     DistrhoPluginInstance *distrho_plugin;
 	DistrhoLauncher *distrho_launcher;
 	DistrhoSharedMemoryAudio *distrho_shared_memory_audio;
+	DistrhoSharedMemoryRPC *distrho_shared_memory_rpc;
 
     float temp_buffer[BUFFER_FRAME_SIZE];
 
@@ -41,9 +43,10 @@ private:
 	bool active;
 
     mutable bool exit_thread;
-    Ref<Thread> thread;
-    Ref<Mutex> mutex;
-    Ref<Semaphore> semaphore;
+    Ref<Thread> audio_thread;
+    Ref<Mutex> audio_mutex;
+
+    Ref<Thread> rpc_thread;
 
     Vector<DistrhoCircularBuffer *> input_channels;
     Vector<DistrhoCircularBuffer *> output_channels;
@@ -60,7 +63,8 @@ public:
     static void _bind_methods();
 
     void initialize();
-    void thread_func();
+    void audio_thread_func();
+    void rpc_thread_func();
 
     int process_sample(AudioFrame *p_buffer, float p_rate, int p_frames);
 
@@ -68,14 +72,16 @@ public:
     int get_channel_sample(AudioFrame *p_buffer, float p_rate, int p_frames, int left, int right);
 
     Error start();
-    void lock();
-    void unlock();
+    void lock_audio();
+    void unlock_audio();
     void finish();
 
     DistrhoConfig *get_config();
 
     String get_version();
     String get_build();
+
+    String get_label();
 
 	void set_distrho_launcher(DistrhoLauncher *p_distrho_launcher);
 	DistrhoLauncher *get_distrho_launcher();

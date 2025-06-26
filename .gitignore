@@ -14,5 +14,7 @@ build-log.txt
 compile_commands.json
 src/version_generated.gen.h
 src/gen
+src/distrho_schema.capnp.cpp
+src/distrho_schema.capnp.h
 doc_classes/_build
 __pycache__
