@@ -12,11 +12,17 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+add_compile_definitions(KJ_USE_FIBERS=0)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISTRHO_NAMESPACE=GodotDISTRHO -DDGL_NAMESPACE=GodotDGL -DDISTRHO_PLUGIN_ENABLE_SUBPROCESS=1")
+
+set(CapnProto_DIR "${CMAKE_CURRENT_SOURCE_DIR}/modules/capnproto/build/install/lib/cmake/CapnProto")
 
 add_subdirectory(modules/dpf)
 
 find_package(Threads REQUIRED)
+
+find_package(CapnProto REQUIRED)
 
 set(GODOT_LIBRARIES_SUFFIX ".linuxbsd.editor.x86_64")
 
@@ -117,10 +123,11 @@ dpf_add_plugin(godot-distrho
   UI_TYPE opengl
   NO_USE_FILE_BROWSER
   FILES_DSP
+    src/distrho_schema.capnp.cpp
     src/plugin/godot_distrho_plugin.cpp
     src/plugin/godot_distrho_utils.cpp
     src/distrho_shared_memory_audio.cpp
-    #src/distrho_schema.capnp.cpp
+    src/distrho_shared_memory_rpc.cpp
     #src/plugin/libgodot_distrho.cpp
   FILES_UI
     src/plugin/godot_distrho_ui.cpp
@@ -137,6 +144,7 @@ target_compile_definitions(dgl-opengl PUBLIC
 target_include_directories(godot-distrho PUBLIC
   src/plugin
   src
+  ${CapnProto_INCLUDE_DIRS}
   #modules/godot/core/extension
   #godot-cpp/include
   #godot-cpp/gen/src
@@ -145,12 +153,16 @@ target_include_directories(godot-distrho PUBLIC
 )
 
 target_link_directories(godot-distrho PUBLIC
-    #godot-cpp/bin
+  #godot-cpp/bin
   #${GODOT_LINK_DIRECTORIES}
 )
 
 target_link_libraries(godot-distrho PUBLIC
   ${CMAKE_THREAD_LIBS_INIT}
+  CapnProto::capnp-rpc
+  CapnProto::capnp
+  CapnProto::kj-async
+  CapnProto::kj
   #godot.linuxbsd.editor.x86_64
   #godot-cpp.linux.template_debug.x86_64
   #${GODOT_LIBRARIES}

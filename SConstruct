@@ -102,7 +102,7 @@ elif env["platform"] == "linux":
         env.Append(CPPPATH=["modules/capnproto/build/install/include"])
         #env.Append(RPATH=["", "."])
 
-env.Append(CPPFLAGS=["-fexceptions"])
+env.Append(CPPFLAGS=["-fexceptions", "-DKJ_USE_FIBERS=0"])
 
 env.Append(CPPPATH=["src/"])
 sources = Glob("src/*.cpp")

@@ -49,11 +49,11 @@ public:
 
     void initialize(std::string p_shared_memory_name = "");
 
-	void write_request(const float *p_buffer, int p_frames);
+	void write_request(capnp::MallocMessageBuilder *builder, uint64_t request_id);
     capnp::FlatArrayMessageReader read_request();
 
 	void write_reponse(capnp::MallocMessageBuilder *builder);
-	void read_reponse(float *p_buffer, int p_frames);
+    capnp::FlatArrayMessageReader read_reponse();
 
     std::string get_shared_memory_name();
 };

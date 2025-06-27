@@ -32,12 +32,12 @@ DistrhoServer::DistrhoServer() {
     distrho_config = memnew(DistrhoConfig);
     distrho_plugin = memnew(DistrhoPluginInstance);
 	distrho_shared_memory_audio = new DistrhoSharedMemoryAudio();
-    const char* audio_shared_memory = std::getenv("DISTRHO_AUDIO_SHARED_MEMORY");
+    const char* audio_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_AUDIO");
     if (audio_shared_memory == NULL) {
         audio_shared_memory = "";
     }
 	distrho_shared_memory_audio->initialize(0, 0, audio_shared_memory);
-    const char* rpc_shared_memory = std::getenv("DISTRHO_RPC_SHARED_MEMORY");
+    const char* rpc_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_RPC");
     if (rpc_shared_memory == NULL) {
         rpc_shared_memory = "";
     }
@@ -314,7 +314,7 @@ String DistrhoServer::get_build() {
 
 String DistrhoServer::get_label() {
     //TODO: return a value set by the user.
-    return "godot-distrho";
+    return "it's working!";
 }
 
 void DistrhoServer::set_distrho_launcher(DistrhoLauncher *p_distrho_launcher) {

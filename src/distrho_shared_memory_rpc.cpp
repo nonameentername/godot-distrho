@@ -27,7 +27,7 @@ void DistrhoSharedMemoryRPC::initialize(std::string p_shared_memory_name) {
 		shared_memory_name = boost::uuids::to_string(uuid);
 
 #if !DISTRHO_PLUGIN_ENABLE_SUBPROCESS && DEBUG
-        printf("shared_memory_name %s\n", shared_memory_name.c_str());
+        printf("export DISTRHO_SHARED_MEMORY_RPC=%s\n", shared_memory_name.c_str());
 #endif
 
     	bip::shared_memory_object::remove(shared_memory_name.c_str());
@@ -45,7 +45,19 @@ void DistrhoSharedMemoryRPC::initialize(std::string p_shared_memory_name) {
 	}
 }
 
-void DistrhoSharedMemoryRPC::write_request(const float *p_buffer, int p_frames) {
+void DistrhoSharedMemoryRPC::write_request(capnp::MallocMessageBuilder *builder, uint64_t request_id) {
+    kj::Array<capnp::word> words = capnp::messageToFlatArray(*builder);
+    kj::ArrayPtr<const kj::byte> bytes = words.asBytes();
+
+    if (bytes.size() > RPC_BUFFER_SIZE) {
+        //TODO: log error?
+        //throw std::runtime_error("RPC buffer too small!");
+        buffer->size = 0;
+    } else {
+        std::memcpy(buffer->request_buffer, bytes.begin(), bytes.size());
+        buffer->size = bytes.size();
+        buffer->request_id = request_id;
+    }
 }
 
 capnp::FlatArrayMessageReader DistrhoSharedMemoryRPC::read_request() {
@@ -71,7 +83,13 @@ void DistrhoSharedMemoryRPC::write_reponse(capnp::MallocMessageBuilder *builder)
     }
 }
 
-void DistrhoSharedMemoryRPC::read_reponse(float *p_buffer, int p_frames) {
+capnp::FlatArrayMessageReader DistrhoSharedMemoryRPC::read_reponse() {
+    auto wordPtr = reinterpret_cast<const capnp::word*>(buffer->response_buffer);
+    std::size_t wordCount = buffer->size / sizeof(capnp::word);
+
+    capnp::FlatArrayMessageReader reader(kj::arrayPtr(wordPtr, wordCount));
+
+    return reader;
 }
 
 std::string DistrhoSharedMemoryRPC::get_shared_memory_name() {

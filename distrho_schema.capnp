@@ -1,12 +1,12 @@
 @0xd793ef6eb1602207;
 
-struct ParameterRanges {
-  def @0 :Float32;
-  min @1 :Float32;
-  max @2 :Float32;
-}
+#struct ParameterRanges {
+#  def @0 :Float32;
+#  min @1 :Float32;
+#  max @2 :Float32;
+#}
 
-struct Parameter {
+struct DistrhoParameter {
   hints @0 :UInt32;
   name @1 :Text;
   shortName @2 :Text;
@@ -25,7 +25,7 @@ interface PluginInterface {
   getVersion @5 () -> (version :UInt32);
   getUniqueId @6 () -> (uniqueId :Int64);
 
-  initParameter @7 (index :UInt32) -> (parameter :Parameter);
+  initParameter @7 (index :UInt32) -> (parameter :DistrhoParameter);
   getParameterValue @8 (index :UInt32) -> (value :Float32);
   setParameterValue @9 (index :UInt32, value :Float32) -> ();
 }
