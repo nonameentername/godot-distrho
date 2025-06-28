@@ -48,4 +48,4 @@ build:
 #godot library
 
 dev-build:
-	scons platform=$(PLATFORM) target=template_debug dev_build=yes debug_symbols=yes
+	scons platform=$(PLATFORM) target=template_debug dev_build=yes debug_symbols=yes compiledb=true

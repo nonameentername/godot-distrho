@@ -3,23 +3,26 @@
 #include "godot_distrho_plugin.h"
 #include "DistrhoPluginInfo.h"
 #include "distrho_schema.capnp.h"
-#include <thread>
 #include <capnp/serialize.h>
 #include <kj/string.h>
+
+
+using namespace boost::interprocess;
+using namespace boost::posix_time;
 
 
 START_NAMESPACE_DISTRHO
 
 GodotDistrhoPlugin::GodotDistrhoPlugin() : Plugin(0, 0, 0) // parameters, programs, states
 {
-    distrho_shared_memory_audio.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
-    distrho_shared_memory_rpc.initialize();
+    audio_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
+    rpc_memory.initialize();
 
 #if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
     if (plugin == NULL) {
         boost::process::environment env = boost::this_process::environment();
-        env["DISTRHO_SHARED_MEMORY_AUDIO"] = distrho_shared_memory_audio.shared_memory_name.c_str();
-        env["DISTRHO_SHARED_MEMORY_RPC"] = distrho_shared_memory_rpc.shared_memory_name.c_str();
+        env["DISTRHO_SHARED_MEMORY_AUDIO"] = audio_memory.shared_memory_name.c_str();
+        env["DISTRHO_SHARED_MEMORY_RPC"] = rpc_memory.shared_memory_name.c_str();
 #if defined(_WIN32)
         plugin = new boost::process::child("godot-plugin.exe", env);
 #else
@@ -28,81 +31,120 @@ GodotDistrhoPlugin::GodotDistrhoPlugin() : Plugin(0, 0, 0) // parameters, progra
     }
 #endif
 
-    while (!distrho_shared_memory_audio.buffer->godot_ready && !distrho_shared_memory_rpc.buffer->godot_ready) {
+    while (!audio_memory.buffer->godot_ready && !rpc_memory.buffer->godot_ready) {
         sleep(1);
     }
 
     std::string label = getLabel();
-    label = getLabel();
     printf("%s\n", label.c_str());
+
+    std::string description = getDescription();
+    printf("%s\n", description.c_str());
+
+    std::string maker = getMaker();
+    printf("%s\n", maker.c_str());
+
+    std::string homepage = getHomePage();
+    printf("%s\n", homepage.c_str());
+
+    std::string license = getLicense();
+    printf("%s\n", license.c_str());
+
+    int version = getVersion();
+    printf("%d\n", version);
+
+    int unique_id = getUniqueId();
+    printf("%d\n", unique_id);
 }
 
 GodotDistrhoPlugin::~GodotDistrhoPlugin()
 {
 }
 
-const char* GodotDistrhoPlugin::getLabel() const
-{
-    if (distrho_shared_memory_rpc.buffer->godot_ready) {
-        // Acquire the mutex
-        boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(distrho_shared_memory_rpc.buffer->mutex);
+template<typename T, typename R> capnp::FlatArrayMessageReader GodotDistrhoPlugin::rpc_call(std::function<void(typename T::Builder&)> build_request) const {
+    if (rpc_memory.buffer->godot_ready) {
+        scoped_lock<interprocess_mutex> lock(rpc_memory.buffer->mutex);
 
         capnp::MallocMessageBuilder builder;
-        PluginInterface::GetLabelParams::Builder request = builder.initRoot<PluginInterface::GetLabelParams>();
+        typename T::Builder request = builder.initRoot<T>();
 
-        distrho_shared_memory_rpc.write_request(&builder, PluginInterface::GetLabelParams::_capnpPrivate::typeId);
+        if (build_request) {
+            build_request(request);
+        }
 
-        // Signal input ready
-        distrho_shared_memory_rpc.buffer->input_condition.notify_one();
+        rpc_memory.write_request(&builder, T::_capnpPrivate::typeId);
+        rpc_memory.buffer->input_condition.notify_one();
 
-        boost::posix_time::ptime timeout = boost::posix_time::microsec_clock::universal_time() 
-            + boost::posix_time::milliseconds(100);
-
-        // Set output flag to wait
-        bool result = distrho_shared_memory_rpc.buffer->output_condition.timed_wait(lock, timeout);
-        //distrho_shared_memory_rpc.buffer->output_condition.wait(lock);
+        ptime timeout = microsec_clock::universal_time() + milliseconds(100);
+        bool result = rpc_memory.buffer->output_condition.timed_wait(lock, timeout);
 
         if (result) {
-            capnp::FlatArrayMessageReader reader = distrho_shared_memory_rpc.read_reponse();
-            PluginInterface::GetLabelResults::Reader response = reader.getRoot<PluginInterface::GetLabelResults>();
-            return response.getLabel().cStr();
+            return rpc_memory.read_reponse();
         }
-        // The mutex is automatically released when the scoped_lock goes out of scope
     }
 
-    return "godot-distrho";
+    kj::ArrayPtr<const capnp::word> emptyData;
+    return capnp::FlatArrayMessageReader(emptyData);
+}
+
+const char* GodotDistrhoPlugin::getLabel() const {
+    capnp::FlatArrayMessageReader reader = rpc_call<GetLabelRequest, GetLabelResponse>(
+    [](auto& req) {
+        req;
+    });
+
+    GetLabelResponse::Reader response = reader.getRoot<GetLabelResponse>();
+    return response.getLabel().cStr();
 }
 
 const char* GodotDistrhoPlugin::getDescription() const
 {
-    return "Godot DISTRHO plugin";
+    capnp::FlatArrayMessageReader reader = rpc_call<GetDescriptionRequest, GetDescriptionResponse>();
+    GetDescriptionResponse::Reader response = reader.getRoot<GetDescriptionResponse>();
+    return response.getDescription().cStr();
 }
 
 const char* GodotDistrhoPlugin::getMaker() const
 {
-    return "godot-distrho";
+    capnp::FlatArrayMessageReader reader = rpc_call<GetMakerRequest, GetMakerResponse>();
+    GetMakerResponse::Reader response = reader.getRoot<GetMakerResponse>();
+    return response.getMaker().cStr();
 }
 
 const char* GodotDistrhoPlugin::getHomePage() const
 {
-    return "https://github.com/nonameentername/godot-distrho";
+    capnp::FlatArrayMessageReader reader = rpc_call<GetHomePageRequest, GetHomePageResponse>();
+    GetHomePageResponse::Reader response = reader.getRoot<GetHomePageResponse>();
+    return response.getHomePage().cStr();
 }
 
 const char* GodotDistrhoPlugin::getLicense() const
 {
-    return "MIT";
+    capnp::FlatArrayMessageReader reader = rpc_call<GetLicenseRequest, GetLicenseResponse>();
+    GetLicenseResponse::Reader response = reader.getRoot<GetLicenseResponse>();
+    return response.getLicense().cStr();
 }
 
 uint32_t GodotDistrhoPlugin::getVersion() const
 {
-    return d_version(1, 0, 0);
+    capnp::FlatArrayMessageReader reader = rpc_call<GetVersionRequest, GetVersionResponse>();
+    GetVersionResponse::Reader response = reader.getRoot<GetVersionResponse>();
+
+    return d_version(response.getMajor(), response.getMinor(), response.getPatch());
 }
 
 int64_t GodotDistrhoPlugin::getUniqueId() const
 {
-    return d_cconst('M', 'u', 't', 'e');
-}
+    capnp::FlatArrayMessageReader reader = rpc_call<GetUniqueIdRequest, GetUniqueIdResponse>();
+    GetUniqueIdResponse::Reader response = reader.getRoot<GetUniqueIdResponse>();
+    std::string unique_id = response.getUniqueId();
 
+    if (unique_id.length() < 4) {
+        return d_cconst('n', 'o', 'n', 'e');
+    } else {
+        return d_cconst(unique_id[0], unique_id[1], unique_id[2], unique_id[4]);
+    }
+}
 
 void GodotDistrhoPlugin::initAudioPort(const bool input, const uint32_t index, AudioPort& port)
 {
@@ -135,35 +177,24 @@ void GodotDistrhoPlugin::run(const float** inputs, float** outputs, uint32_t num
 {
     bool reinitialize = false;
 
-    // Wait for Godot to be ready
-    if (distrho_shared_memory_audio.buffer->godot_ready) {
-        // Acquire the mutex
-        boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(distrho_shared_memory_audio.buffer->mutex);
+    if (audio_memory.buffer->godot_ready) {
+        scoped_lock<interprocess_mutex> lock(audio_memory.buffer->mutex);
 
-        // Write input from the correct segment
-        distrho_shared_memory_audio.write_input_channel(inputs, godot::BUFFER_FRAME_SIZE);
-        distrho_shared_memory_audio.advance_input_write_index(godot::BUFFER_FRAME_SIZE);
+        audio_memory.write_input_channel(inputs, godot::BUFFER_FRAME_SIZE);
+        audio_memory.advance_input_write_index(godot::BUFFER_FRAME_SIZE);
 
-        // Signal input ready
-        distrho_shared_memory_audio.buffer->input_condition.notify_one();
+        audio_memory.buffer->input_condition.notify_one();
 
-        //printf("Plugin: Input written, waiting for output...\n");
+        ptime timeout = microsec_clock::universal_time() + milliseconds(100);
 
-        boost::posix_time::ptime timeout = boost::posix_time::microsec_clock::universal_time() 
-            + boost::posix_time::milliseconds(100);
-
-        // Set output flag to wait
-        bool result = distrho_shared_memory_audio.buffer->output_condition.timed_wait(lock, timeout);
+        bool result = audio_memory.buffer->output_condition.timed_wait(lock, timeout);
 
         if (result) {
-            // Read processed output into the correct segment
-            distrho_shared_memory_audio.read_output_channel(outputs, godot::BUFFER_FRAME_SIZE);
-            distrho_shared_memory_audio.advance_output_read_index(godot::BUFFER_FRAME_SIZE);
+            audio_memory.read_output_channel(outputs, godot::BUFFER_FRAME_SIZE);
+            audio_memory.advance_output_read_index(godot::BUFFER_FRAME_SIZE);
         } else {
             reinitialize = true;
         }
-
-        // The mutex is automatically released when the scoped_lock goes out of scope
     } else {
         for (int channel = 0; channel < DISTRHO_PLUGIN_NUM_OUTPUTS; channel++) {
             for (int frame = 0; frame < godot::BUFFER_FRAME_SIZE; frame++) {
@@ -180,8 +211,8 @@ void GodotDistrhoPlugin::run(const float** inputs, float** outputs, uint32_t num
         delete plugin;
         plugin = NULL;
 #endif
-        distrho_shared_memory_audio.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
-        distrho_shared_memory_rpc.initialize();
+        audio_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
+        rpc_memory.initialize();
     }
 }
 

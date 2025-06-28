@@ -5,7 +5,6 @@
 #include "DistrhoPlugin.hpp"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
-//#include "libgodot_distrho.h"
 
 
 START_NAMESPACE_DISTRHO
@@ -14,8 +13,8 @@ class GodotDistrhoPlugin : public Plugin
 {
 private:
     boost::process::child *plugin;
-    mutable godot::DistrhoSharedMemoryAudio distrho_shared_memory_audio;
-    mutable godot::DistrhoSharedMemoryRPC distrho_shared_memory_rpc;
+    mutable godot::DistrhoSharedMemoryAudio audio_memory;
+    mutable godot::DistrhoSharedMemoryRPC rpc_memory;
 
 public:
     GodotDistrhoPlugin();
@@ -23,6 +22,8 @@ public:
     ~GodotDistrhoPlugin();
 
 protected:
+    template<typename T, typename R> capnp::FlatArrayMessageReader rpc_call(std::function<void(typename T::Builder&)> build_request = nullptr) const;
+
     const char* getLabel() const override;
 
     const char* getDescription() const override;

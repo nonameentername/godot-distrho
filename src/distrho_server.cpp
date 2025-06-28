@@ -22,6 +22,8 @@
 
 
 using namespace godot;
+using namespace boost::interprocess;
+
 
 DistrhoServer *DistrhoServer::singleton = NULL;
 
@@ -31,18 +33,18 @@ DistrhoServer::DistrhoServer() {
     exit_thread = false;
     distrho_config = memnew(DistrhoConfig);
     distrho_plugin = memnew(DistrhoPluginInstance);
-	distrho_shared_memory_audio = new DistrhoSharedMemoryAudio();
+	audio_memory = new DistrhoSharedMemoryAudio();
     const char* audio_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_AUDIO");
     if (audio_shared_memory == NULL) {
         audio_shared_memory = "";
     }
-	distrho_shared_memory_audio->initialize(0, 0, audio_shared_memory);
+	audio_memory->initialize(0, 0, audio_shared_memory);
     const char* rpc_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_RPC");
     if (rpc_shared_memory == NULL) {
         rpc_shared_memory = "";
     }
-    distrho_shared_memory_rpc = new DistrhoSharedMemoryRPC();
-	distrho_shared_memory_rpc->initialize(rpc_shared_memory);
+    rpc_memory = new DistrhoSharedMemoryRPC();
+	rpc_memory->initialize(rpc_shared_memory);
     singleton = this;
 
     //TODO: use the correct number of channels instad of num_channels (16)
@@ -51,14 +53,14 @@ DistrhoServer::DistrhoServer() {
 		output_buffer[i] = output_data[i];
     }
 
-    input_channels.resize(distrho_shared_memory_audio->get_num_input_channels());
-    output_channels.resize(distrho_shared_memory_audio->get_num_output_channels());
+    input_channels.resize(audio_memory->get_num_input_channels());
+    output_channels.resize(audio_memory->get_num_output_channels());
 
-    for (int channel = 0; channel < distrho_shared_memory_audio->get_num_input_channels(); channel++) {
+    for (int channel = 0; channel < audio_memory->get_num_input_channels(); channel++) {
         input_channels.write[channel] = new DistrhoCircularBuffer();;
     }
 
-    for (int channel = 0; channel < distrho_shared_memory_audio->get_num_output_channels(); channel++) {
+    for (int channel = 0; channel < audio_memory->get_num_output_channels(); channel++) {
         output_channels.write[channel] = new DistrhoCircularBuffer();
     }
 
@@ -89,102 +91,147 @@ void DistrhoServer::initialize() {
 }
 
 void DistrhoServer::audio_thread_func() {
-    boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> shared_memory_lock(distrho_shared_memory_audio->buffer->mutex);
-    distrho_shared_memory_audio->buffer->godot_ready = true;
+    scoped_lock<interprocess_mutex> shared_memory_lock(audio_memory->buffer->mutex);
+    audio_memory->buffer->godot_ready = true;
     shared_memory_lock.unlock();
 
 	active = true;
 
     while (!exit_thread) {
-        // Acquire the mutex
-        boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> shared_memory_lock(distrho_shared_memory_audio->buffer->mutex);
+        scoped_lock<interprocess_mutex> shared_memory_lock(audio_memory->buffer->mutex);
 
         if (initialized) {
             AudioServer::get_singleton()->process_external(BUFFER_FRAME_SIZE);
         }
 
-        // Wait for input data (release the mutex while waiting)
-        distrho_shared_memory_audio->buffer->input_condition.wait(shared_memory_lock);
+        audio_memory->buffer->input_condition.wait(shared_memory_lock);
 
-		distrho_shared_memory_audio->read_input_channel(input_buffer, BUFFER_FRAME_SIZE);
-		distrho_shared_memory_audio->advance_input_read_index(BUFFER_FRAME_SIZE);
+		audio_memory->read_input_channel(input_buffer, BUFFER_FRAME_SIZE);
+		audio_memory->advance_input_read_index(BUFFER_FRAME_SIZE);
 
-        for (int channel = 0; channel < distrho_shared_memory_audio->get_num_input_channels(); channel++) {
+        for (int channel = 0; channel < audio_memory->get_num_input_channels(); channel++) {
             input_channels.write[channel]->write_channel(input_buffer[channel], BUFFER_FRAME_SIZE);
         }
 
-        for (int channel = 0; channel < distrho_shared_memory_audio->get_num_output_channels(); channel++) {
+        for (int channel = 0; channel < audio_memory->get_num_output_channels(); channel++) {
             output_channels[channel]->read_channel(output_buffer[channel], BUFFER_FRAME_SIZE);
         }
 
-		distrho_shared_memory_audio->write_output_channel(output_buffer, BUFFER_FRAME_SIZE);
-		distrho_shared_memory_audio->advance_output_write_index(BUFFER_FRAME_SIZE);
+		audio_memory->write_output_channel(output_buffer, BUFFER_FRAME_SIZE);
+		audio_memory->advance_output_write_index(BUFFER_FRAME_SIZE);
 
-        // Signal the output condition (wake up the host)
-        distrho_shared_memory_audio->buffer->output_condition.notify_one();
-
-        // The mutex is automatically released when the scoped_lock goes out of scope
+        audio_memory->buffer->output_condition.notify_one();
     }
-	delete distrho_shared_memory_audio;
+	delete audio_memory;
+}
+
+template<typename T, typename R> void DistrhoServer::handle_rpc_call(std::function<void(typename T::Reader&, typename R::Builder&)> handle_request) {
+    capnp::FlatArrayMessageReader reader = rpc_memory->read_request();
+    typename T::Reader request = reader.getRoot<T>();
+
+    capnp::MallocMessageBuilder builder;
+    typename R::Builder response = builder.initRoot<R>();
+
+    handle_request(request, response);
+
+    rpc_memory->write_reponse(&builder);
+    rpc_memory->buffer->output_condition.notify_one();
 }
 
 void DistrhoServer::rpc_thread_func() {
-    boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> shared_memory_lock(distrho_shared_memory_rpc->buffer->mutex);
-    distrho_shared_memory_rpc->buffer->godot_ready = true;
+    scoped_lock<interprocess_mutex> shared_memory_lock(rpc_memory->buffer->mutex);
+    rpc_memory->buffer->godot_ready = true;
     shared_memory_lock.unlock();
 
     while (!exit_thread) {
-        // Acquire the mutex
-        boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> shared_memory_lock(distrho_shared_memory_rpc->buffer->mutex);
+        scoped_lock<interprocess_mutex> shared_memory_lock(rpc_memory->buffer->mutex);
+        rpc_memory->buffer->input_condition.wait(shared_memory_lock);
 
-        // Wait for input data (release the mutex while waiting)
-        distrho_shared_memory_rpc->buffer->input_condition.wait(shared_memory_lock);
-
-        capnp::FlatArrayMessageReader reader = distrho_shared_memory_rpc->read_request();
-        capnp::MallocMessageBuilder builder;
-
-        switch (distrho_shared_memory_rpc->buffer->request_id) {
-            case PluginInterface::GetLabelParams::_capnpPrivate::typeId: {
-                PluginInterface::GetLabelParams::Reader request = reader.getRoot<PluginInterface::GetLabelParams>();
-
-                String label = get_label();
-
-                PluginInterface::GetLabelResults::Builder response = builder.initRoot<PluginInterface::GetLabelResults>();
-                response.setLabel(std::string(label.ascii()));
+        switch (rpc_memory->buffer->request_id) {
+            case GetLabelRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetLabelRequest, GetLabelResponse>(
+                [](auto& request, auto&response) {
+                    String label = DistrhoServer::get_singleton()->get_config()->get_plugin_label();
+                    response.setLabel(std::string(label.ascii()));
+                });
                 break;
             }
-            case PluginInterface::InitParameterParams::_capnpPrivate::typeId: {
-                PluginInterface::InitParameterParams::Reader request = reader.getRoot<PluginInterface::InitParameterParams>();
-                request.getIndex();
 
-                //TODO: handle the request
-
-                PluginInterface::InitParameterParams::Builder response = builder.initRoot<PluginInterface::InitParameterParams>();
-                response.setIndex(32);
+            case GetDescriptionRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetDescriptionRequest, GetDescriptionResponse>(
+                [](auto& request, auto&response) {
+                    String description = DistrhoServer::get_singleton()->get_config()->get_plugin_description();
+                    response.setDescription(std::string(description.ascii()));
+                });
                 break;
             }
+
+            case GetMakerRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetMakerRequest, GetMakerResponse>(
+                [](auto& request, auto&response) {
+                    String maker = DistrhoServer::get_singleton()->get_config()->get_plugin_maker();
+                    response.setMaker(std::string(maker.ascii()));
+                });
+                break;
+            }
+
+            case GetHomePageRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetHomePageRequest, GetHomePageResponse>(
+                [](auto& request, auto&response) {
+                    String homepage = DistrhoServer::get_singleton()->get_config()->get_plugin_homepage();
+                    response.setHomePage(std::string(homepage.ascii()));
+                });
+                break;
+            }
+
+            case GetLicenseRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetLicenseRequest, GetLicenseResponse>(
+                [](auto& request, auto&response) {
+                    String license = DistrhoServer::get_singleton()->get_config()->get_plugin_license();
+                    response.setLicense(std::string(license.ascii()));
+                });
+                break;
+            }
+
+            case GetVersionRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetVersionRequest, GetVersionResponse>(
+                [](auto& request, auto&response) {
+                    String value = DistrhoServer::get_singleton()->get_config()->get_plugin_version();
+                    PackedStringArray version = value.split(".");
+                    if (version.size() == 3) {
+                        response.setMajor(version.get(0).to_int());
+                        response.setMinor(version.get(1).to_int());
+                        response.setPatch(version.get(2).to_int());
+                    }
+                });
+                break;
+            }
+
+            case GetUniqueIdRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetUniqueIdRequest, GetUniqueIdResponse>(
+                [](auto& request, auto&response) {
+                    String unique_id = DistrhoServer::get_singleton()->get_config()->get_plugin_unique_id();
+                    if (unique_id.length() >= 4) {
+                        response.setUniqueId(std::string(unique_id.ascii()));
+                    }
+                });
+                break;
+            }
+
         }
-
-        //write the response
-		distrho_shared_memory_rpc->write_reponse(&builder);
-
-        // Signal the output condition (wake up the host)
-        distrho_shared_memory_rpc->buffer->output_condition.notify_one();
-
-        // The mutex is automatically released when the scoped_lock goes out of scope
     }
-	delete distrho_shared_memory_rpc;
+	delete rpc_memory;
 }
 
 int DistrhoServer::process_sample(AudioFrame *p_buffer, float p_rate, int p_frames) {
     lock_audio();
 
-    if (distrho_shared_memory_audio->get_num_input_channels() == 0) {
+    if (audio_memory->get_num_input_channels() == 0) {
         for (int frame = 0; frame < p_frames; frame++) {
             p_buffer[frame].left = 0;
             p_buffer[frame].right = 0;
         }
-    } else if (distrho_shared_memory_audio->get_num_input_channels() == 1) {
+    } else if (audio_memory->get_num_input_channels() == 1) {
         input_channels[0]->read_channel(temp_buffer, p_frames);
         for (int frame = 0; frame < p_frames; frame++) {
             p_buffer[frame].left = temp_buffer[frame];

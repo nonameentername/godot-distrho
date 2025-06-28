@@ -12,6 +12,7 @@
 #include "godot_cpp/classes/mutex.hpp"
 #include "godot_cpp/classes/semaphore.hpp"
 #include <godot_cpp/classes/audio_frame.hpp>
+#include <functional>
 
 
 namespace godot {
@@ -29,8 +30,8 @@ private:
     DistrhoConfig *distrho_config;
     DistrhoPluginInstance *distrho_plugin;
 	DistrhoLauncher *distrho_launcher;
-	DistrhoSharedMemoryAudio *distrho_shared_memory_audio;
-	DistrhoSharedMemoryRPC *distrho_shared_memory_rpc;
+	DistrhoSharedMemoryAudio *audio_memory;
+	DistrhoSharedMemoryRPC *rpc_memory;
 
     float temp_buffer[BUFFER_FRAME_SIZE];
 
@@ -65,6 +66,8 @@ public:
     void initialize();
     void audio_thread_func();
     void rpc_thread_func();
+
+    template<typename T, typename R> void handle_rpc_call(std::function<void(typename T::Reader&, typename R::Builder&)> handle_request);
 
     int process_sample(AudioFrame *p_buffer, float p_rate, int p_frames);
 

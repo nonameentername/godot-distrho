@@ -1,31 +1,52 @@
 @0xd793ef6eb1602207;
 
-#struct ParameterRanges {
-#  def @0 :Float32;
-#  min @1 :Float32;
-#  max @2 :Float32;
-#}
-
-struct DistrhoParameter {
-  hints @0 :UInt32;
-  name @1 :Text;
-  shortName @2 :Text;
-  symbol @3 :Text;
-  unit @4 :Text;
-  description @5 :Text;
+struct GetLabelRequest {
 }
 
-interface PluginInterface {
-  getLabel @0 () -> (label :Text);
-  getDescription @1 () -> (description :Text);
-  getMaker @2 () -> (maker :Text);
-  getHomePage @3 () -> (homepage :Text);
-  getLicense @4 () -> (license :Text);
+struct GetLabelResponse {
+  label @0 :Text;
+}
 
-  getVersion @5 () -> (version :UInt32);
-  getUniqueId @6 () -> (uniqueId :Int64);
+struct GetDescriptionRequest {
+}
 
-  initParameter @7 (index :UInt32) -> (parameter :DistrhoParameter);
-  getParameterValue @8 (index :UInt32) -> (value :Float32);
-  setParameterValue @9 (index :UInt32, value :Float32) -> ();
+struct GetDescriptionResponse {
+  description @0 :Text;
+}
+
+struct GetMakerRequest {
+}
+
+struct GetMakerResponse {
+  maker @0 :Text;
+}
+
+struct GetHomePageRequest {
+}
+
+struct GetHomePageResponse {
+  homePage @0 :Text;
+}
+
+struct GetLicenseRequest {
+}
+
+struct GetLicenseResponse {
+  license @0 :Text;
+}
+
+struct GetVersionRequest {
+}
+
+struct GetVersionResponse {
+  major @0 :UInt32;
+  minor @1 :UInt32;
+  patch @2 :UInt32;
+}
+
+struct GetUniqueIdRequest {
+}
+
+struct GetUniqueIdResponse {
+  uniqueId @0 :Text;
 }
