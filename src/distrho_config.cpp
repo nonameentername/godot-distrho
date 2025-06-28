@@ -19,14 +19,7 @@ DistrhoConfig::DistrhoConfig() {
             PackedStringArray keys = {
                 "main_scene",
                 "width",
-                "height",
-                "label",
-                "description",
-                "maker",
-                "homepage",
-                "license",
-                "version",
-                "unique_id"
+                "height"
             };
 
             for (const String &key : keys) {
@@ -53,34 +46,6 @@ String DistrhoConfig::get_plugin_width() {
 
 String DistrhoConfig::get_plugin_height() {
     return plugin_values["height"];
-}
-
-String DistrhoConfig::get_plugin_label() {
-    return plugin_values["label"];
-}
-
-String DistrhoConfig::get_plugin_description() {
-    return plugin_values["description"];
-}
-
-String DistrhoConfig::get_plugin_maker() {
-    return plugin_values["maker"];
-}
-
-String DistrhoConfig::get_plugin_homepage() {
-    return plugin_values["homepage"];
-}
-
-String DistrhoConfig::get_plugin_license() {
-    return plugin_values["license"];
-}
-
-String DistrhoConfig::get_plugin_version() {
-    return plugin_values["version"];
-}
-
-String DistrhoConfig::get_plugin_unique_id() {
-    return plugin_values["unique_id"];
 }
 
 void DistrhoConfig::_bind_methods() {

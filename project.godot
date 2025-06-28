@@ -20,6 +20,10 @@ config/icon="res://icon.svg"
 driver/output_latency=1
 driver/mix_rate=48000
 
+[autoload]
+
+GlobalDistrhoPluginInstance="*res://distrho_plugin_instance.gd"
+
 [display]
 
 window/size/viewport_width=1

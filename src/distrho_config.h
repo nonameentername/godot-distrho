@@ -27,20 +27,6 @@ public:
 
     String get_plugin_height();
 
-    String get_plugin_label();
-
-    String get_plugin_description();
-
-    String get_plugin_maker();
-
-    String get_plugin_homepage();
-
-    String get_plugin_license();
-
-    String get_plugin_version();
-
-    String get_plugin_unique_id();
-
     static void _bind_methods();
 };
 } // namespace godot

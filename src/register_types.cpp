@@ -34,7 +34,6 @@ void initialize_godot_distrho_module(ModuleInitializationLevel p_level) {
     ClassDB::register_class<DistrhoLauncher>();
     ClassDB::register_class<DistrhoServer>();
     distrho_server = memnew(DistrhoServer);
-    distrho_server->start();
     Engine::get_singleton()->register_singleton("DistrhoServer", DistrhoServer::get_singleton());
 }
 

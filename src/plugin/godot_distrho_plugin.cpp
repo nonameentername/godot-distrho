@@ -1,8 +1,7 @@
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "godot_distrho_plugin.h"
-#include "DistrhoPluginInfo.h"
-#include "distrho_schema.capnp.h"
+#include "godot_distrho_client.h"
 #include <capnp/serialize.h>
 #include <kj/string.h>
 
@@ -13,141 +12,52 @@ using namespace boost::posix_time;
 
 START_NAMESPACE_DISTRHO
 
-GodotDistrhoPlugin::GodotDistrhoPlugin() : Plugin(0, 0, 0) // parameters, programs, states
+GodotDistrhoPlugin::GodotDistrhoPlugin(GodotDistrhoClient *p_client, uint32_t parameterCount, uint32_t programCount, uint32_t stateCount) : Plugin(parameterCount, programCount, stateCount)
 {
-    audio_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
-    rpc_memory.initialize();
-
-#if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
-    if (plugin == NULL) {
-        boost::process::environment env = boost::this_process::environment();
-        env["DISTRHO_SHARED_MEMORY_AUDIO"] = audio_memory.shared_memory_name.c_str();
-        env["DISTRHO_SHARED_MEMORY_RPC"] = rpc_memory.shared_memory_name.c_str();
-#if defined(_WIN32)
-        plugin = new boost::process::child("godot-plugin.exe", env);
-#else
-        plugin = new boost::process::child("godot-plugin", env);
-#endif
-    }
-#endif
-
-    while (!audio_memory.buffer->godot_ready && !rpc_memory.buffer->godot_ready) {
-        sleep(1);
-    }
-
-    std::string label = getLabel();
-    printf("%s\n", label.c_str());
-
-    std::string description = getDescription();
-    printf("%s\n", description.c_str());
-
-    std::string maker = getMaker();
-    printf("%s\n", maker.c_str());
-
-    std::string homepage = getHomePage();
-    printf("%s\n", homepage.c_str());
-
-    std::string license = getLicense();
-    printf("%s\n", license.c_str());
-
-    int version = getVersion();
-    printf("%d\n", version);
-
-    int unique_id = getUniqueId();
-    printf("%d\n", unique_id);
+    client = p_client;
 }
 
 GodotDistrhoPlugin::~GodotDistrhoPlugin()
 {
 }
 
-template<typename T, typename R> capnp::FlatArrayMessageReader GodotDistrhoPlugin::rpc_call(std::function<void(typename T::Builder&)> build_request) const {
-    if (rpc_memory.buffer->godot_ready) {
-        scoped_lock<interprocess_mutex> lock(rpc_memory.buffer->mutex);
-
-        capnp::MallocMessageBuilder builder;
-        typename T::Builder request = builder.initRoot<T>();
-
-        if (build_request) {
-            build_request(request);
-        }
-
-        rpc_memory.write_request(&builder, T::_capnpPrivate::typeId);
-        rpc_memory.buffer->input_condition.notify_one();
-
-        ptime timeout = microsec_clock::universal_time() + milliseconds(100);
-        bool result = rpc_memory.buffer->output_condition.timed_wait(lock, timeout);
-
-        if (result) {
-            return rpc_memory.read_reponse();
-        }
-    }
-
-    kj::ArrayPtr<const capnp::word> emptyData;
-    return capnp::FlatArrayMessageReader(emptyData);
-}
-
 const char* GodotDistrhoPlugin::getLabel() const {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetLabelRequest, GetLabelResponse>(
-    [](auto& req) {
-        req;
-    });
-
-    GetLabelResponse::Reader response = reader.getRoot<GetLabelResponse>();
-    return response.getLabel().cStr();
+    return client->getLabel();
 }
 
 const char* GodotDistrhoPlugin::getDescription() const
 {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetDescriptionRequest, GetDescriptionResponse>();
-    GetDescriptionResponse::Reader response = reader.getRoot<GetDescriptionResponse>();
-    return response.getDescription().cStr();
+    return client->getDescription();
 }
 
 const char* GodotDistrhoPlugin::getMaker() const
 {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetMakerRequest, GetMakerResponse>();
-    GetMakerResponse::Reader response = reader.getRoot<GetMakerResponse>();
-    return response.getMaker().cStr();
+    return client->getMaker();
 }
 
 const char* GodotDistrhoPlugin::getHomePage() const
 {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetHomePageRequest, GetHomePageResponse>();
-    GetHomePageResponse::Reader response = reader.getRoot<GetHomePageResponse>();
-    return response.getHomePage().cStr();
+    return client->getHomePage();
 }
 
 const char* GodotDistrhoPlugin::getLicense() const
 {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetLicenseRequest, GetLicenseResponse>();
-    GetLicenseResponse::Reader response = reader.getRoot<GetLicenseResponse>();
-    return response.getLicense().cStr();
+    return client->getLicense();
 }
 
 uint32_t GodotDistrhoPlugin::getVersion() const
 {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetVersionRequest, GetVersionResponse>();
-    GetVersionResponse::Reader response = reader.getRoot<GetVersionResponse>();
-
-    return d_version(response.getMajor(), response.getMinor(), response.getPatch());
+    return client->getVersion();
 }
 
 int64_t GodotDistrhoPlugin::getUniqueId() const
 {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetUniqueIdRequest, GetUniqueIdResponse>();
-    GetUniqueIdResponse::Reader response = reader.getRoot<GetUniqueIdResponse>();
-    std::string unique_id = response.getUniqueId();
-
-    if (unique_id.length() < 4) {
-        return d_cconst('n', 'o', 'n', 'e');
-    } else {
-        return d_cconst(unique_id[0], unique_id[1], unique_id[2], unique_id[4]);
-    }
+    return client->getUniqueId();
 }
 
 void GodotDistrhoPlugin::initAudioPort(const bool input, const uint32_t index, AudioPort& port)
 {
+    //TODO: how should the client handle this?
     // treat meter audio ports as mono
     port.groupId = kPortGroupMono;
 
@@ -157,68 +67,38 @@ void GodotDistrhoPlugin::initAudioPort(const bool input, const uint32_t index, A
 
 void GodotDistrhoPlugin::initParameter(const uint32_t index, Parameter& parameter)
 {
+    client->initParameter(index, parameter);
 }
-
 
 float GodotDistrhoPlugin::getParameterValue(const uint32_t index) const
 {
-    return 0;
+    return client->getParameterValue(index);
 }
 
 void GodotDistrhoPlugin::setParameterValue(const uint32_t index, const float value)
 {
+    client->setParameterValue(index, value);
 }
 
 void GodotDistrhoPlugin::activate()
 {
+    client->activate();
 }
 
 void GodotDistrhoPlugin::run(const float** inputs, float** outputs, uint32_t numSamples)
 {
-    bool reinitialize = false;
-
-    if (audio_memory.buffer->godot_ready) {
-        scoped_lock<interprocess_mutex> lock(audio_memory.buffer->mutex);
-
-        audio_memory.write_input_channel(inputs, godot::BUFFER_FRAME_SIZE);
-        audio_memory.advance_input_write_index(godot::BUFFER_FRAME_SIZE);
-
-        audio_memory.buffer->input_condition.notify_one();
-
-        ptime timeout = microsec_clock::universal_time() + milliseconds(100);
-
-        bool result = audio_memory.buffer->output_condition.timed_wait(lock, timeout);
-
-        if (result) {
-            audio_memory.read_output_channel(outputs, godot::BUFFER_FRAME_SIZE);
-            audio_memory.advance_output_read_index(godot::BUFFER_FRAME_SIZE);
-        } else {
-            reinitialize = true;
-        }
-    } else {
-        for (int channel = 0; channel < DISTRHO_PLUGIN_NUM_OUTPUTS; channel++) {
-            for (int frame = 0; frame < godot::BUFFER_FRAME_SIZE; frame++) {
-                outputs[channel][frame] = 0;
-            }
-        }
-    }
-
-    if (reinitialize) {
-#if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
-        if(plugin->running()) {
-            plugin->terminate();
-        }
-        delete plugin;
-        plugin = NULL;
-#endif
-        audio_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
-        rpc_memory.initialize();
-    }
+    client->run(inputs, outputs, numSamples);
 }
 
 Plugin* createPlugin()
 {
-    GodotDistrhoPlugin* const plugin = new GodotDistrhoPlugin();
+    GodotDistrhoClient* client = new GodotDistrhoClient();
+
+    uint32_t parameterCount = client->get_parameter_count();
+    uint32_t programCount = client->get_program_count();
+    uint32_t stateCount = client->get_state_count();
+
+    GodotDistrhoPlugin* const plugin = new GodotDistrhoPlugin(client, parameterCount, programCount, stateCount);
     return plugin;
 }
 

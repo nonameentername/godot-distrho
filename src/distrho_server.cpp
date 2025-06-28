@@ -87,6 +87,7 @@ DistrhoServer *DistrhoServer::get_singleton() {
 }
 
 void DistrhoServer::initialize() {
+    start();
     initialized = true;
 }
 
@@ -151,7 +152,7 @@ void DistrhoServer::rpc_thread_func() {
             case GetLabelRequest::_capnpPrivate::typeId: {
                 handle_rpc_call<GetLabelRequest, GetLabelResponse>(
                 [](auto& request, auto&response) {
-                    String label = DistrhoServer::get_singleton()->get_config()->get_plugin_label();
+                    String label = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_label();
                     response.setLabel(std::string(label.ascii()));
                 });
                 break;
@@ -160,7 +161,7 @@ void DistrhoServer::rpc_thread_func() {
             case GetDescriptionRequest::_capnpPrivate::typeId: {
                 handle_rpc_call<GetDescriptionRequest, GetDescriptionResponse>(
                 [](auto& request, auto&response) {
-                    String description = DistrhoServer::get_singleton()->get_config()->get_plugin_description();
+                    String description = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_description();
                     response.setDescription(std::string(description.ascii()));
                 });
                 break;
@@ -169,7 +170,7 @@ void DistrhoServer::rpc_thread_func() {
             case GetMakerRequest::_capnpPrivate::typeId: {
                 handle_rpc_call<GetMakerRequest, GetMakerResponse>(
                 [](auto& request, auto&response) {
-                    String maker = DistrhoServer::get_singleton()->get_config()->get_plugin_maker();
+                    String maker = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_maker();
                     response.setMaker(std::string(maker.ascii()));
                 });
                 break;
@@ -178,7 +179,7 @@ void DistrhoServer::rpc_thread_func() {
             case GetHomePageRequest::_capnpPrivate::typeId: {
                 handle_rpc_call<GetHomePageRequest, GetHomePageResponse>(
                 [](auto& request, auto&response) {
-                    String homepage = DistrhoServer::get_singleton()->get_config()->get_plugin_homepage();
+                    String homepage = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_homepage();
                     response.setHomePage(std::string(homepage.ascii()));
                 });
                 break;
@@ -187,7 +188,7 @@ void DistrhoServer::rpc_thread_func() {
             case GetLicenseRequest::_capnpPrivate::typeId: {
                 handle_rpc_call<GetLicenseRequest, GetLicenseResponse>(
                 [](auto& request, auto&response) {
-                    String license = DistrhoServer::get_singleton()->get_config()->get_plugin_license();
+                    String license = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_license();
                     response.setLicense(std::string(license.ascii()));
                 });
                 break;
@@ -196,7 +197,7 @@ void DistrhoServer::rpc_thread_func() {
             case GetVersionRequest::_capnpPrivate::typeId: {
                 handle_rpc_call<GetVersionRequest, GetVersionResponse>(
                 [](auto& request, auto&response) {
-                    String value = DistrhoServer::get_singleton()->get_config()->get_plugin_version();
+                    String value = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_version();
                     PackedStringArray version = value.split(".");
                     if (version.size() == 3) {
                         response.setMajor(version.get(0).to_int());
@@ -210,7 +211,7 @@ void DistrhoServer::rpc_thread_func() {
             case GetUniqueIdRequest::_capnpPrivate::typeId: {
                 handle_rpc_call<GetUniqueIdRequest, GetUniqueIdResponse>(
                 [](auto& request, auto&response) {
-                    String unique_id = DistrhoServer::get_singleton()->get_config()->get_plugin_unique_id();
+                    String unique_id = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_unique_id();
                     if (unique_id.length() >= 4) {
                         response.setUniqueId(std::string(unique_id.ascii()));
                     }
@@ -359,11 +360,6 @@ String DistrhoServer::get_build() {
     return GODOT_DISTRHO_BUILD;
 }
 
-String DistrhoServer::get_label() {
-    //TODO: return a value set by the user.
-    return "it's working!";
-}
-
 void DistrhoServer::set_distrho_launcher(DistrhoLauncher *p_distrho_launcher) {
 	distrho_launcher = p_distrho_launcher;
 }
@@ -372,10 +368,19 @@ DistrhoLauncher *DistrhoServer::get_distrho_launcher() {
 	return distrho_launcher;
 }
 
+void DistrhoServer::set_distrho_plugin(DistrhoPluginInstance *p_distrho_plugin) {
+    distrho_plugin = p_distrho_plugin;
+}
+
+DistrhoPluginInstance *DistrhoServer::get_distrho_plugin() {
+    return distrho_plugin;
+}
+
 void DistrhoServer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("initialize"), &DistrhoServer::initialize);
 
     ClassDB::bind_method(D_METHOD("get_config"), &DistrhoServer::get_config);
+    ClassDB::bind_method(D_METHOD("set_distrho_plugin", "distrho_plugin"), &DistrhoServer::set_distrho_plugin);
 
     ClassDB::bind_method(D_METHOD("get_version"), &DistrhoServer::get_version);
     ClassDB::bind_method(D_METHOD("get_build"), &DistrhoServer::get_build);

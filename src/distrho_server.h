@@ -84,10 +84,11 @@ public:
     String get_version();
     String get_build();
 
-    String get_label();
-
 	void set_distrho_launcher(DistrhoLauncher *p_distrho_launcher);
 	DistrhoLauncher *get_distrho_launcher();
+
+    void set_distrho_plugin(DistrhoPluginInstance *p_distrho_plugin);
+    DistrhoPluginInstance *get_distrho_plugin();
 };
 }
 

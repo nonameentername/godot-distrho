@@ -2,9 +2,6 @@
 
 #include "DistrhoDetails.hpp"
 
-static constexpr const char* const kVersionString = "v0.0.1";
-static constexpr const uint32_t kVersionNumber = d_version(0, 0, 1);
-
 #define DISTRHO_PLUGIN_BRAND   "GodotDistrho"
 #define DISTRHO_PLUGIN_NAME    "GodotDistrho"
 #define DISTRHO_PLUGIN_URI     "https://github.com/nonameentername/godot-distrho"
@@ -30,18 +27,3 @@ static constexpr const uint32_t kVersionNumber = d_version(0, 0, 1);
 
 #define DISTRHO_UI_DEFAULT_WIDTH  940
 #define DISTRHO_UI_DEFAULT_HEIGHT 398
-
-enum Parameters {
-    kParameterCount
-};
-
-enum States {
-    kStateCount
-};
-
-static const Parameter kParameters[] = {
-};
-
-static constexpr const uint kNumParameters = ARRAY_SIZE(kParameters);
-
-static_assert(kNumParameters == kParameterCount, "Matched num params");
