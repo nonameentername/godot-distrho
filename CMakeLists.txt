@@ -115,10 +115,45 @@ foreach(lib IN LISTS GODOT_LIBRARIES_NAMES)
     list(APPEND GODOT_LIBRARIES "${lib}${GODOT_LIBRARIES_SUFFIX}")
 endforeach()
 
+#godot-plugin
+
+set(SOURCE src/plugin/libgodot_distrho.cpp src/plugin/main.cpp)
+set(HEADER src/plugin/libgodot_distrho.h)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g3")
+
+add_executable(godot-plugin ${SOURCE} ${HEADER})
+
+set(CMAKE_SKIP_RPATH TRUE)
+
+target_include_directories(godot-plugin PUBLIC
+  src/plugin
+  src
+  modules/godot/core/extension
+  godot-cpp/include
+  godot-cpp/gen/src
+  godot-cpp/gen/include
+  ${CMAKE_BINARY_DIR}
+)
+
+target_link_directories(godot-plugin PRIVATE
+  godot-cpp/bin
+  ${GODOT_LINK_DIRECTORIES}
+)
+
+target_link_libraries(godot-plugin PRIVATE
+  ${CMAKE_THREAD_LIBS_INIT}
+  godot.linuxbsd.editor.x86_64
+  godot-cpp.linux.template_debug.x86_64
+  ${GODOT_LIBRARIES}
+)
+
+#godot-distrho
+
 dpf_add_plugin(godot-distrho
   #TARGETS au clap lv2 vst2 vst3
   #TARGETS au lv2 vst2 vst3 jack
-  TARGETS jack
+  TARGETS lv2
   NO_SHARED_RESOURCES
   UI_TYPE opengl
   NO_USE_FILE_BROWSER
@@ -169,33 +204,4 @@ target_link_libraries(godot-distrho PUBLIC
   #${GODOT_LIBRARIES}
 )
 
-set(SOURCE src/plugin/libgodot_distrho.cpp src/plugin/main.cpp)
-set(HEADER src/plugin/libgodot_distrho.h)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g3")
-
-add_executable(godot-plugin ${SOURCE} ${HEADER})
-
-set(CMAKE_SKIP_RPATH TRUE)
-
-target_include_directories(godot-plugin PUBLIC
-  src/plugin
-  src
-  modules/godot/core/extension
-  godot-cpp/include
-  godot-cpp/gen/src
-  godot-cpp/gen/include
-  ${CMAKE_BINARY_DIR}
-)
-
-target_link_directories(godot-plugin PRIVATE
-  godot-cpp/bin
-  ${GODOT_LINK_DIRECTORIES}
-)
-
-target_link_libraries(godot-plugin PRIVATE
-  ${CMAKE_THREAD_LIBS_INIT}
-  godot.linuxbsd.editor.x86_64
-  godot-cpp.linux.template_debug.x86_64
-  ${GODOT_LIBRARIES}
-)

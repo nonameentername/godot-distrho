@@ -1,6 +1,7 @@
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "godot_distrho_client.h"
+#include "godot_distrho_utils.h"
 #include "distrho_schema.capnp.h"
 #include <capnp/serialize.h>
 #include <kj/string.h>
@@ -22,9 +23,11 @@ GodotDistrhoClient::GodotDistrhoClient()
     env["DISTRHO_SHARED_MEMORY_AUDIO"] = audio_memory.shared_memory_name.c_str();
     env["DISTRHO_SHARED_MEMORY_RPC"] = rpc_memory.shared_memory_name.c_str();
 #if defined(_WIN32)
-    plugin = new boost::process::child("godot-plugin.exe", env);
+    plugin = GodotDistrhoUtils::launch_process("godot-plugin.exe", env);
+    //new boost::process::child("godot-plugin.exe", env);
 #else
-    plugin = new boost::process::child("godot-plugin", env);
+    plugin = GodotDistrhoUtils::launch_process("godot-plugin", env);
+    //plugin = new boost::process::child("godot-plugin", env);
 #endif
 #endif
 
