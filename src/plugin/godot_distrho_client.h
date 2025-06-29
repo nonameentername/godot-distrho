@@ -60,8 +60,8 @@ public:
     int get_number_of_input_ports();
     int get_number_of_output_ports();
 
-    void get_input_port(int p_index, AudioPort& port);
-    void get_output_port(int p_index, AudioPort& port);
+    bool get_input_port(int p_index, AudioPort& port);
+    bool get_output_port(int p_index, AudioPort& port);
 };
 
 END_NAMESPACE_DISTRHO

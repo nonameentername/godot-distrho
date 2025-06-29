@@ -67,6 +67,7 @@ struct GetInputPortResponse {
   name @1 :Text;
   symbol @2 :Text;
   groupId @3 :UInt32;
+  result @4 :Bool;
 }
 
 struct GetNumberOfOutputPortsRequest {
@@ -85,4 +86,5 @@ struct GetOutputPortResponse {
   name @1 :Text;
   symbol @2 :Text;
   groupId @3 :UInt32;
+  result @4 :Bool;
 }

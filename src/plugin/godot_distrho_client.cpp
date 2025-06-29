@@ -232,7 +232,7 @@ int GodotDistrhoClient::get_number_of_output_ports() {
     return response.getNumberOfOutputPorts();
 }
 
-void GodotDistrhoClient::get_input_port(int p_index, AudioPort& port) {
+bool GodotDistrhoClient::get_input_port(int p_index, AudioPort& port) {
     capnp::FlatArrayMessageReader reader = rpc_call<GetInputPortRequest, GetInputPortResponse>(
     [p_index](auto& req) {
         req.setIndex(p_index);
@@ -243,9 +243,11 @@ void GodotDistrhoClient::get_input_port(int p_index, AudioPort& port) {
     port.name = response.getName().cStr();
     port.symbol = response.getSymbol().cStr();
     port.groupId = response.getGroupId();
+
+    return response.getResult();
 }
 
-void GodotDistrhoClient::get_output_port(int p_index, AudioPort& port) {
+bool GodotDistrhoClient::get_output_port(int p_index, AudioPort& port) {
     capnp::FlatArrayMessageReader reader = rpc_call<GetOutputPortRequest, GetOutputPortResponse>(
     [p_index](auto& req) {
         req.setIndex(p_index);
@@ -256,7 +258,10 @@ void GodotDistrhoClient::get_output_port(int p_index, AudioPort& port) {
     port.name = response.getName().cStr();
     port.symbol = response.getSymbol().cStr();
     port.groupId = response.getGroupId();
+
+    return response.getResult();
 }
+
 
 
 END_NAMESPACE_DISTRHO

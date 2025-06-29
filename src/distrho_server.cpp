@@ -248,7 +248,10 @@ void DistrhoServer::rpc_thread_func() {
 						response.setName(std::string(port->get_name().ascii()));
 						response.setSymbol(std::string(port->get_symbol().ascii()));
 						response.setGroupId(port->get_group_id());
-					}
+                        response.setResult(true);
+					} else {
+                        response.setResult(false);
+                    }
                 });
                 break;
             }
@@ -263,7 +266,10 @@ void DistrhoServer::rpc_thread_func() {
 						response.setName(std::string(port->get_name().ascii()));
 						response.setSymbol(std::string(port->get_symbol().ascii()));
 						response.setGroupId(port->get_group_id());
-					}
+                        response.setResult(true);
+					} else {
+                        response.setResult(false);
+                    }
                 });
                 break;
             }
