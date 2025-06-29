@@ -1,38 +1,62 @@
 extends DistrhoPluginInstance
 
+
 func _init() -> void:
-    DistrhoServer.set_distrho_plugin(self)
+	DistrhoServer.set_distrho_plugin(self)
+
 
 func get_label() -> String:
-    return "godot-distrho"
+	return "godot-distrho"
+
 
 func get_description() -> String:
-    return "Godot DISTRHO plugin"
+	return "Godot DISTRHO plugin"
+
 
 func get_maker() -> String:
-    return "godot-distrho"
+	return "godot-distrho"
+
 
 func get_homepage() -> String:
-    return "https://github.com/nonameentername/godot-distrho"
+	return "https://github.com/nonameentername/godot-distrho"
+
 
 func get_license() -> String:
-    return "MIT"
+	return "MIT"
+
 
 func get_version() -> String:
-    return "0.0.1"
+	return "0.0.1"
+
 
 func get_unique_id() -> String:
-    #unique_id should only be 4 characters
-    return "godt"
+	#unique_id should only be 4 characters
+	return "godt"
+
 
 func get_input_ports() -> Array[DistrhoAudioPort]:
-    var ports: Array[DistrhoAudioPort] = []
-    for side in ["Left", "Right"]:
-        ports.append(DistrhoAudioPort.create(DistrhoAudioPort.HINT_NONE, "Input " + side, "input_" + side.to_lower(), DistrhoAudioPort.PORT_GROUP_STEREO))
-    return ports
+	var ports: Array[DistrhoAudioPort] = []
+	for side in ["Left", "Right"]:
+		ports.append(
+			DistrhoAudioPort.create(
+				DistrhoAudioPort.HINT_NONE,
+				"Input " + side,
+				"input_" + side.to_lower(),
+				DistrhoAudioPort.PORT_GROUP_STEREO
+			)
+		)
+	return ports
+
 
 func get_output_ports() -> Array[DistrhoAudioPort]:
-    var ports: Array[DistrhoAudioPort] = []
-    for side in ["Left", "Right"]:
-        ports.append(DistrhoAudioPort.create(DistrhoAudioPort.HINT_NONE, "Output " + side, "output_" + side.to_lower(), DistrhoAudioPort.PORT_GROUP_STEREO))
-    return ports
+	var ports: Array[DistrhoAudioPort] = []
+	for side in ["Left", "Right"]:
+		ports.append(
+			DistrhoAudioPort.create(
+				DistrhoAudioPort.HINT_NONE,
+				"Output " + side,
+				"output_" + side.to_lower(),
+				DistrhoAudioPort.PORT_GROUP_STEREO
+			)
+		)
+	return ports

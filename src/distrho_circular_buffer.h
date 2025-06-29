@@ -1,11 +1,9 @@
 #ifndef DISTRHO_CIRCULAR_BUFFER_H
 #define DISTRHO_CIRCULAR_BUFFER_H
 
-
 namespace godot {
 
 const int CIRCULAR_BUFFER_SIZE = 2048;
-
 
 struct AudioRingBuffer {
     int input_write_index = 0;
@@ -17,7 +15,6 @@ struct AudioRingBuffer {
     float buffer[CIRCULAR_BUFFER_SIZE];
 };
 
-
 class DistrhoCircularBuffer {
 
 private:
@@ -27,11 +24,11 @@ public:
     DistrhoCircularBuffer();
     ~DistrhoCircularBuffer();
 
-	void write_channel(const float *p_buffer, int p_frames);
+    void write_channel(const float *p_buffer, int p_frames);
 
-	void read_channel(float *p_buffer, int p_frames);
+    void read_channel(float *p_buffer, int p_frames);
 };
 
-}
- 
+} // namespace godot
+
 #endif

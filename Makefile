@@ -21,6 +21,10 @@ schema:
 		-o modules/capnproto/build/install/bin/capnpc-c++:src \
 		distrho_schema.capnp && mv src/distrho_schema.capnp.c++ src/distrho_schema.capnp.cpp
 
+format:
+	clang-format -i src/*.cpp src/*.h
+	gdformat $(shell find -name '*.gd' ! -path './godot-cpp/*' ! -path './modules/godot/*')
+
 #distrho plugin
 
 godot:

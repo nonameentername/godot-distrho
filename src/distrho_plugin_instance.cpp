@@ -10,7 +10,6 @@ DistrhoPluginInstance::DistrhoPluginInstance() {
 DistrhoPluginInstance::~DistrhoPluginInstance() {
 }
 
-
 String DistrhoPluginInstance::_get_label() {
     if (has_method("get_label")) {
         return call("get_label");

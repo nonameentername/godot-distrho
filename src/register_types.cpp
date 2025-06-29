@@ -8,13 +8,13 @@
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 
+#include "audio_effect_send_distrho_channel.h"
 #include "audio_stream_distrho.h"
 #include "audio_stream_player_distrho.h"
-#include "audio_effect_send_distrho_channel.h"
 #include "distrho_audio_port.h"
 #include "distrho_config.h"
-#include "distrho_plugin_instance.h"
 #include "distrho_launcher.h"
+#include "distrho_plugin_instance.h"
 #include "distrho_server.h"
 
 using namespace godot;
@@ -52,8 +52,8 @@ void uninitialize_godot_distrho_module(ModuleInitializationLevel p_level) {
 extern "C" {
 // Initialization.
 GDExtensionBool GDE_EXPORT godot_distrho_library_init(GDExtensionInterfaceGetProcAddress p_get_proc_address,
-                                                  const GDExtensionClassLibraryPtr p_library,
-                                                  GDExtensionInitialization *r_initialization) {
+                                                      const GDExtensionClassLibraryPtr p_library,
+                                                      GDExtensionInitialization *r_initialization) {
     godot::GDExtensionBinding::InitObject init_obj(p_get_proc_address, p_library, r_initialization);
 
     init_obj.register_initializer(initialize_godot_distrho_module);

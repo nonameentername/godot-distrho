@@ -37,8 +37,8 @@ bool AudioEffectSetDistrhoChannel::get_forward_audio() {
 void AudioEffectSetDistrhoChannel::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_channel_left", "channel"), &AudioEffectSetDistrhoChannel::set_channel_left);
     ClassDB::bind_method(D_METHOD("get_channel_left"), &AudioEffectSetDistrhoChannel::get_channel_left);
-    ClassDB::add_property("AudioEffectSetDistrhoChannel", PropertyInfo(Variant::INT, "channel_left"), "set_channel_left",
-                          "get_channel_left");
+    ClassDB::add_property("AudioEffectSetDistrhoChannel", PropertyInfo(Variant::INT, "channel_left"),
+                          "set_channel_left", "get_channel_left");
     ClassDB::bind_method(D_METHOD("set_channel_right", "channel"), &AudioEffectSetDistrhoChannel::set_channel_right);
     ClassDB::bind_method(D_METHOD("get_channel_right"), &AudioEffectSetDistrhoChannel::get_channel_right);
     ClassDB::add_property("AudioEffectSetDistrhoChannel", PropertyInfo(Variant::INT, "channel_right"),
@@ -79,7 +79,8 @@ void AudioEffectSetDistrhoChannelInstance::_process(const void *p_src_frames, Au
     }
 
     int p_rate = 1;
-    DistrhoServer::get_singleton()->set_channel_sample(src_frames, p_rate, p_frame_count, base->channel_left, base->channel_right);
+    DistrhoServer::get_singleton()->set_channel_sample(src_frames, p_rate, p_frame_count, base->channel_left,
+                                                       base->channel_right);
 }
 
 bool AudioEffectSetDistrhoChannelInstance::_process_silence() const {

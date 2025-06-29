@@ -1,26 +1,24 @@
 #ifndef DISTRHO_SERVER_H
 #define DISTRHO_SERVER_H
 
+#include "distrho_circular_buffer.h"
 #include "distrho_config.h"
 #include "distrho_launcher.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
-#include "distrho_circular_buffer.h"
-#include <godot_cpp/classes/node.hpp>
-#include "godot_cpp/classes/thread.hpp"
 #include "godot_cpp/classes/mutex.hpp"
 #include "godot_cpp/classes/semaphore.hpp"
-#include <godot_cpp/classes/audio_frame.hpp>
+#include "godot_cpp/classes/thread.hpp"
 #include <functional>
-
+#include <godot_cpp/classes/audio_frame.hpp>
+#include <godot_cpp/classes/node.hpp>
 
 namespace godot {
 
 const int num_channels = 16;
 const int buffer_size = 2048;
 
-    
 class DistrhoServer : public Object {
     GDCLASS(DistrhoServer, Object);
 
@@ -29,19 +27,19 @@ private:
 
     DistrhoConfig *distrho_config;
     DistrhoPluginInstance *distrho_plugin;
-	DistrhoLauncher *distrho_launcher;
-	DistrhoSharedMemoryAudio *audio_memory;
-	DistrhoSharedMemoryRPC *rpc_memory;
+    DistrhoLauncher *distrho_launcher;
+    DistrhoSharedMemoryAudio *audio_memory;
+    DistrhoSharedMemoryRPC *rpc_memory;
 
     float temp_buffer[BUFFER_FRAME_SIZE];
 
-	float input_data[num_channels][buffer_size];
-	float *input_buffer[num_channels];
+    float input_data[num_channels][buffer_size];
+    float *input_buffer[num_channels];
 
-	float output_data[num_channels][buffer_size];
-	float *output_buffer[num_channels];
+    float output_data[num_channels][buffer_size];
+    float *output_buffer[num_channels];
 
-	bool active;
+    bool active;
 
     mutable bool exit_thread;
     Ref<Thread> audio_thread;
@@ -67,7 +65,8 @@ public:
     void audio_thread_func();
     void rpc_thread_func();
 
-    template<typename T, typename R> void handle_rpc_call(std::function<void(typename T::Reader&, typename R::Builder&)> handle_request);
+    template <typename T, typename R>
+    void handle_rpc_call(std::function<void(typename T::Reader &, typename R::Builder &)> handle_request);
 
     int process_sample(AudioFrame *p_buffer, float p_rate, int p_frames);
 
@@ -84,12 +83,12 @@ public:
     String get_version();
     String get_build();
 
-	void set_distrho_launcher(DistrhoLauncher *p_distrho_launcher);
-	DistrhoLauncher *get_distrho_launcher();
+    void set_distrho_launcher(DistrhoLauncher *p_distrho_launcher);
+    DistrhoLauncher *get_distrho_launcher();
 
     void set_distrho_plugin(DistrhoPluginInstance *p_distrho_plugin);
     DistrhoPluginInstance *get_distrho_plugin();
 };
-}
+} // namespace godot
 
 #endif

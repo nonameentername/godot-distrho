@@ -13,7 +13,8 @@ DistrhoAudioPort::DistrhoAudioPort(DistrhoAudioPortHint p_hints, String p_name, 
     group_id = p_group_id;
 }
 
-DistrhoAudioPort* DistrhoAudioPort::create(DistrhoAudioPortHint p_hints, String p_name, String p_symbol, int p_group_id) {
+DistrhoAudioPort *DistrhoAudioPort::create(DistrhoAudioPortHint p_hints, String p_name, String p_symbol,
+                                           int p_group_id) {
     return memnew(DistrhoAudioPort(p_hints, p_name, p_symbol, p_group_id));
 }
 
@@ -50,5 +51,6 @@ void DistrhoAudioPort::_bind_methods() {
     BIND_ENUM_CONSTANT(PORT_GROUP_MONO);
     BIND_ENUM_CONSTANT(PORT_GROUP_STEREO);
 
-    ClassDB::bind_static_method("DistrhoAudioPort", D_METHOD("create", "hints", "name", "symbol", "group_id"), &DistrhoAudioPort::create);
+    ClassDB::bind_static_method("DistrhoAudioPort", D_METHOD("create", "hints", "name", "symbol", "group_id"),
+                                &DistrhoAudioPort::create);
 }

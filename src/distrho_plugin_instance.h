@@ -10,9 +10,7 @@ class DistrhoPluginInstance : public Node {
     GDCLASS(DistrhoPluginInstance, Node);
 
 private:
-
 protected:
-
 public:
     DistrhoPluginInstance();
     ~DistrhoPluginInstance();
