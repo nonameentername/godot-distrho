@@ -57,11 +57,19 @@ int64_t GodotDistrhoPlugin::getUniqueId() const
 
 void GodotDistrhoPlugin::initAudioPort(const bool input, const uint32_t index, AudioPort& port)
 {
-    //TODO: how should the client handle this?
-    // treat meter audio ports as mono
-    port.groupId = kPortGroupMono;
+    if (input) {
+        client->get_input_port(index, port);
+        //TODO: only return if the above function returns true.
+        return;
+    } else {
+        client->get_output_port(index, port);
+        //TODO: only return if the above function returns true.
+        return;
+    }
 
-    // everything else is as default
+    printf("port.name = %s\n", port.name.buffer());
+    printf("port.symbol = %s\n", port.symbol.buffer());
+
     Plugin::initAudioPort(input, index, port);
 }
 

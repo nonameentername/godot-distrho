@@ -1,4 +1,6 @@
 #include "distrho_plugin_instance.h"
+#include "distrho_audio_port.h"
+#include "godot_cpp/templates/vector.hpp"
 
 using namespace godot;
 
@@ -63,6 +65,44 @@ String DistrhoPluginInstance::_get_unique_id() {
     } else {
         return "godt";
     }
+}
+
+Vector<Ref<DistrhoAudioPort>> DistrhoPluginInstance::_get_input_ports() {
+    Vector<Ref<DistrhoAudioPort>> result;
+
+    if (has_method("get_input_ports")) {
+        Variant v = call("get_input_ports");
+        if (v.get_type() == Variant::ARRAY) {
+            Array array = v;
+            for (int i = 0; i < array.size(); i++) {
+                Ref<DistrhoAudioPort> port = array[i];
+                if (port.is_valid()) {
+                    result.push_back(port);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+Vector<Ref<DistrhoAudioPort>> DistrhoPluginInstance::_get_output_ports() {
+    Vector<Ref<DistrhoAudioPort>> result;
+
+    if (has_method("get_output_ports")) {
+        Variant v = call("get_output_ports");
+        if (v.get_type() == Variant::ARRAY) {
+            Array array = v;
+            for (int i = 0; i < array.size(); i++) {
+                Ref<DistrhoAudioPort> port = array[i];
+                if (port.is_valid()) {
+                    result.push_back(port);
+                }
+            }
+        }
+    }
+
+    return result;
 }
 
 void DistrhoPluginInstance::_bind_methods() {

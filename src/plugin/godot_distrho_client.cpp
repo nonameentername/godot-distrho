@@ -220,6 +220,43 @@ int GodotDistrhoClient::get_state_count() {
     return 0;
 }
 
+int GodotDistrhoClient::get_number_of_input_ports() {
+    capnp::FlatArrayMessageReader reader = rpc_call<GetNumberOfInputPortsRequest, GetNumberOfInputPortsResponse>();
+    GetNumberOfInputPortsResponse::Reader response = reader.getRoot<GetNumberOfInputPortsResponse>();
+    return response.getNumberOfInputPorts();
+}
+
+int GodotDistrhoClient::get_number_of_output_ports() {
+    capnp::FlatArrayMessageReader reader = rpc_call<GetNumberOfOutputPortsRequest, GetNumberOfOutputPortsResponse>();
+    GetNumberOfOutputPortsResponse::Reader response = reader.getRoot<GetNumberOfOutputPortsResponse>();
+    return response.getNumberOfOutputPorts();
+}
+
+void GodotDistrhoClient::get_input_port(int p_index, AudioPort& port) {
+    capnp::FlatArrayMessageReader reader = rpc_call<GetInputPortRequest, GetInputPortResponse>(
+    [p_index](auto& req) {
+        req.setIndex(p_index);
+    });
+
+    GetInputPortResponse::Reader response = reader.getRoot<GetInputPortResponse>();
+    port.hints = response.getHints();
+    port.name = response.getName().cStr();
+    port.symbol = response.getSymbol().cStr();
+    port.groupId = response.getGroupId();
+}
+
+void GodotDistrhoClient::get_output_port(int p_index, AudioPort& port) {
+    capnp::FlatArrayMessageReader reader = rpc_call<GetOutputPortRequest, GetOutputPortResponse>(
+    [p_index](auto& req) {
+        req.setIndex(p_index);
+    });
+
+    GetOutputPortResponse::Reader response = reader.getRoot<GetOutputPortResponse>();
+    port.hints = response.getHints();
+    port.name = response.getName().cStr();
+    port.symbol = response.getSymbol().cStr();
+    port.groupId = response.getGroupId();
+}
 
 
 END_NAMESPACE_DISTRHO

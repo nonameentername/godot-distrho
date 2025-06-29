@@ -1,5 +1,6 @@
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include "distrho_server.h"
+#include "distrho_audio_port.h"
 #include "distrho_config.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_schema.capnp.h"
@@ -219,6 +220,53 @@ void DistrhoServer::rpc_thread_func() {
                 break;
             }
 
+            case GetNumberOfInputPortsRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetNumberOfInputPortsRequest, GetNumberOfInputPortsResponse>(
+                [](auto& request, auto&response) {
+                    int number_of_input_ports = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_input_ports().size();
+					response.setNumberOfInputPorts(number_of_input_ports);
+                });
+                break;
+            }
+
+            case GetNumberOfOutputPortsRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetNumberOfOutputPortsRequest, GetNumberOfOutputPortsResponse>(
+                [](auto& request, auto&response) {
+                    int number_of_input_ports = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_output_ports().size();
+					response.setNumberOfOutputPorts(number_of_input_ports);
+                });
+                break;
+            }
+
+            case GetInputPortRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetInputPortRequest, GetInputPortResponse>(
+                [](auto& request, auto&response) {
+                    Vector<Ref<DistrhoAudioPort>> input_ports = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_input_ports();
+					if (request.getIndex() < input_ports.size()) {
+						Ref<DistrhoAudioPort> port = input_ports[request.getIndex()];
+						response.setHints(port->get_hints());
+						response.setName(std::string(port->get_name().ascii()));
+						response.setSymbol(std::string(port->get_symbol().ascii()));
+						response.setGroupId(port->get_group_id());
+					}
+                });
+                break;
+            }
+
+         	case GetOutputPortRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetOutputPortRequest, GetOutputPortResponse>(
+                [](auto& request, auto&response) {
+                    Vector<Ref<DistrhoAudioPort>> output_ports = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_output_ports();
+					if (request.getIndex() < output_ports.size()) {
+						Ref<DistrhoAudioPort> port = output_ports[request.getIndex()];
+						response.setHints(port->get_hints());
+						response.setName(std::string(port->get_name().ascii()));
+						response.setSymbol(std::string(port->get_symbol().ascii()));
+						response.setGroupId(port->get_group_id());
+					}
+                });
+                break;
+            }
         }
     }
 	delete rpc_memory;

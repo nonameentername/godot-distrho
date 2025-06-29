@@ -3,6 +3,7 @@
 
 #include <boost/process.hpp>
 #include "DistrhoPlugin.hpp"
+#include "distrho_schema.capnp.h"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
 
@@ -55,6 +56,12 @@ public:
     int get_program_count();
 
     int get_state_count();
+
+    int get_number_of_input_ports();
+    int get_number_of_output_ports();
+
+    void get_input_port(int p_index, AudioPort& port);
+    void get_output_port(int p_index, AudioPort& port);
 };
 
 END_NAMESPACE_DISTRHO

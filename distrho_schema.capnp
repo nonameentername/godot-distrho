@@ -50,3 +50,39 @@ struct GetUniqueIdRequest {
 struct GetUniqueIdResponse {
   uniqueId @0 :Text;
 }
+
+struct GetNumberOfInputPortsRequest {
+}
+
+struct GetNumberOfInputPortsResponse {
+  numberOfInputPorts @0 :UInt32;
+}
+
+struct GetInputPortRequest {
+  index @0 :UInt32;
+}
+
+struct GetInputPortResponse {
+  hints @0 :UInt32;
+  name @1 :Text;
+  symbol @2 :Text;
+  groupId @3 :UInt32;
+}
+
+struct GetNumberOfOutputPortsRequest {
+}
+
+struct GetNumberOfOutputPortsResponse {
+  numberOfOutputPorts @0 :UInt32;
+}
+
+struct GetOutputPortRequest {
+  index @0 :UInt32;
+}
+
+struct GetOutputPortResponse {
+  hints @0 :UInt32;
+  name @1 :Text;
+  symbol @2 :Text;
+  groupId @3 :UInt32;
+}

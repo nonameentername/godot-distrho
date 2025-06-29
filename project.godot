@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="GodotDistrho:godot"
+config/name="GodotDistrho"
 run/main_scene="uid://b6dypp4qpoog8"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 config/icon="res://icon.svg"
