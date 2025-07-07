@@ -81,8 +81,14 @@ public:
     void process();
     void emit_midi_event(MidiEvent &p_midi_event);
 
-    // TODO: add additional methods for note_on, off, etc
     void send_midi_event(Ref<DistrhoMidiEvent> p_midi_event);
+    void note_on(int p_channel, int p_note, int p_velocity);
+    void note_off(int p_channel, int p_note, int p_velocity);
+    void program_change(int p_channel, int p_program_number);
+    void control_change(int p_channel, int p_controller, int p_value);
+    void pitch_bend(int p_channel, int p_value);
+    void channel_pressure(int p_channel, int p_pressure);
+    void midi_poly_aftertouch(int p_channel, int p_note, int p_pressure);
 
     void start_buffer_processing();
     uint32_t get_frame_offset_for_event(uint64_t p_event_time_usec);

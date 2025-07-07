@@ -351,15 +351,34 @@ void DistrhoServer::emit_midi_event(MidiEvent &p_midi_event) {
                         midi_event->get_frame());
         }
         break;
+
     case 0x80: // Note Off
         emit_signal("midi_note_off", channel, midi_event->get_data1(), midi_event->get_data2(),
                     midi_event->get_frame());
         break;
+
     case 0xB0: // Control Change
         emit_signal("midi_cc", channel, midi_event->get_data1(), midi_event->get_data2(), midi_event->get_frame());
         break;
+
     case 0xC0: // Program Change
         emit_signal("midi_program_change", channel, midi_event->get_data1(), midi_event->get_frame());
+        break;
+
+    case 0xD0: // Channel Pressure (Aftertouch)
+        emit_signal("midi_channel_pressure", channel, midi_event->get_data1(), midi_event->get_frame());
+        break;
+
+    case 0xE0: { // Pitch Bend
+        int lsb = midi_event->get_data1() & 0x7F;
+        int msb = midi_event->get_data2() & 0x7F;
+        int pitch_bend = (msb << 7) | lsb; // 14-bit value
+        emit_signal("midi_pitch_bend", channel, pitch_bend, midi_event->get_frame());
+        break;
+    }
+    case 0xA0: // Polyphonic Aftertouch
+        emit_signal("midi_poly_aftertouch", channel, midi_event->get_data1(), midi_event->get_data2(),
+                    midi_event->get_frame());
         break;
     default:
         break;
@@ -369,19 +388,103 @@ void DistrhoServer::emit_midi_event(MidiEvent &p_midi_event) {
 }
 
 void DistrhoServer::send_midi_event(Ref<DistrhoMidiEvent> p_midi_event) {
-    uint64_t event_time_usec = Time::get_singleton()->get_ticks_usec();
-    uint32_t frame = get_frame_offset_for_event(event_time_usec);
+    MidiEvent event;
+    event.size = 3;
+    event.frame = get_frame_offset_for_event(Time::get_singleton()->get_ticks_usec());
+    event.data[0] = p_midi_event->get_status();
+    event.data[1] = p_midi_event->get_data1();
+    event.data[2] = p_midi_event->get_data2();
 
     std::lock_guard<std::mutex> lock(midi_output_mutex);
+    midi_output_queue.push(event);
+}
 
-    MidiEvent midi_event;
-    midi_event.size = 3;
-    midi_event.data[0] = p_midi_event->get_status();
-    midi_event.data[1] = p_midi_event->get_data1();
-    midi_event.data[2] = p_midi_event->get_data2();
-    midi_event.frame = frame;
+void DistrhoServer::note_on(int p_channel, int p_note, int p_velocity) {
+    MidiEvent event;
+    event.size = 3;
+    event.frame = get_frame_offset_for_event(Time::get_singleton()->get_ticks_usec());
+    event.data[0] = 0x90 | (p_channel & 0x0F);
+    event.data[1] = p_note & 0x7F;
+    event.data[2] = p_velocity & 0x7F;
 
-    midi_output_queue.push(midi_event);
+    std::lock_guard<std::mutex> lock(midi_output_mutex);
+    midi_output_queue.push(event);
+}
+
+void DistrhoServer::note_off(int p_channel, int p_note, int p_velocity) {
+    MidiEvent event;
+    event.size = 3;
+    event.frame = get_frame_offset_for_event(Time::get_singleton()->get_ticks_usec());
+    event.data[0] = 0x80 | (p_channel & 0x0F);
+    event.data[1] = p_note & 0x7F;
+    event.data[2] = p_velocity & 0x7F;
+
+    std::lock_guard<std::mutex> lock(midi_output_mutex);
+    midi_output_queue.push(event);
+}
+
+void DistrhoServer::program_change(int p_channel, int p_program_number) {
+    MidiEvent event;
+    event.size = 2;
+    event.frame = get_frame_offset_for_event(Time::get_singleton()->get_ticks_usec());
+    event.data[0] = 0xC0 | (p_channel & 0x0F);
+    event.data[1] = p_program_number & 0x7F;
+    event.data[2] = 0;
+
+    std::lock_guard<std::mutex> lock(midi_output_mutex);
+    midi_output_queue.push(event);
+}
+
+void DistrhoServer::control_change(int p_channel, int p_controller, int p_value) {
+    MidiEvent event;
+    event.size = 3;
+    event.frame = get_frame_offset_for_event(Time::get_singleton()->get_ticks_usec());
+    event.data[0] = 0xB0 | (p_channel & 0x0F);
+    event.data[1] = p_controller & 0x7F;
+    event.data[2] = p_value & 0x7F;
+
+    std::lock_guard<std::mutex> lock(midi_output_mutex);
+    midi_output_queue.push(event);
+}
+
+void DistrhoServer::pitch_bend(int p_channel, int p_value) {
+    p_value = std::clamp(p_value, 0, 16383);
+
+    MidiEvent event;
+    event.size = 3;
+    event.frame = get_frame_offset_for_event(Time::get_singleton()->get_ticks_usec());
+    event.data[0] = 0xE0 | (p_channel & 0x0F);
+    event.data[1] = p_value & 0x7F;
+    event.data[2] = (p_value >> 7) & 0x7F;
+
+    std::lock_guard<std::mutex> lock(midi_output_mutex);
+    midi_output_queue.push(event);
+}
+
+void DistrhoServer::channel_pressure(int p_channel, int p_pressure) {
+    p_pressure = std::clamp(p_pressure, 0, 127);
+
+    MidiEvent event;
+    event.size = 2;
+    event.frame = get_frame_offset_for_event(Time::get_singleton()->get_ticks_usec());
+    event.data[0] = 0xD0 | (p_channel & 0x0F);
+    event.data[1] = p_pressure & 0x7F;
+    event.data[2] = 0;
+
+    std::lock_guard<std::mutex> lock(midi_output_mutex);
+    midi_output_queue.push(event);
+}
+
+void DistrhoServer::midi_poly_aftertouch(int p_channel, int p_note, int p_pressure) {
+    MidiEvent event;
+    event.size = 3;
+    event.frame = get_frame_offset_for_event(Time::get_singleton()->get_ticks_usec());
+    event.data[0] = 0xA0 | (p_channel & 0x0F);
+    event.data[1] = p_note;
+    event.data[2] = p_pressure;
+
+    std::lock_guard<std::mutex> lock(midi_output_mutex);
+    midi_output_queue.push(event);
 }
 
 void DistrhoServer::start_buffer_processing() {
@@ -564,6 +667,12 @@ void DistrhoServer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("initialize"), &DistrhoServer::initialize);
 
     ClassDB::bind_method(D_METHOD("send_midi_event"), &DistrhoServer::send_midi_event);
+    ClassDB::bind_method(D_METHOD("note_on", "channel", "note", "velocity"), &DistrhoServer::note_on);
+    ClassDB::bind_method(D_METHOD("note_off", "channel", "note", "velocity"), &DistrhoServer::note_off);
+    ClassDB::bind_method(D_METHOD("program_change", "channel", "program_number"), &DistrhoServer::program_change);
+    ClassDB::bind_method(D_METHOD("control_change", "channel", "controller", "value"), &DistrhoServer::control_change);
+    ClassDB::bind_method(D_METHOD("midi_poly_aftertouch", "channel", "note", "pressure"),
+                         &DistrhoServer::midi_poly_aftertouch);
 
     ClassDB::bind_method(D_METHOD("get_config"), &DistrhoServer::get_config);
     ClassDB::bind_method(D_METHOD("set_distrho_plugin", "distrho_plugin"), &DistrhoServer::set_distrho_plugin);
@@ -585,4 +694,14 @@ void DistrhoServer::_bind_methods() {
 
     ADD_SIGNAL(MethodInfo("midi_program_change", PropertyInfo(Variant::INT, "channel"),
                           PropertyInfo(Variant::INT, "program"), PropertyInfo(Variant::INT, "frame")));
+
+    ADD_SIGNAL(MethodInfo("midi_channel_pressure", PropertyInfo(Variant::INT, "channel"),
+                          PropertyInfo(Variant::INT, "pressure"), PropertyInfo(Variant::INT, "frame")));
+
+    ADD_SIGNAL(MethodInfo("midi_pitch_bend", PropertyInfo(Variant::INT, "channel"),
+                          PropertyInfo(Variant::INT, "bend_value"), PropertyInfo(Variant::INT, "frame")));
+
+    ADD_SIGNAL(MethodInfo("midi_poly_aftertouch", PropertyInfo(Variant::INT, "channel"),
+                          PropertyInfo(Variant::INT, "note"), PropertyInfo(Variant::INT, "pressure"),
+                          PropertyInfo(Variant::INT, "frame")));
 }
