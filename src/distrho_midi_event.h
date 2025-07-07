@@ -16,7 +16,6 @@ private:
     int frame;
 
 protected:
-
 public:
     DistrhoMidiEvent();
     ~DistrhoMidiEvent();

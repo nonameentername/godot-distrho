@@ -14,10 +14,10 @@
 #include "distrho_audio_port.h"
 #include "distrho_config.h"
 #include "distrho_launcher.h"
+#include "distrho_midi_event.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_server.h"
 #include "distrho_server_node.h"
-#include "distrho_midi_event.h"
 
 using namespace godot;
 

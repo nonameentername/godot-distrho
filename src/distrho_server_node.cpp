@@ -3,7 +3,6 @@
 
 using namespace godot;
 
-
 DistrhoServerNode::DistrhoServerNode() {
 }
 

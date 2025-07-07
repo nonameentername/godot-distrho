@@ -1,17 +1,17 @@
 #include "distrho_server.h"
-#include "distrho_midi_event.h"
-#include "distrho_server_node.h"
 #include "distrho_audio_port.h"
 #include "distrho_circular_buffer.h"
 #include "distrho_config.h"
+#include "distrho_midi_event.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_schema.capnp.h"
+#include "distrho_server_node.h"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
 #include "godot_cpp/classes/audio_server.hpp"
 #include "godot_cpp/classes/engine.hpp"
-#include "godot_cpp/classes/scene_tree.hpp"
 #include "godot_cpp/classes/os.hpp"
+#include "godot_cpp/classes/scene_tree.hpp"
 #include "godot_cpp/classes/time.hpp"
 #include "godot_cpp/core/class_db.hpp"
 #include "godot_cpp/core/memory.hpp"
@@ -31,7 +31,7 @@ using namespace boost::interprocess;
 DistrhoServer *DistrhoServer::singleton = NULL;
 
 DistrhoServer::DistrhoServer() {
-	process_sample_frame_size = 1024;
+    process_sample_frame_size = 1024;
     buffer_start_time_usec = 0;
 
     initialized = false;
@@ -95,8 +95,8 @@ DistrhoServer *DistrhoServer::get_singleton() {
 
 void DistrhoServer::initialize() {
     if (!initialized) {
-        Node* distrho_server_node = memnew(DistrhoServerNode);
-        SceneTree* tree = Object::cast_to<SceneTree>(Engine::get_singleton()->get_main_loop());
+        Node *distrho_server_node = memnew(DistrhoServerNode);
+        SceneTree *tree = Object::cast_to<SceneTree>(Engine::get_singleton()->get_main_loop());
         tree->get_root()->add_child(distrho_server_node);
         distrho_server_node->set_process(true);
     }
@@ -119,7 +119,7 @@ void DistrhoServer::audio_thread_func() {
         scoped_lock<interprocess_mutex> shared_memory_lock(audio_memory->buffer->mutex);
 
         if (initialized) {
-			start_buffer_processing();
+            start_buffer_processing();
             AudioServer::get_singleton()->process_external(BUFFER_FRAME_SIZE);
         }
 
@@ -328,61 +328,44 @@ void DistrhoServer::process() {
 }
 
 void DistrhoServer::emit_midi_event(MidiEvent &p_midi_event) {
-	Ref<DistrhoMidiEvent> midi_event = Ref<DistrhoMidiEvent>();
+    Ref<DistrhoMidiEvent> midi_event = Ref<DistrhoMidiEvent>();
     midi_event.instantiate();
 
     uint8_t channel = p_midi_event.data[0] & 0x0F;
     uint8_t status = p_midi_event.data[0] & 0xF0;
 
-	midi_event->set_channel(channel);
-	midi_event->set_status(status);
-	midi_event->set_data1(p_midi_event.data[1]);
-	midi_event->set_data2(p_midi_event.data[2]);
+    midi_event->set_channel(channel);
+    midi_event->set_status(status);
+    midi_event->set_data1(p_midi_event.data[1]);
+    midi_event->set_data2(p_midi_event.data[2]);
     midi_event->set_frame(p_midi_event.frame);
 
+    switch (status) {
+    // TODO: make variables for note on, off, etc.
+    case 0x90: // Note On
+        if (midi_event->get_data2() > 0) {
+            emit_signal("midi_note_on", channel, midi_event->get_data1(), midi_event->get_data2(),
+                        midi_event->get_frame());
+        } else {
+            emit_signal("midi_note_off", channel, midi_event->get_data1(), midi_event->get_data2(),
+                        midi_event->get_frame());
+        }
+        break;
+    case 0x80: // Note Off
+        emit_signal("midi_note_off", channel, midi_event->get_data1(), midi_event->get_data2(),
+                    midi_event->get_frame());
+        break;
+    case 0xB0: // Control Change
+        emit_signal("midi_cc", channel, midi_event->get_data1(), midi_event->get_data2(), midi_event->get_frame());
+        break;
+    case 0xC0: // Program Change
+        emit_signal("midi_program_change", channel, midi_event->get_data1(), midi_event->get_frame());
+        break;
+    default:
+        break;
+    }
 
-	switch(status) {
-		//TODO: make variables for note on, off, etc.
-        case 0x90:  // Note On
-            if (midi_event->get_data2() > 0) {
-				emit_signal("midi_note_on",
-						channel,
-						midi_event->get_data1(),
-						midi_event->get_data2(),
-						midi_event->get_frame());
-            } else {
-                emit_signal("midi_note_off",
-						channel,
-						midi_event->get_data1(),
-						midi_event->get_data2(),
-						midi_event->get_frame());
-            }
-            break;
-        case 0x80:  // Note Off
-			emit_signal("midi_note_off",
-					channel,
-					midi_event->get_data1(),
-					midi_event->get_data2(),
-					midi_event->get_frame());
-            break;
-        case 0xB0:  // Control Change
-            emit_signal("midi_cc",
-					channel,
-					midi_event->get_data1(),
-					midi_event->get_data2(),
-					midi_event->get_frame());
-            break;
-        case 0xC0:  // Program Change
-			emit_signal("midi_program_change",
-					channel,
-					midi_event->get_data1(),
-					midi_event->get_frame());
-            break;
-        default:
-            break;
-	}
-
-	emit_signal("midi_event", midi_event);
+    emit_signal("midi_event", midi_event);
 }
 
 void DistrhoServer::send_midi_event(Ref<DistrhoMidiEvent> p_midi_event) {
@@ -406,27 +389,27 @@ void DistrhoServer::start_buffer_processing() {
 }
 
 uint32_t DistrhoServer::get_frame_offset_for_event(uint64_t p_event_time_usec) {
-	if (p_event_time_usec < buffer_start_time_usec) {
-		return 0;
-	}
+    if (p_event_time_usec < buffer_start_time_usec) {
+        return 0;
+    }
 
-	uint64_t delta_usec = p_event_time_usec - buffer_start_time_usec;
-	float mix_rate = AudioServer::get_singleton()->get_mix_rate();
-	uint32_t frame_offset = static_cast<uint32_t>((delta_usec * mix_rate) / 1'000'000);
+    uint64_t delta_usec = p_event_time_usec - buffer_start_time_usec;
+    float mix_rate = AudioServer::get_singleton()->get_mix_rate();
+    uint32_t frame_offset = static_cast<uint32_t>((delta_usec * mix_rate) / 1'000'000);
 
-	if (frame_offset >= static_cast<uint32_t>(process_sample_frame_size)) {
-		frame_offset = process_sample_frame_size - 1;
-	}
+    if (frame_offset >= static_cast<uint32_t>(process_sample_frame_size)) {
+        frame_offset = process_sample_frame_size - 1;
+    }
 
-	return frame_offset;
+    return frame_offset;
 }
 
 int DistrhoServer::process_sample(AudioFrame *p_buffer, float p_rate, int p_frames) {
     lock_audio();
 
-	if (process_sample_frame_size != p_frames) {
-		process_sample_frame_size = p_frames;
-	}
+    if (process_sample_frame_size != p_frames) {
+        process_sample_frame_size = p_frames;
+    }
 
     if (audio_memory->get_num_input_channels() == 0) {
         for (int frame = 0; frame < p_frames; frame++) {
@@ -588,34 +571,18 @@ void DistrhoServer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_version"), &DistrhoServer::get_version);
     ClassDB::bind_method(D_METHOD("get_build"), &DistrhoServer::get_build);
 
-	ADD_SIGNAL(MethodInfo("midi_event",
-		PropertyInfo(Variant::OBJECT, "event", PROPERTY_HINT_RESOURCE_TYPE, "DistrhoMidiEvent")
-	));
+    ADD_SIGNAL(MethodInfo("midi_event",
+                          PropertyInfo(Variant::OBJECT, "event", PROPERTY_HINT_RESOURCE_TYPE, "DistrhoMidiEvent")));
 
-	ADD_SIGNAL(MethodInfo("midi_note_on",
-		PropertyInfo(Variant::INT, "channel"),
-		PropertyInfo(Variant::INT, "note"),
-		PropertyInfo(Variant::INT, "velocity"),
-		PropertyInfo(Variant::INT, "frame")
-	));
+    ADD_SIGNAL(MethodInfo("midi_note_on", PropertyInfo(Variant::INT, "channel"), PropertyInfo(Variant::INT, "note"),
+                          PropertyInfo(Variant::INT, "velocity"), PropertyInfo(Variant::INT, "frame")));
 
-	ADD_SIGNAL(MethodInfo("midi_note_off",
-		PropertyInfo(Variant::INT, "channel"),
-		PropertyInfo(Variant::INT, "note"),
-		PropertyInfo(Variant::INT, "velocity"),
-		PropertyInfo(Variant::INT, "frame")
-	));
+    ADD_SIGNAL(MethodInfo("midi_note_off", PropertyInfo(Variant::INT, "channel"), PropertyInfo(Variant::INT, "note"),
+                          PropertyInfo(Variant::INT, "velocity"), PropertyInfo(Variant::INT, "frame")));
 
-	ADD_SIGNAL(MethodInfo("midi_cc",
-		PropertyInfo(Variant::INT, "channel"),
-		PropertyInfo(Variant::INT, "controller"),
-		PropertyInfo(Variant::INT, "value"),
-		PropertyInfo(Variant::INT, "frame")
-	));
+    ADD_SIGNAL(MethodInfo("midi_cc", PropertyInfo(Variant::INT, "channel"), PropertyInfo(Variant::INT, "controller"),
+                          PropertyInfo(Variant::INT, "value"), PropertyInfo(Variant::INT, "frame")));
 
-	ADD_SIGNAL(MethodInfo("midi_program_change",
-		PropertyInfo(Variant::INT, "channel"),
-		PropertyInfo(Variant::INT, "program"),
-		PropertyInfo(Variant::INT, "frame")
-	));
+    ADD_SIGNAL(MethodInfo("midi_program_change", PropertyInfo(Variant::INT, "channel"),
+                          PropertyInfo(Variant::INT, "program"), PropertyInfo(Variant::INT, "frame")));
 }

@@ -9,9 +9,7 @@ class DistrhoServerNode : public Node {
     GDCLASS(DistrhoServerNode, Node);
 
 private:
-
 protected:
-
 public:
     DistrhoServerNode();
     ~DistrhoServerNode();

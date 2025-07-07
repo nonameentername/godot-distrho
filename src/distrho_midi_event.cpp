@@ -2,7 +2,6 @@
 
 using namespace godot;
 
-
 DistrhoMidiEvent::DistrhoMidiEvent() {
     channel = 0;
     status = 0;

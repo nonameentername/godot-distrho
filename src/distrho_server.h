@@ -5,6 +5,7 @@
 #include "distrho_circular_buffer.h"
 #include "distrho_config.h"
 #include "distrho_launcher.h"
+#include "distrho_midi_event.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
@@ -14,7 +15,6 @@
 #include <functional>
 #include <godot_cpp/classes/audio_frame.hpp>
 #include <godot_cpp/classes/node.hpp>
-#include "distrho_midi_event.h"
 #include <mutex>
 #include <queue>
 
@@ -30,7 +30,7 @@ private:
     bool initialized;
 
     uint64_t buffer_start_time_usec;
-	int process_sample_frame_size;
+    int process_sample_frame_size;
 
     DistrhoConfig *distrho_config;
     DistrhoPluginInstance *distrho_plugin;
@@ -79,9 +79,9 @@ public:
     void rpc_thread_func();
 
     void process();
-	void emit_midi_event(MidiEvent &p_midi_event);
+    void emit_midi_event(MidiEvent &p_midi_event);
 
-    //TODO: add additional methods for note_on, off, etc
+    // TODO: add additional methods for note_on, off, etc
     void send_midi_event(Ref<DistrhoMidiEvent> p_midi_event);
 
     void start_buffer_processing();

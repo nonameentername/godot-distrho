@@ -150,7 +150,8 @@ int DistrhoSharedMemoryAudio::read_output_midi(MidiEvent *p_midi_events) {
     for (int i = 0; i < buffer->midi_output_event_count; i++) {
         p_midi_events[i] = buffer->midi_output[(i + buffer->midi_output_read_index) % MIDI_BUFFER_SIZE];
     }
-    buffer->midi_output_read_index = (buffer->midi_output_read_index + buffer->midi_output_event_count) % MIDI_BUFFER_SIZE;
-    
+    buffer->midi_output_read_index =
+        (buffer->midi_output_read_index + buffer->midi_output_event_count) % MIDI_BUFFER_SIZE;
+
     return buffer->midi_output_event_count;
 }
