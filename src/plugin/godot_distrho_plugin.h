@@ -44,7 +44,7 @@ protected:
 
     void activate() override;
 
-    void run(const float** inputs, float** outputs, uint32_t numSamples) override;
+    void run(const float** inputs, float** outputs, uint32_t numSamples, const MidiEvent* midiEvents, uint32_t midiEventCount) override;
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GodotDistrhoPlugin)
 };

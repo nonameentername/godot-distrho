@@ -120,3 +120,37 @@ int DistrhoSharedMemoryAudio::get_num_output_channels() {
 std::string DistrhoSharedMemoryAudio::get_shared_memory_name() {
     return shared_memory_name;
 }
+
+void DistrhoSharedMemoryAudio::write_input_midi(const MidiEvent *p_midi_events, int p_midi_event_count) {
+    for (int i = 0; i < p_midi_event_count; i++) {
+        buffer->midi_input[(i + buffer->midi_input_write_index) % MIDI_BUFFER_SIZE] = p_midi_events[i];
+    }
+    buffer->midi_input_event_count = p_midi_event_count;
+    buffer->midi_input_write_index = (buffer->midi_input_write_index + p_midi_event_count) % MIDI_BUFFER_SIZE;
+}
+
+int DistrhoSharedMemoryAudio::read_input_midi(MidiEvent *p_midi_events) {
+    for (int i = 0; i < buffer->midi_input_event_count; i++) {
+        p_midi_events[i] = buffer->midi_input[(i + buffer->midi_input_read_index) % MIDI_BUFFER_SIZE];
+    }
+    buffer->midi_input_read_index = (buffer->midi_input_read_index + buffer->midi_input_event_count) % MIDI_BUFFER_SIZE;
+
+    return buffer->midi_input_event_count;
+}
+
+void DistrhoSharedMemoryAudio::write_output_midi(const MidiEvent *p_midi_events, int p_midi_event_count) {
+    for (int i = 0; i < p_midi_event_count; i++) {
+        buffer->midi_output[(i + buffer->midi_output_write_index) % MIDI_BUFFER_SIZE] = p_midi_events[i];
+    }
+    buffer->midi_output_event_count = p_midi_event_count;
+    buffer->midi_output_write_index = (buffer->midi_output_write_index + p_midi_event_count) % MIDI_BUFFER_SIZE;
+}
+
+int DistrhoSharedMemoryAudio::read_output_midi(MidiEvent *p_midi_events) {
+    for (int i = 0; i < buffer->midi_output_event_count; i++) {
+        p_midi_events[i] = buffer->midi_output[(i + buffer->midi_output_read_index) % MIDI_BUFFER_SIZE];
+    }
+    buffer->midi_output_read_index = (buffer->midi_output_read_index + buffer->midi_output_event_count) % MIDI_BUFFER_SIZE;
+    
+    return buffer->midi_output_event_count;
+}

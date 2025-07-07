@@ -16,6 +16,8 @@
 #include "distrho_launcher.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_server.h"
+#include "distrho_server_node.h"
+#include "distrho_midi_event.h"
 
 using namespace godot;
 
@@ -35,6 +37,8 @@ void initialize_godot_distrho_module(ModuleInitializationLevel p_level) {
     ClassDB::register_class<DistrhoPluginInstance>();
     ClassDB::register_class<DistrhoLauncher>();
     ClassDB::register_class<DistrhoServer>();
+    ClassDB::register_class<DistrhoMidiEvent>();
+    ClassDB::register_class<DistrhoServerNode>();
     distrho_server = memnew(DistrhoServer);
     Engine::get_singleton()->register_singleton("DistrhoServer", DistrhoServer::get_singleton());
 }

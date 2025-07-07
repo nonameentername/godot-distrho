@@ -168,7 +168,8 @@ void GodotDistrhoClient::activate()
 {
 }
 
-void GodotDistrhoClient::run(const float** inputs, float** outputs, uint32_t numSamples)
+void GodotDistrhoClient::run(const float** inputs, float** outputs, uint32_t numSamples,
+        const MidiEvent *input_midi, int input_midi_size, MidiEvent *output_midi, int &output_midi_size)
 {
     bool reinitialize = false;
 
@@ -177,6 +178,7 @@ void GodotDistrhoClient::run(const float** inputs, float** outputs, uint32_t num
 
         audio_memory.write_input_channel(inputs, godot::BUFFER_FRAME_SIZE);
         audio_memory.advance_input_write_index(godot::BUFFER_FRAME_SIZE);
+        audio_memory.write_input_midi(input_midi, input_midi_size);
 
         audio_memory.buffer->input_condition.notify_one();
 
@@ -187,6 +189,7 @@ void GodotDistrhoClient::run(const float** inputs, float** outputs, uint32_t num
         if (result) {
             audio_memory.read_output_channel(outputs, godot::BUFFER_FRAME_SIZE);
             audio_memory.advance_output_read_index(godot::BUFFER_FRAME_SIZE);
+            output_midi_size = audio_memory.read_output_midi(output_midi);
         } else {
             reinitialize = true;
         }

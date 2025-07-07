@@ -20,7 +20,7 @@ Ref<AudioStreamPlayback> AudioStreamDistrho::_instantiate_playback() const {
     return talking_tree;
 }
 
-String AudioStreamDistrho::get_stream_name() const {
+godot::String AudioStreamDistrho::get_stream_name() const {
     return "Distrho";
 }
 

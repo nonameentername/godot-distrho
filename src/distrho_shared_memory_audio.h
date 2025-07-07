@@ -1,6 +1,7 @@
 #ifndef DISTRHO_SHARED_MEMORY_AUDIO_H
 #define DISTRHO_SHARED_MEMORY_AUDIO_H
 
+#include <DistrhoDetails.hpp>
 #include <boost/interprocess/sync/interprocess_condition.hpp>
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
 #include <boost/uuid/random_generator.hpp>
@@ -14,6 +15,8 @@ const int BUFFER_SIZE = 4096;
 const int BUFFER_FRAME_SIZE = 1024;
 const int MAX_CHANNELS = 16;
 const int SIZE_SHARED_MEMORY = 524288; // pow(2, 19);
+const int MIDI_BUFFER_SIZE = 2048;
+
 
 struct AudioBuffer {
     int num_input_channels = 0;
@@ -27,6 +30,18 @@ struct AudioBuffer {
 
     float input[MAX_CHANNELS * BUFFER_SIZE];
     float output[MAX_CHANNELS * BUFFER_SIZE];
+
+    int midi_input_write_index = 0;
+    int midi_input_read_index = 0;
+
+    int midi_output_write_index = 0;
+    int midi_output_read_index = 0;
+
+    int midi_input_event_count = 0;
+    int midi_output_event_count = 0;
+
+    MidiEvent midi_input[MIDI_BUFFER_SIZE];
+    MidiEvent midi_output[MIDI_BUFFER_SIZE];
 
     bool godot_ready = false;
     boost::interprocess::interprocess_mutex mutex;
@@ -70,6 +85,12 @@ public:
 
     int get_num_input_channels();
     int get_num_output_channels();
+
+    void write_input_midi(const MidiEvent *p_midi_events, int p_midi_event_count);
+    int read_input_midi(MidiEvent *p_midi_events);
+
+    void write_output_midi(const MidiEvent *p_midi_events, int p_midi_event_count);
+    int read_output_midi(MidiEvent *p_midi_events);
 
     std::string get_shared_memory_name();
 };

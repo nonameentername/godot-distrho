@@ -1,4 +1,6 @@
 #include "distrho_server.h"
+#include "distrho_midi_event.h"
+#include "distrho_server_node.h"
 #include "distrho_audio_port.h"
 #include "distrho_circular_buffer.h"
 #include "distrho_config.h"
@@ -8,7 +10,10 @@
 #include "distrho_shared_memory_rpc.h"
 #include "godot_cpp/classes/audio_server.hpp"
 #include "godot_cpp/classes/engine.hpp"
+#include "godot_cpp/classes/scene_tree.hpp"
 #include "godot_cpp/classes/os.hpp"
+#include "godot_cpp/classes/time.hpp"
+#include "godot_cpp/core/class_db.hpp"
 #include "godot_cpp/core/memory.hpp"
 #include "godot_cpp/variant/utility_functions.hpp"
 #include "version_generated.gen.h"
@@ -26,6 +31,9 @@ using namespace boost::interprocess;
 DistrhoServer *DistrhoServer::singleton = NULL;
 
 DistrhoServer::DistrhoServer() {
+	process_sample_frame_size = 1024;
+    buffer_start_time_usec = 0;
+
     initialized = false;
     active = false;
     exit_thread = false;
@@ -86,6 +94,13 @@ DistrhoServer *DistrhoServer::get_singleton() {
 }
 
 void DistrhoServer::initialize() {
+    if (!initialized) {
+        Node* distrho_server_node = memnew(DistrhoServerNode);
+        SceneTree* tree = Object::cast_to<SceneTree>(Engine::get_singleton()->get_main_loop());
+        tree->get_root()->add_child(distrho_server_node);
+        distrho_server_node->set_process(true);
+    }
+
     start();
     initialized = true;
 }
@@ -97,10 +112,14 @@ void DistrhoServer::audio_thread_func() {
 
     active = true;
 
+    static MidiEvent midi_input[godot::MIDI_BUFFER_SIZE];
+    static MidiEvent midi_output[godot::MIDI_BUFFER_SIZE];
+
     while (!exit_thread) {
         scoped_lock<interprocess_mutex> shared_memory_lock(audio_memory->buffer->mutex);
 
         if (initialized) {
+			start_buffer_processing();
             AudioServer::get_singleton()->process_external(BUFFER_FRAME_SIZE);
         }
 
@@ -108,6 +127,30 @@ void DistrhoServer::audio_thread_func() {
 
         audio_memory->read_input_channel(input_buffer, BUFFER_FRAME_SIZE);
         audio_memory->advance_input_read_index(BUFFER_FRAME_SIZE);
+        int midi_input_size = audio_memory->read_input_midi(midi_input);
+
+        if (midi_input_size > 0) {
+            std::lock_guard<std::mutex> lock(midi_input_mutex);
+            for (int i = 0; i < midi_input_size; i++) {
+                midi_input_queue.push(midi_input[i]);
+            }
+        }
+
+        int midi_output_size = 0;
+        std::lock_guard<std::mutex> lock(midi_output_mutex);
+
+        while (!midi_output_queue.empty()) {
+            MidiEvent midi_event = midi_output_queue.front();
+            midi_output_queue.pop();
+
+            midi_output[midi_output_size].size = midi_event.size;
+            midi_output[midi_output_size].data[0] = midi_event.data[0];
+            midi_output[midi_output_size].data[1] = midi_event.data[1];
+            midi_output[midi_output_size].data[2] = midi_event.data[2];
+            midi_output[midi_output_size].frame = midi_event.frame;
+
+            midi_output_size = midi_output_size + 1;
+        }
 
         for (int channel = 0; channel < audio_memory->get_num_input_channels(); channel++) {
             input_channels.write[channel]->write_channel(input_buffer[channel], BUFFER_FRAME_SIZE);
@@ -119,6 +162,7 @@ void DistrhoServer::audio_thread_func() {
 
         audio_memory->write_output_channel(output_buffer, BUFFER_FRAME_SIZE);
         audio_memory->advance_output_write_index(BUFFER_FRAME_SIZE);
+        audio_memory->write_output_midi(midi_output, midi_output_size);
 
         audio_memory->buffer->output_condition.notify_one();
     }
@@ -272,8 +316,117 @@ void DistrhoServer::rpc_thread_func() {
     delete rpc_memory;
 }
 
+void DistrhoServer::process() {
+    std::lock_guard<std::mutex> lock(midi_input_mutex);
+
+    while (!midi_input_queue.empty()) {
+        MidiEvent midi_event = midi_input_queue.front();
+        midi_input_queue.pop();
+
+        emit_midi_event(midi_event);
+    }
+}
+
+void DistrhoServer::emit_midi_event(MidiEvent &p_midi_event) {
+	Ref<DistrhoMidiEvent> midi_event = Ref<DistrhoMidiEvent>();
+    midi_event.instantiate();
+
+    uint8_t channel = p_midi_event.data[0] & 0x0F;
+    uint8_t status = p_midi_event.data[0] & 0xF0;
+
+	midi_event->set_channel(channel);
+	midi_event->set_status(status);
+	midi_event->set_data1(p_midi_event.data[1]);
+	midi_event->set_data2(p_midi_event.data[2]);
+    midi_event->set_frame(p_midi_event.frame);
+
+
+	switch(status) {
+		//TODO: make variables for note on, off, etc.
+        case 0x90:  // Note On
+            if (midi_event->get_data2() > 0) {
+				emit_signal("midi_note_on",
+						channel,
+						midi_event->get_data1(),
+						midi_event->get_data2(),
+						midi_event->get_frame());
+            } else {
+                emit_signal("midi_note_off",
+						channel,
+						midi_event->get_data1(),
+						midi_event->get_data2(),
+						midi_event->get_frame());
+            }
+            break;
+        case 0x80:  // Note Off
+			emit_signal("midi_note_off",
+					channel,
+					midi_event->get_data1(),
+					midi_event->get_data2(),
+					midi_event->get_frame());
+            break;
+        case 0xB0:  // Control Change
+            emit_signal("midi_cc",
+					channel,
+					midi_event->get_data1(),
+					midi_event->get_data2(),
+					midi_event->get_frame());
+            break;
+        case 0xC0:  // Program Change
+			emit_signal("midi_program_change",
+					channel,
+					midi_event->get_data1(),
+					midi_event->get_frame());
+            break;
+        default:
+            break;
+	}
+
+	emit_signal("midi_event", midi_event);
+}
+
+void DistrhoServer::send_midi_event(Ref<DistrhoMidiEvent> p_midi_event) {
+    uint64_t event_time_usec = Time::get_singleton()->get_ticks_usec();
+    uint32_t frame = get_frame_offset_for_event(event_time_usec);
+
+    std::lock_guard<std::mutex> lock(midi_output_mutex);
+
+    MidiEvent midi_event;
+    midi_event.size = 3;
+    midi_event.data[0] = p_midi_event->get_status();
+    midi_event.data[1] = p_midi_event->get_data1();
+    midi_event.data[2] = p_midi_event->get_data2();
+    midi_event.frame = frame;
+
+    midi_output_queue.push(midi_event);
+}
+
+void DistrhoServer::start_buffer_processing() {
+    buffer_start_time_usec = Time::get_singleton()->get_ticks_usec();
+}
+
+uint32_t DistrhoServer::get_frame_offset_for_event(uint64_t p_event_time_usec) {
+	if (p_event_time_usec < buffer_start_time_usec) {
+		return 0;
+	}
+
+	uint64_t delta_usec = p_event_time_usec - buffer_start_time_usec;
+	float mix_rate = AudioServer::get_singleton()->get_mix_rate();
+	uint32_t frame_offset = static_cast<uint32_t>((delta_usec * mix_rate) / 1'000'000);
+
+	if (frame_offset >= static_cast<uint32_t>(process_sample_frame_size)) {
+		frame_offset = process_sample_frame_size - 1;
+	}
+
+	return frame_offset;
+}
+
 int DistrhoServer::process_sample(AudioFrame *p_buffer, float p_rate, int p_frames) {
     lock_audio();
+
+	if (process_sample_frame_size != p_frames) {
+		process_sample_frame_size = p_frames;
+	}
 
     if (audio_memory->get_num_input_channels() == 0) {
         for (int frame = 0; frame < p_frames; frame++) {
@@ -400,11 +553,11 @@ DistrhoConfig *DistrhoServer::get_config() {
     return distrho_config;
 }
 
-String DistrhoServer::get_version() {
+godot::String DistrhoServer::get_version() {
     return GODOT_DISTRHO_VERSION;
 }
 
-String DistrhoServer::get_build() {
+godot::String DistrhoServer::get_build() {
     return GODOT_DISTRHO_BUILD;
 }
 
@@ -427,9 +580,42 @@ DistrhoPluginInstance *DistrhoServer::get_distrho_plugin() {
 void DistrhoServer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("initialize"), &DistrhoServer::initialize);
 
+    ClassDB::bind_method(D_METHOD("send_midi_event"), &DistrhoServer::send_midi_event);
+
     ClassDB::bind_method(D_METHOD("get_config"), &DistrhoServer::get_config);
     ClassDB::bind_method(D_METHOD("set_distrho_plugin", "distrho_plugin"), &DistrhoServer::set_distrho_plugin);
 
     ClassDB::bind_method(D_METHOD("get_version"), &DistrhoServer::get_version);
     ClassDB::bind_method(D_METHOD("get_build"), &DistrhoServer::get_build);
+
+	ADD_SIGNAL(MethodInfo("midi_event",
+		PropertyInfo(Variant::OBJECT, "event", PROPERTY_HINT_RESOURCE_TYPE, "DistrhoMidiEvent")
+	));
+
+	ADD_SIGNAL(MethodInfo("midi_note_on",
+		PropertyInfo(Variant::INT, "channel"),
+		PropertyInfo(Variant::INT, "note"),
+		PropertyInfo(Variant::INT, "velocity"),
+		PropertyInfo(Variant::INT, "frame")
+	));
+
+	ADD_SIGNAL(MethodInfo("midi_note_off",
+		PropertyInfo(Variant::INT, "channel"),
+		PropertyInfo(Variant::INT, "note"),
+		PropertyInfo(Variant::INT, "velocity"),
+		PropertyInfo(Variant::INT, "frame")
+	));
+
+	ADD_SIGNAL(MethodInfo("midi_cc",
+		PropertyInfo(Variant::INT, "channel"),
+		PropertyInfo(Variant::INT, "controller"),
+		PropertyInfo(Variant::INT, "value"),
+		PropertyInfo(Variant::INT, "frame")
+	));
+
+	ADD_SIGNAL(MethodInfo("midi_program_change",
+		PropertyInfo(Variant::INT, "channel"),
+		PropertyInfo(Variant::INT, "program"),
+		PropertyInfo(Variant::INT, "frame")
+	));
 }

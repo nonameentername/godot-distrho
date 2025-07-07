@@ -124,6 +124,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g3")
 
 add_executable(godot-plugin ${SOURCE} ${HEADER})
 
+set_target_properties(godot-plugin PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 set(CMAKE_SKIP_RPATH TRUE)
 
 target_include_directories(godot-plugin PUBLIC
@@ -153,7 +155,7 @@ target_link_libraries(godot-plugin PRIVATE
 dpf_add_plugin(godot-distrho
   #TARGETS au clap lv2 vst2 vst3
   #TARGETS au lv2 vst2 vst3 jack
-  TARGETS lv2
+  TARGETS jack
   NO_SHARED_RESOURCES
   UI_TYPE opengl
   NO_USE_FILE_BROWSER

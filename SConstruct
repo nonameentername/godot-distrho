@@ -95,14 +95,14 @@ elif env["platform"] == "linux":
 
     if env["dev_build"]:
         env.Append(LIBPATH=["modules/capnproto/build/install/lib"])
-        env.Append(CPPPATH=["modules/capnproto/build/install/include"])
+        env.Append(CPPPATH=["modules/capnproto/build/install/include", "modules/dpf/distrho"])
         #env.Append(RPATH=["", "."])
     else:
         env.Append(LIBPATH=["modules/capnproto/build/install/lib"])
-        env.Append(CPPPATH=["modules/capnproto/build/install/include"])
+        env.Append(CPPPATH=["modules/capnproto/build/install/include", "modules/dpf/distrho"])
         #env.Append(RPATH=["", "."])
 
-env.Append(CPPFLAGS=["-fexceptions", "-DKJ_USE_FIBERS=0"])
+env.Append(CPPFLAGS=["-fexceptions", "-DKJ_USE_FIBERS=0", "-DDISTRHO_NAMESPACE=GodotDISTRHO"])
 
 env.Append(CPPPATH=["src/"])
 sources = Glob("src/*.cpp")

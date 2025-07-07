@@ -1,6 +1,7 @@
 #ifndef DISTRHO_SERVER_H
 #define DISTRHO_SERVER_H
 
+#include "DistrhoDetails.hpp"
 #include "distrho_circular_buffer.h"
 #include "distrho_config.h"
 #include "distrho_launcher.h"
@@ -13,6 +14,9 @@
 #include <functional>
 #include <godot_cpp/classes/audio_frame.hpp>
 #include <godot_cpp/classes/node.hpp>
+#include "distrho_midi_event.h"
+#include <mutex>
+#include <queue>
 
 namespace godot {
 
@@ -24,6 +28,9 @@ class DistrhoServer : public Object {
 
 private:
     bool initialized;
+
+    uint64_t buffer_start_time_usec;
+	int process_sample_frame_size;
 
     DistrhoConfig *distrho_config;
     DistrhoPluginInstance *distrho_plugin;
@@ -50,6 +57,12 @@ private:
     Vector<DistrhoCircularBuffer *> input_channels;
     Vector<DistrhoCircularBuffer *> output_channels;
 
+    std::queue<MidiEvent> midi_input_queue;
+    std::mutex midi_input_mutex;
+
+    std::queue<MidiEvent> midi_output_queue;
+    std::mutex midi_output_mutex;
+
 protected:
     static DistrhoServer *singleton;
 
@@ -64,6 +77,15 @@ public:
     void initialize();
     void audio_thread_func();
     void rpc_thread_func();
+
+    void process();
+	void emit_midi_event(MidiEvent &p_midi_event);
+
+    //TODO: add additional methods for note_on, off, etc
+    void send_midi_event(Ref<DistrhoMidiEvent> p_midi_event);
+
+    void start_buffer_processing();
+    uint32_t get_frame_offset_for_event(uint64_t p_event_time_usec);
 
     template <typename T, typename R>
     void handle_rpc_call(std::function<void(typename T::Reader &, typename R::Builder &)> handle_request);

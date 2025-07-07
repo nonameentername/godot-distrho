@@ -2,7 +2,7 @@
 #define GODOT_DISTRHO_UI_H
 
 #include "DistrhoUI.hpp"
-#include "DistrhoPluginCommon.hpp"
+#include "DistrhoPlugin.hpp"
 #include "DistrhoPluginUtils.hpp"
 #include "DistrhoStandaloneUtils.hpp"
 

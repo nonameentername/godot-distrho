@@ -31,7 +31,7 @@ func get_version() -> String:
 
 func get_unique_id() -> String:
 	#unique_id should only be 4 characters
-	return "godt"
+	return "GDot"
 
 
 func get_input_ports() -> Array[DistrhoAudioPort]:

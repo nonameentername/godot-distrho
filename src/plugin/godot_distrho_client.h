@@ -2,6 +2,7 @@
 #define GODOT_DISTRHO_CLIENT_H
 
 #include <boost/process.hpp>
+#include "DistrhoDetails.hpp"
 #include "DistrhoPlugin.hpp"
 #include "distrho_schema.capnp.h"
 #include "distrho_shared_memory_audio.h"
@@ -49,7 +50,8 @@ public:
 
     void activate();
 
-    void run(const float** inputs, float** outputs, uint32_t numSamples);
+    void run(const float** inputs, float** outputs, uint32_t numSamples,
+             const MidiEvent *input_midi, int input_midi_size, MidiEvent *output_midi, int &output_midi_size);
 
     int get_parameter_count();
 

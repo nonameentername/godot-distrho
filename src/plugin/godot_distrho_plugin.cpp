@@ -1,6 +1,8 @@
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "godot_distrho_plugin.h"
+#include "DistrhoDetails.hpp"
+#include "distrho_shared_memory_audio.h"
 #include "godot_distrho_client.h"
 #include <capnp/serialize.h>
 #include <kj/string.h>
@@ -90,9 +92,20 @@ void GodotDistrhoPlugin::activate()
     client->activate();
 }
 
-void GodotDistrhoPlugin::run(const float** inputs, float** outputs, uint32_t numSamples)
+void GodotDistrhoPlugin::run(const float** inputs, float** outputs, uint32_t numSamples, const MidiEvent* midiEvents, uint32_t midiEventCount)
 {
-    client->run(inputs, outputs, numSamples);
+    static MidiEvent midi_output[godot::MIDI_BUFFER_SIZE];
+    int midi_output_size = 0;
+
+    client->run(inputs, outputs, numSamples, midiEvents, midiEventCount, midi_output, midi_output_size);
+
+    if (midi_output_size > 0) {
+        printf("midi_output_size = %d\n", midi_output_size);
+    }
+
+    for (int i = 0; i < midi_output_size; i++) {
+        writeMidiEvent(midi_output[i]);
+    }
 }
 
 Plugin* createPlugin()
