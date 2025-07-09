@@ -91,6 +91,8 @@ public:
     void write_output_midi(const MidiEvent *p_midi_events, int p_midi_event_count);
     int read_output_midi(MidiEvent *p_midi_events);
 
+    bool get_is_host();
+
     std::string get_shared_memory_name();
 };
 

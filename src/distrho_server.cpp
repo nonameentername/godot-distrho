@@ -24,9 +24,11 @@
 #include <godot_cpp/core/mutex_lock.hpp>
 #include <kj/string.h>
 #include <unistd.h>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace godot;
 using namespace boost::interprocess;
+using namespace boost::posix_time;
 
 DistrhoServer *DistrhoServer::singleton = NULL;
 
@@ -123,7 +125,17 @@ void DistrhoServer::audio_thread_func() {
             AudioServer::get_singleton()->process_external(BUFFER_FRAME_SIZE);
         }
 
-        audio_memory->buffer->input_condition.wait(shared_memory_lock);
+        ptime timeout = microsec_clock::universal_time() + milliseconds(5000);
+        bool result = audio_memory->buffer->input_condition.timed_wait(shared_memory_lock, timeout);
+
+        if (!result) {
+            if (!audio_memory->get_is_host()) {
+                exit_thread = true;
+                SceneTree *tree = Object::cast_to<SceneTree>(Engine::get_singleton()->get_main_loop());
+                tree->quit();
+            }
+            break;
+        }
 
         audio_memory->read_input_channel(input_buffer, BUFFER_FRAME_SIZE);
         audio_memory->advance_input_read_index(BUFFER_FRAME_SIZE);
@@ -190,7 +202,13 @@ void DistrhoServer::rpc_thread_func() {
 
     while (!exit_thread) {
         scoped_lock<interprocess_mutex> shared_memory_lock(rpc_memory->buffer->mutex);
-        rpc_memory->buffer->input_condition.wait(shared_memory_lock);
+
+        ptime timeout = microsec_clock::universal_time() + milliseconds(5000);
+        bool result = rpc_memory->buffer->input_condition.timed_wait(shared_memory_lock, timeout);
+
+        if (!result) {
+            break;
+        }
 
         switch (rpc_memory->buffer->request_id) {
         case GetLabelRequest::_capnpPrivate::typeId: {

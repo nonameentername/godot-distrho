@@ -99,10 +99,6 @@ void GodotDistrhoPlugin::run(const float** inputs, float** outputs, uint32_t num
 
     client->run(inputs, outputs, numSamples, midiEvents, midiEventCount, midi_output, midi_output_size);
 
-    if (midi_output_size > 0) {
-        printf("midi_output_size = %d\n", midi_output_size);
-    }
-
     for (int i = 0; i < midi_output_size; i++) {
         writeMidiEvent(midi_output[i]);
     }

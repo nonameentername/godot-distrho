@@ -155,3 +155,7 @@ int DistrhoSharedMemoryAudio::read_output_midi(MidiEvent *p_midi_events) {
 
     return buffer->midi_output_event_count;
 }
+
+bool DistrhoSharedMemoryAudio::get_is_host() {
+    return is_host;
+}
