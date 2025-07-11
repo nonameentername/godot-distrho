@@ -9,6 +9,9 @@ using namespace godot;
 namespace bip = boost::interprocess;
 
 DistrhoSharedMemoryAudio::DistrhoSharedMemoryAudio() {
+    std::random_device rd;
+    std::mt19937_64 rng(rd());
+    generator = boost::uuids::basic_random_generator<std::mt19937_64>(rng);
 }
 
 DistrhoSharedMemoryAudio::~DistrhoSharedMemoryAudio() {

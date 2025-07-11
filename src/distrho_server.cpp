@@ -1,7 +1,9 @@
 #include "distrho_server.h"
 #include "distrho_audio_port.h"
 #include "distrho_circular_buffer.h"
+#include "distrho_common.h"
 #include "distrho_config.h"
+#include "distrho_launcher.h"
 #include "distrho_midi_event.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_schema.capnp.h"
@@ -17,6 +19,7 @@
 #include "godot_cpp/core/memory.hpp"
 #include "godot_cpp/variant/utility_functions.hpp"
 #include "version_generated.gen.h"
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <capnp/serialize.h>
 #include <cstdlib>
@@ -24,7 +27,6 @@
 #include <godot_cpp/core/mutex_lock.hpp>
 #include <kj/string.h>
 #include <unistd.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace godot;
 using namespace boost::interprocess;
@@ -35,6 +37,13 @@ DistrhoServer *DistrhoServer::singleton = NULL;
 DistrhoServer::DistrhoServer() {
     process_sample_frame_size = 1024;
     buffer_start_time_usec = 0;
+
+    const char *module_type = std::getenv("DISTRHO_MODULE_TYPE");
+    if (module_type == NULL) {
+        module_type = std::to_string(DistrhoCommon::PLUGIN_TYPE).c_str();
+    }
+
+    is_plugin = std::stoi(module_type) == DistrhoCommon::PLUGIN_TYPE;
 
     initialized = false;
     active = false;
@@ -207,7 +216,7 @@ void DistrhoServer::rpc_thread_func() {
         bool result = rpc_memory->buffer->input_condition.timed_wait(shared_memory_lock, timeout);
 
         if (!result) {
-            break;
+            continue;
         }
 
         switch (rpc_memory->buffer->request_id) {
@@ -526,6 +535,10 @@ uint32_t DistrhoServer::get_frame_offset_for_event(uint64_t p_event_time_usec) {
 }
 
 int DistrhoServer::process_sample(AudioFrame *p_buffer, float p_rate, int p_frames) {
+    if (!is_plugin) {
+        return p_frames;
+    }
+
     lock_audio();
 
     if (process_sample_frame_size != p_frames) {
@@ -621,9 +634,11 @@ int DistrhoServer::get_channel_sample(AudioFrame *p_buffer, float p_rate, int p_
 
 Error DistrhoServer::start() {
     if (!godot::Engine::get_singleton()->is_editor_hint()) {
-        audio_thread.instantiate();
-        audio_mutex.instantiate();
-        audio_thread->start(callable_mp(this, &DistrhoServer::audio_thread_func), Thread::PRIORITY_HIGH);
+        if (is_plugin) {
+            audio_thread.instantiate();
+            audio_mutex.instantiate();
+            audio_thread->start(callable_mp(this, &DistrhoServer::audio_thread_func), Thread::PRIORITY_HIGH);
+        }
 
         rpc_thread.instantiate();
         rpc_thread->start(callable_mp(this, &DistrhoServer::rpc_thread_func), Thread::PRIORITY_NORMAL);
@@ -648,7 +663,9 @@ void DistrhoServer::unlock_audio() {
 void DistrhoServer::finish() {
     if (!godot::Engine::get_singleton()->is_editor_hint()) {
         exit_thread = true;
-        audio_thread->wait_to_finish();
+        if (is_plugin) {
+            audio_thread->wait_to_finish();
+        }
         rpc_thread->wait_to_finish();
     }
 }

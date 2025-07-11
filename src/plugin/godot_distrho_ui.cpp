@@ -10,6 +10,7 @@ START_NAMESPACE_DISTRHO
 
 GodotDistrhoUI::GodotDistrhoUI() : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAULT_HEIGHT)
 {
+    client = new GodotDistrhoClient(DistrhoCommon::UI_TYPE);
 }
 
 
@@ -26,6 +27,13 @@ void GodotDistrhoUI::uiIdle()
 }
 
 void GodotDistrhoUI::create_godot_instance() {
+}
+
+void GodotDistrhoUI::visibilityChanged(bool p_visible) {
+    printf("visibility changed\n");
+}
+
+void GodotDistrhoUI::onDisplay() {
 }
 
 UI* createUI()

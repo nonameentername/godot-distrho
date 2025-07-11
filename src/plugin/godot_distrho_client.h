@@ -1,6 +1,7 @@
 #ifndef GODOT_DISTRHO_CLIENT_H
 #define GODOT_DISTRHO_CLIENT_H
 
+#include "distrho_common.h"
 #include <boost/process.hpp>
 #include "DistrhoDetails.hpp"
 #include "DistrhoPlugin.hpp"
@@ -22,7 +23,7 @@ protected:
     template<typename T, typename R> capnp::FlatArrayMessageReader rpc_call(std::function<void(typename T::Builder&)> build_request = nullptr) const;
 
 public:
-    GodotDistrhoClient();
+    GodotDistrhoClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type);
 
     ~GodotDistrhoClient();
 

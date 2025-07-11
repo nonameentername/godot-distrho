@@ -5,8 +5,10 @@
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <memory>
+#include <random>
 
 #include <capnp/message.h>
 #include <capnp/serialize-packed.h>
@@ -32,7 +34,7 @@ struct RPCBuffer {
 class DistrhoSharedMemoryRPC {
 
 private:
-    boost::uuids::random_generator generator;
+    boost::uuids::basic_random_generator<std::mt19937_64> generator;
     std::unique_ptr<boost::interprocess::managed_shared_memory> shared_memory;
 
 public:
@@ -55,6 +57,8 @@ public:
     capnp::FlatArrayMessageReader read_reponse();
 
     std::string get_shared_memory_name();
+
+    bool get_is_host();
 };
 
 } // namespace godot

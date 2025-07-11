@@ -5,6 +5,7 @@
 #include "DistrhoPlugin.hpp"
 #include "DistrhoPluginUtils.hpp"
 #include "DistrhoStandaloneUtils.hpp"
+#include "godot_distrho_client.h"
 
 //#include "libgodot_distrho.h"
 #include <thread>
@@ -16,6 +17,7 @@ class GodotDistrhoUI : public UI
 
 private:
     uintptr_t window_id;
+    mutable GodotDistrhoClient *client;
 
 public:
     GodotDistrhoUI();
@@ -23,6 +25,10 @@ public:
     ~GodotDistrhoUI();
 
     void create_godot_instance();
+
+    virtual void visibilityChanged(bool p_visible);
+
+    void onDisplay() override;
 
 protected:
     void parameterChanged(const uint32_t index, const float value) override;

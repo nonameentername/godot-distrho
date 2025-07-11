@@ -8,6 +8,7 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <memory>
+#include <random>
 
 namespace godot {
 
@@ -51,7 +52,7 @@ struct AudioBuffer {
 class DistrhoSharedMemoryAudio {
 
 private:
-    boost::uuids::random_generator generator;
+    boost::uuids::basic_random_generator<std::mt19937_64> generator;
     std::unique_ptr<boost::interprocess::managed_shared_memory> shared_memory;
 
 public:

@@ -28,6 +28,7 @@ class DistrhoServer : public Object {
 
 private:
     bool initialized;
+    bool is_plugin;
 
     uint64_t buffer_start_time_usec;
     int process_sample_frame_size;

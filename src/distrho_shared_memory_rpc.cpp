@@ -10,6 +10,9 @@ using namespace godot;
 namespace bip = boost::interprocess;
 
 DistrhoSharedMemoryRPC::DistrhoSharedMemoryRPC() {
+    std::random_device rd;
+    std::mt19937_64 rng(rd());
+    generator = boost::uuids::basic_random_generator<std::mt19937_64>(rng);
 }
 
 DistrhoSharedMemoryRPC::~DistrhoSharedMemoryRPC() {
@@ -91,4 +94,8 @@ capnp::FlatArrayMessageReader DistrhoSharedMemoryRPC::read_reponse() {
 
 std::string DistrhoSharedMemoryRPC::get_shared_memory_name() {
     return shared_memory_name;
+}
+
+bool DistrhoSharedMemoryRPC::get_is_host() {
+    return is_host;
 }

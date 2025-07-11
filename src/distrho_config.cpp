@@ -16,7 +16,7 @@ DistrhoConfig::DistrhoConfig() {
             godot::UtilityFunctions::printerr("godot-distrho.cfg: Could not find section [distrho_plugin]");
             ERR_FAIL_MSG("godot-distrho.cfg: Could not find section [distrho_plugin]");
         } else {
-            PackedStringArray keys = {"main_scene", "width", "height"};
+            PackedStringArray keys = {"main_scene"};
 
             for (const String &key : keys) {
                 if (!config_file->has_section_key("distrho_plugin", key)) {
@@ -24,6 +24,14 @@ DistrhoConfig::DistrhoConfig() {
                                                       "` in section [distrho_plugin]");
                 }
                 plugin_values.insert(key, config_file->get_value("distrho_plugin", key, ""));
+            }
+
+            for (const String &key : keys) {
+                if (!config_file->has_section_key("distrho_ui", key)) {
+                    godot::UtilityFunctions::printerr("godot-distrho.cfg: Could not find key `", key,
+                                                      "` in section [distrho_ui]");
+                }
+                ui_values.insert(key, config_file->get_value("distrho_ui", key, ""));
             }
         }
     }
@@ -36,12 +44,8 @@ String DistrhoConfig::get_plugin_main_scene() {
     return plugin_values["main_scene"];
 }
 
-String DistrhoConfig::get_plugin_width() {
-    return plugin_values["width"];
-}
-
-String DistrhoConfig::get_plugin_height() {
-    return plugin_values["height"];
+String DistrhoConfig::get_ui_main_scene() {
+    return ui_values["main_scene"];
 }
 
 void DistrhoConfig::_bind_methods() {

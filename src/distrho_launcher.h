@@ -10,8 +10,6 @@ class DistrhoLauncher : public Node2D {
     GDCLASS(DistrhoLauncher, Node2D);
 
 private:
-    Window *window;
-
 protected:
 public:
     DistrhoLauncher();
@@ -19,9 +17,6 @@ public:
 
     void _ready() override;
     void initialize();
-
-    void show_ui();
-    void hide_ui();
 
     static void _bind_methods();
 };

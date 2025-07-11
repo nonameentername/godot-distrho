@@ -24,19 +24,6 @@ driver/mix_rate=48000
 
 GlobalDistrhoPluginInstance="*res://distrho_plugin_instance.gd"
 
-[display]
-
-window/size/viewport_width=1
-window/size/viewport_height=1
-window/size/initial_position_type=0
-window/size/resizable=false
-window/size/borderless=true
-window/size/always_on_top=true
-window/size/transparent=true
-window/size/no_focus=true
-window/subwindows/embed_subwindows=false
-window/per_pixel_transparency/allowed=true
-
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

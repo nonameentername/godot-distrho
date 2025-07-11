@@ -1,6 +1,8 @@
+#include "distrho_common.h"
 #include "libgodot_distrho.h"
 
 extern LibGodot libgodot;
+
 
 int main(int argc, char **argv) {
     std::string program;
@@ -13,14 +15,30 @@ int main(int argc, char **argv) {
         return EXIT_SUCCESS;
     }
 
-    std::vector<std::string> args = {
-        program,
-        "--rendering-method", "gl_compatibility",
-        "--rendering-driver", "opengl3",
-        "--display-driver", "x11",
-        "--audio-driver", "Distrho",
-        "--path", "/home/wmendiza/source/godot-distrho"
-    };
+    const char *module_type = std::getenv("DISTRHO_MODULE_TYPE");
+    if (module_type == NULL) {
+        module_type = std::to_string(DistrhoCommon::PLUGIN_TYPE).c_str();
+    }
+
+    std::vector<std::string> args;
+
+    if (std::stoi(module_type) == DistrhoCommon::PLUGIN_TYPE) {
+        args = {
+            program,
+            "--display-driver", "headless",
+            "--audio-driver", "Distrho",
+            "--path", "/home/wmendiza/source/godot-distrho"
+        };
+    } else {
+        args = {
+            program,
+            "--rendering-method", "gl_compatibility",
+            "--rendering-driver", "opengl3",
+            "--display-driver", "x11",
+            "--audio-driver", "Dummy",
+            "--path", "/home/wmendiza/source/godot-distrho"
+        };
+    }
 
     std::vector<char*> argvs;
     for (const auto& arg : args) {

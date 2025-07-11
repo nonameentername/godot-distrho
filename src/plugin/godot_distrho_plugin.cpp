@@ -106,7 +106,7 @@ void GodotDistrhoPlugin::run(const float** inputs, float** outputs, uint32_t num
 
 Plugin* createPlugin()
 {
-    GodotDistrhoClient* client = new GodotDistrhoClient();
+    GodotDistrhoClient* client = new GodotDistrhoClient(DistrhoCommon::PLUGIN_TYPE);
 
     uint32_t parameterCount = client->get_parameter_count();
     uint32_t programCount = client->get_program_count();
