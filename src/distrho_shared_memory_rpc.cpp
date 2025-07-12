@@ -2,8 +2,8 @@
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
 
-#include "distrho_schema.capnp.h"
 #include "distrho_shared_memory_rpc.h"
+#include "godot_distrho_schema.capnp.h"
 
 using namespace godot;
 

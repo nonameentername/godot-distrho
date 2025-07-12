@@ -6,7 +6,6 @@
 #include "distrho_launcher.h"
 #include "distrho_midi_event.h"
 #include "distrho_plugin_instance.h"
-#include "distrho_schema.capnp.h"
 #include "distrho_server_node.h"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
@@ -18,6 +17,7 @@
 #include "godot_cpp/core/class_db.hpp"
 #include "godot_cpp/core/memory.hpp"
 #include "godot_cpp/variant/utility_functions.hpp"
+#include "godot_distrho_schema.capnp.h"
 #include "version_generated.gen.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
@@ -139,6 +139,7 @@ void DistrhoServer::audio_thread_func() {
 
         if (!result) {
             if (!audio_memory->get_is_host()) {
+                // TODO: remove duplicate
                 exit_thread = true;
                 SceneTree *tree = Object::cast_to<SceneTree>(Engine::get_singleton()->get_main_loop());
                 tree->quit();
@@ -335,6 +336,17 @@ void DistrhoServer::rpc_thread_func() {
                 } else {
                     response.setResult(false);
                 }
+            });
+            break;
+        }
+
+        case ShutdownRequest::_capnpPrivate::typeId: {
+            handle_rpc_call<ShutdownRequest, ShutdownResponse>([this](auto &request, auto &response) {
+                // TODO: remove duplicate
+                exit_thread = true;
+                SceneTree *tree = Object::cast_to<SceneTree>(Engine::get_singleton()->get_main_loop());
+                tree->quit();
+                response.setResult(true);
             });
             break;
         }

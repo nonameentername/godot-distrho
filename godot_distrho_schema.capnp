@@ -88,3 +88,10 @@ struct GetOutputPortResponse {
   groupId @3 :UInt32;
   result @4 :Bool;
 }
+
+struct ShutdownRequest {
+}
+
+struct ShutdownResponse {
+  result @0 :Bool;
+}

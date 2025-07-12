@@ -1,19 +1,18 @@
 #ifndef GODOT_DISTRHO_UI_H
 #define GODOT_DISTRHO_UI_H
 
-#include "DistrhoUI.hpp"
 #include "DistrhoPlugin.hpp"
 #include "DistrhoPluginUtils.hpp"
 #include "DistrhoStandaloneUtils.hpp"
+#include "DistrhoUI.hpp"
 #include "godot_distrho_client.h"
 
-//#include "libgodot_distrho.h"
+// #include "libgodot_distrho.h"
 #include <thread>
 
 START_NAMESPACE_DISTRHO
 
-class GodotDistrhoUI : public UI
-{
+class GodotDistrhoUI : public UI {
 
 private:
     uintptr_t window_id;
@@ -26,9 +25,11 @@ public:
 
     void create_godot_instance();
 
-    virtual void visibilityChanged(bool p_visible);
+    void visibilityChanged(const bool visible) override;
 
-    void onDisplay() override;
+    uintptr_t get_window_id();
+
+    // void onDisplay() override;
 
 protected:
     void parameterChanged(const uint32_t index, const float value) override;

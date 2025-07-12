@@ -1,8 +1,8 @@
 #ifndef GODOT_DISTRHO_UTILS_H
 #define GODOT_DISTRHO_UTILS_H
 
-#include <boost/process.hpp>
 #include "src/DistrhoDefines.h"
+#include <boost/process.hpp>
 #include <string>
 #include <vector>
 
@@ -17,20 +17,17 @@ START_NAMESPACE_DISTRHO
 class GodotDistrhoUtils {
 
 public:
-    static Display* get_x11_display();
+    static Display *get_x11_display();
 
     static ::Window get_x11_window(Display *display);
 
     static std::string get_executable_path();
 
-    static boost::process::child* launch_process(const std::string& p_name,
-           boost::process::environment p_env,
-           const std::vector<std::string>& p_args = {}
-           );
+    static boost::process::child *launch_process(const std::string &p_name, boost::process::environment p_env,
+                                                 const std::vector<std::string> &p_args = {});
 
     static std::string get_shared_library_path();
 };
-
 
 END_NAMESPACE_DISTRHO
 

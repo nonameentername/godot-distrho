@@ -2,15 +2,15 @@
 #include <X11/Xlib.h>
 
 #if defined(_WIN32)
-#  include <windows.h>
+#include <windows.h>
 #elif defined(__linux__)
-#  include <unistd.h>
-#  include <limits.h>
-#  include <dlfcn.h>
+#include <dlfcn.h>
+#include <limits.h>
+#include <unistd.h>
 #elif defined(__APPLE__)
-#  include <mach-o/dyld.h>
-#  include <limits.h>
-#  include <dlfcn.h>
+#include <dlfcn.h>
+#include <limits.h>
+#include <mach-o/dyld.h>
 #endif
 
 #include <boost/process.hpp>
@@ -58,15 +58,14 @@ std::string GodotDistrhoUtils::get_executable_path() {
 std::string GodotDistrhoUtils::get_shared_library_path() {
 #if defined(_WIN32)
     HMODULE hModule = nullptr;
-    GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                      GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+    GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
                       (LPCSTR)&getSharedLibraryPath, &hModule);
     char path[MAX_PATH];
     GetModuleFileName(hModule, path, MAX_PATH);
     return std::string(path);
 #elif defined(__linux__) || defined(__APPLE__)
     Dl_info info;
-    if (dladdr(reinterpret_cast<void*>(&GodotDistrhoUtils::get_shared_library_path), &info) && info.dli_fname)
+    if (dladdr(reinterpret_cast<void *>(&GodotDistrhoUtils::get_shared_library_path), &info) && info.dli_fname)
         return std::string(info.dli_fname);
     return {};
 #else
@@ -74,11 +73,8 @@ std::string GodotDistrhoUtils::get_shared_library_path() {
 #endif
 }
 
-child* GodotDistrhoUtils::launch_process(
-    const std::string& p_name,
-    environment p_env,
-    const std::vector<std::string>& p_args
-) {
+child *GodotDistrhoUtils::launch_process(const std::string &p_name, environment p_env,
+                                         const std::vector<std::string> &p_args) {
     using std::filesystem::path;
 
     path lib_dir = path{get_shared_library_path()}.parent_path();
