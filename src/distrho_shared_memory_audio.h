@@ -43,7 +43,7 @@ struct AudioBuffer {
     MidiEvent midi_input[MIDI_BUFFER_SIZE];
     MidiEvent midi_output[MIDI_BUFFER_SIZE];
 
-    bool godot_ready = false;
+    bool ready = false;
     boost::interprocess::interprocess_mutex mutex;
     boost::interprocess::interprocess_condition input_condition;
     boost::interprocess::interprocess_condition output_condition;

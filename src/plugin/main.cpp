@@ -14,13 +14,6 @@ int main(int argc, char **argv) {
         return EXIT_SUCCESS;
     }
 
-    const char *window_id = std::getenv("DISTRHO_WINDOW_ID");
-    if (window_id == NULL) {
-        window_id = "";
-    }
-
-    printf("main: window_id = %s\n", window_id);
-
     const char *module_type = std::getenv("DISTRHO_MODULE_TYPE");
     if (module_type == NULL) {
         module_type = std::to_string(DistrhoCommon::PLUGIN_TYPE).c_str();
@@ -48,13 +41,6 @@ int main(int argc, char **argv) {
                 "Dummy",
                 "--path",
                 "/home/wmendiza/source/godot-distrho"};
-
-        /*
-        if (std::stoi(window_id) != 0) {
-            args.push_back("--wid");
-            args.push_back(window_id);
-        }
-        */
     }
 
     std::vector<char *> argvs;

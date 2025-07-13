@@ -8,7 +8,7 @@
 
 // #define DISTRHO_UI_USE_CUSTOM          1
 // #define DISTRHO_UI_CUSTOM_INCLUDE_PATH "godot_gui_widget.h"
-// #define DISTRHO_UI_CUSTOM_WIDGET_TYPE  DGL_NAMESPACE::GodotGuiWidget
+// #define DISTRHO_UI_CUSTOM_WIDGET_TYPE  DGL_NAMESPACE::GodotDistrhoGuiWidget
 
 #define DISTRHO_PLUGIN_HAS_UI 1
 #define DISTRHO_PLUGIN_HAS_EMBED_UI 0

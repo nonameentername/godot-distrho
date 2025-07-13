@@ -9,6 +9,7 @@
 #include "distrho_server_node.h"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
+#include "distrho_ui_client.h"
 #include "godot_cpp/classes/audio_server.hpp"
 #include "godot_cpp/classes/engine.hpp"
 #include "godot_cpp/classes/os.hpp"
@@ -50,18 +51,30 @@ DistrhoServer::DistrhoServer() {
     exit_thread = false;
     distrho_config = memnew(DistrhoConfig);
     distrho_plugin = memnew(DistrhoPluginInstance);
-    audio_memory = new DistrhoSharedMemoryAudio();
+
     const char *audio_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_AUDIO");
     if (audio_shared_memory == NULL) {
         audio_shared_memory = "";
     }
+    audio_memory = new DistrhoSharedMemoryAudio();
     audio_memory->initialize(0, 0, audio_shared_memory);
+
     const char *rpc_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_RPC");
     if (rpc_shared_memory == NULL) {
         rpc_shared_memory = "";
     }
     rpc_memory = new DistrhoSharedMemoryRPC();
     rpc_memory->initialize(rpc_shared_memory);
+
+    const char *godot_rpc_shared_memory = std::getenv("GODOT_SHARED_MEMORY_RPC");
+    if (godot_rpc_shared_memory == NULL) {
+        godot_rpc_shared_memory = "";
+    }
+    godot_rpc_memory = new DistrhoSharedMemoryRPC();
+    godot_rpc_memory->initialize(godot_rpc_shared_memory);
+
+    client = new DistrhoUIClient(godot_rpc_memory);
+
     singleton = this;
 
     // TODO: use the correct number of channels instad of num_channels (16)
@@ -75,7 +88,6 @@ DistrhoServer::DistrhoServer() {
 
     for (int channel = 0; channel < audio_memory->get_num_input_channels(); channel++) {
         input_channels.write[channel] = new DistrhoCircularBuffer();
-        ;
     }
 
     for (int channel = 0; channel < audio_memory->get_num_output_channels(); channel++) {
@@ -97,6 +109,7 @@ DistrhoServer::~DistrhoServer() {
         delete output_channels[channel];
     }
 
+    delete client;
     singleton = NULL;
 }
 
@@ -118,7 +131,7 @@ void DistrhoServer::initialize() {
 
 void DistrhoServer::audio_thread_func() {
     scoped_lock<interprocess_mutex> shared_memory_lock(audio_memory->buffer->mutex);
-    audio_memory->buffer->godot_ready = true;
+    audio_memory->buffer->ready = true;
     shared_memory_lock.unlock();
 
     active = true;
@@ -193,21 +206,12 @@ void DistrhoServer::audio_thread_func() {
 
 template <typename T, typename R>
 void DistrhoServer::handle_rpc_call(std::function<void(typename T::Reader &, typename R::Builder &)> handle_request) {
-    capnp::FlatArrayMessageReader reader = rpc_memory->read_request();
-    typename T::Reader request = reader.getRoot<T>();
-
-    capnp::MallocMessageBuilder builder;
-    typename R::Builder response = builder.initRoot<R>();
-
-    handle_request(request, response);
-
-    rpc_memory->write_reponse(&builder);
-    rpc_memory->buffer->output_condition.notify_one();
+    return DistrhoCommon::handle_rpc_call<T, R>(*rpc_memory, handle_request);
 }
 
 void DistrhoServer::rpc_thread_func() {
     scoped_lock<interprocess_mutex> shared_memory_lock(rpc_memory->buffer->mutex);
-    rpc_memory->buffer->godot_ready = true;
+    rpc_memory->buffer->ready = true;
     shared_memory_lock.unlock();
 
     while (!exit_thread) {

@@ -117,7 +117,8 @@ endforeach()
 
 #godot-plugin
 
-set(SOURCE src/plugin/libgodot_distrho.cpp src/plugin/main.cpp)
+set(SOURCE src/plugin/libgodot_distrho.cpp src/plugin/main.cpp src/distrho_common.cpp)
+    
 set(HEADER src/plugin/libgodot_distrho.h)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g3")
@@ -147,6 +148,10 @@ target_link_libraries(godot-plugin PRIVATE
   ${CMAKE_THREAD_LIBS_INIT}
   godot.linuxbsd.editor.x86_64
   godot-cpp.linux.template_debug.x86_64
+  CapnProto::capnp-rpc
+  CapnProto::capnp
+  CapnProto::kj-async
+  CapnProto::kj
   ${GODOT_LIBRARIES}
 )
 
@@ -163,17 +168,21 @@ dpf_add_plugin(godot-distrho
     src/godot_distrho_schema.capnp.cpp
     src/plugin/godot_distrho_plugin.cpp
     src/plugin/godot_distrho_utils.cpp
+    src/plugin/godot_distrho_plugin_server.cpp
     src/plugin/godot_distrho_client.cpp
     src/distrho_shared_memory_audio.cpp
     src/distrho_shared_memory_rpc.cpp
+    src/distrho_common.cpp
     #src/plugin/libgodot_distrho.cpp
   FILES_UI
-    src/plugin/godot_gui_widget.cpp
+    src/plugin/godot_distrho_gui_widget.cpp
     src/plugin/godot_distrho_ui.cpp
     src/plugin/godot_distrho_utils.cpp
+    src/plugin/godot_distrho_ui_server.cpp
     src/plugin/godot_distrho_client.cpp
     src/distrho_shared_memory_audio.cpp
     src/distrho_shared_memory_rpc.cpp
+    src/distrho_common.cpp
     #src/plugin/libgodot_distrho.cpp
 )
 
@@ -186,7 +195,6 @@ target_compile_definitions(dgl-opengl PUBLIC
 target_include_directories(godot-distrho PUBLIC
   src/plugin
   src
-  ${CapnProto_INCLUDE_DIRS}
   #modules/godot/core/extension
   #godot-cpp/include
   #godot-cpp/gen/src

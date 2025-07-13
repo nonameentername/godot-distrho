@@ -12,17 +12,18 @@ using namespace boost::posix_time;
 
 START_NAMESPACE_DISTRHO
 
-GodotDistrhoClient::GodotDistrhoClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type, std::string p_window_id) {
+GodotDistrhoClient::GodotDistrhoClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type) {
     audio_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
     rpc_memory.initialize();
+    godot_rpc_memory.initialize();
 
 #if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
     boost::process::environment env = boost::this_process::environment();
 
-    env["DISTRHO_WINDOW_ID"] = p_window_id;
     env["DISTRHO_MODULE_TYPE"] = std::to_string(p_type);
     env["DISTRHO_SHARED_MEMORY_AUDIO"] = audio_memory.shared_memory_name.c_str();
     env["DISTRHO_SHARED_MEMORY_RPC"] = rpc_memory.shared_memory_name.c_str();
+    env["GODOT_SHARED_MEMORY_RPC"] = godot_rpc_memory.shared_memory_name.c_str();
 
 #if defined(_WIN32)
     plugin = GodotDistrhoUtils::launch_process("godot-plugin.exe", env);
@@ -34,12 +35,12 @@ GodotDistrhoClient::GodotDistrhoClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type
 #endif
 
     if (p_type == DistrhoCommon::PLUGIN_TYPE) {
-        while (!audio_memory.buffer->godot_ready) {
+        while (!audio_memory.buffer->ready) {
             sleep(1);
         }
     }
 
-    while (!rpc_memory.buffer->godot_ready) {
+    while (!rpc_memory.buffer->ready) {
         sleep(1);
     }
 
@@ -78,29 +79,7 @@ GodotDistrhoClient::~GodotDistrhoClient() {
 template <typename T, typename R>
 capnp::FlatArrayMessageReader GodotDistrhoClient::rpc_call(
     std::function<void(typename T::Builder &)> build_request) const {
-    if (rpc_memory.buffer->godot_ready) {
-        scoped_lock<interprocess_mutex> lock(rpc_memory.buffer->mutex);
-
-        capnp::MallocMessageBuilder builder;
-        typename T::Builder request = builder.initRoot<T>();
-
-        if (build_request) {
-            build_request(request);
-        }
-
-        rpc_memory.write_request(&builder, T::_capnpPrivate::typeId);
-        rpc_memory.buffer->input_condition.notify_one();
-
-        ptime timeout = microsec_clock::universal_time() + milliseconds(1000);
-        bool result = rpc_memory.buffer->output_condition.timed_wait(lock, timeout);
-
-        if (result) {
-            return rpc_memory.read_reponse();
-        }
-    }
-
-    kj::ArrayPtr<const capnp::word> emptyData;
-    return capnp::FlatArrayMessageReader(emptyData);
+    return DistrhoCommon::rpc_call<T, R>(rpc_memory, build_request);
 }
 
 const char *GodotDistrhoClient::getLabel() const {
@@ -173,7 +152,7 @@ void GodotDistrhoClient::run(const float **inputs, float **outputs, uint32_t num
                              int input_midi_size, MidiEvent *output_midi, int &output_midi_size) {
     bool reinitialize = false;
 
-    if (audio_memory.buffer->godot_ready) {
+    if (audio_memory.buffer->ready) {
         scoped_lock<interprocess_mutex> lock(audio_memory.buffer->mutex);
 
         audio_memory.write_input_channel(inputs, godot::BUFFER_FRAME_SIZE);
@@ -268,6 +247,10 @@ bool GodotDistrhoClient::shutdown() {
     capnp::FlatArrayMessageReader reader = rpc_call<ShutdownRequest, ShutdownResponse>();
     ShutdownResponse::Reader response = reader.getRoot<ShutdownResponse>();
     return response.getResult();
+}
+
+godot::DistrhoSharedMemoryRPC *GodotDistrhoClient::get_godot_rpc_memory() {
+    return &godot_rpc_memory;
 }
 
 END_NAMESPACE_DISTRHO

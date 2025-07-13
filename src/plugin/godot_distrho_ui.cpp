@@ -9,6 +9,7 @@ START_NAMESPACE_DISTRHO
 
 GodotDistrhoUI::GodotDistrhoUI() : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAULT_HEIGHT) {
     client = NULL;
+    server = NULL;
 
     // if (isVisible() || isEmbed()) {
     if (isVisible()) {
@@ -18,7 +19,14 @@ GodotDistrhoUI::GodotDistrhoUI() : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAU
 
 GodotDistrhoUI::~GodotDistrhoUI() {
     if (client != NULL) {
+        client->shutdown();
         delete client;
+        client = NULL;
+    }
+
+    if (server != NULL) {
+        delete server;
+        server = NULL;
     }
 }
 
@@ -35,27 +43,20 @@ void GodotDistrhoUI::visibilityChanged(const bool p_visible) {
     printf("visibility changed\n");
 
     if (p_visible) {
-
         if (client == NULL) {
-            printf("wtf? window_id = %d\n", 0);
-            client = new GodotDistrhoClient(DistrhoCommon::UI_TYPE, "0");
+            client = new GodotDistrhoClient(DistrhoCommon::UI_TYPE);
+            server = new GodotDistrhoUIServer(this, client->get_godot_rpc_memory());
         }
-
-        /*
-        if (isEmbed()) {
-            if (client == NULL) {
-                window_id = getParentWindowHandle();
-                printf("wtf? window_id = %ld\n", window_id);
-                client = new GodotDistrhoClient(DistrhoCommon::UI_TYPE, std::to_string(window_id));
-            }
-        } else {
-        }
-        */
     } else {
         if (client != NULL) {
             client->shutdown();
             delete client;
             client = NULL;
+        }
+
+        if (server != NULL) {
+            delete server;
+            server = NULL;
         }
     }
 }

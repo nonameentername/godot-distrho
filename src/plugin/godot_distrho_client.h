@@ -16,13 +16,14 @@ private:
     boost::process::child *plugin;
     mutable godot::DistrhoSharedMemoryAudio audio_memory;
     mutable godot::DistrhoSharedMemoryRPC rpc_memory;
+    mutable godot::DistrhoSharedMemoryRPC godot_rpc_memory;
 
 protected:
     template <typename T, typename R>
     capnp::FlatArrayMessageReader rpc_call(std::function<void(typename T::Builder &)> build_request = nullptr) const;
 
 public:
-    GodotDistrhoClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type, std::string p_window_id = "");
+    GodotDistrhoClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type);
 
     ~GodotDistrhoClient();
 
@@ -66,6 +67,8 @@ public:
     bool get_output_port(int p_index, AudioPort &port);
 
     bool shutdown();
+
+    godot::DistrhoSharedMemoryRPC *get_godot_rpc_memory();
 };
 
 END_NAMESPACE_DISTRHO

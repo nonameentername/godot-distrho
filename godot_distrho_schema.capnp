@@ -1,5 +1,7 @@
 @0xd793ef6eb1602207;
 
+# DistrhoServer (godot)
+
 struct GetLabelRequest {
 }
 
@@ -94,4 +96,31 @@ struct ShutdownRequest {
 
 struct ShutdownResponse {
   result @0 :Bool;
+}
+
+# GodotDistrhoUIServer (distrho)
+
+struct EditParameterRequest {
+  index @0 :UInt32;
+  started @1 :Bool;
+}
+
+struct EditParameterResponse {
+}
+
+struct SetParameterValueRequest {
+  index @0 :UInt32;
+  value @1 :Float32;
+}
+
+struct SetParameterValueResponse {
+}
+
+struct SendNoteRequest {
+  channel @0 :UInt8;
+  note @1 :UInt8;
+  velocity @2 :UInt8;
+}
+
+struct SendNoteResponse {
 }

@@ -25,7 +25,7 @@ struct RPCBuffer {
     int size;
     uint64_t request_id;
 
-    bool godot_ready = false;
+    bool ready = false;
     boost::interprocess::interprocess_mutex mutex;
     boost::interprocess::interprocess_condition input_condition;
     boost::interprocess::interprocess_condition output_condition;

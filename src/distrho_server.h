@@ -9,6 +9,7 @@
 #include "distrho_plugin_instance.h"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
+#include "distrho_ui_client.h"
 #include "godot_cpp/classes/mutex.hpp"
 #include "godot_cpp/classes/semaphore.hpp"
 #include "godot_cpp/classes/thread.hpp"
@@ -36,8 +37,11 @@ private:
     DistrhoConfig *distrho_config;
     DistrhoPluginInstance *distrho_plugin;
     DistrhoLauncher *distrho_launcher;
+
     DistrhoSharedMemoryAudio *audio_memory;
     DistrhoSharedMemoryRPC *rpc_memory;
+    DistrhoSharedMemoryRPC *godot_rpc_memory;
+    DistrhoUIClient *client;
 
     float temp_buffer[BUFFER_FRAME_SIZE];
 
