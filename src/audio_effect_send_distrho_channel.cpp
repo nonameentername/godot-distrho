@@ -1,5 +1,5 @@
 #include "audio_effect_send_distrho_channel.h"
-#include "distrho_server.h"
+#include "distrho_plugin_server.h"
 #include "godot_cpp/classes/audio_server.hpp"
 
 using namespace godot;
@@ -79,8 +79,8 @@ void AudioEffectSetDistrhoChannelInstance::_process(const void *p_src_frames, Au
     }
 
     int p_rate = 1;
-    DistrhoServer::get_singleton()->set_channel_sample(src_frames, p_rate, p_frame_count, base->channel_left,
-                                                       base->channel_right);
+    DistrhoPluginServer::get_singleton()->set_channel_sample(src_frames, p_rate, p_frame_count, base->channel_left,
+                                                             base->channel_right);
 }
 
 bool AudioEffectSetDistrhoChannelInstance::_process_silence() const {

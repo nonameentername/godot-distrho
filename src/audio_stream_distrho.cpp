@@ -1,6 +1,6 @@
 #include "audio_stream_distrho.h"
 #include "audio_stream_player_distrho.h"
-#include "distrho_server.h"
+#include "distrho_plugin_server.h"
 #include "godot_cpp/classes/audio_stream.hpp"
 
 using namespace godot;
@@ -29,7 +29,7 @@ float AudioStreamDistrho::get_length() const {
 }
 
 int AudioStreamDistrho::process_sample(AudioFrame *p_buffer, float p_rate, int p_frames) {
-    return DistrhoServer::get_singleton()->process_sample(p_buffer, p_rate, p_frames);
+    return DistrhoPluginServer::get_singleton()->process_sample(p_buffer, p_rate, p_frames);
 }
 
 void AudioStreamDistrho::_bind_methods() {

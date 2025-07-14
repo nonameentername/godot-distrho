@@ -1,7 +1,7 @@
 #include "godot_distrho_plugin.h"
 #include "DistrhoDetails.hpp"
 #include "distrho_shared_memory_audio.h"
-#include "godot_distrho_client.h"
+#include "godot_distrho_plugin_client.h"
 #include "godot_distrho_plugin_server.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
@@ -13,7 +13,7 @@ using namespace boost::posix_time;
 
 START_NAMESPACE_DISTRHO
 
-GodotDistrhoPlugin::GodotDistrhoPlugin(GodotDistrhoClient *p_client, GodotDistrhoPluginServer *p_server,
+GodotDistrhoPlugin::GodotDistrhoPlugin(GodotDistrhoPluginClient *p_client, GodotDistrhoPluginServer *p_server,
                                        uint32_t parameterCount, uint32_t programCount, uint32_t stateCount)
     : Plugin(parameterCount, programCount, stateCount) {
     client = p_client;
@@ -94,7 +94,7 @@ void GodotDistrhoPlugin::run(const float **inputs, float **outputs, uint32_t num
 }
 
 Plugin *createPlugin() {
-    GodotDistrhoClient *client = new GodotDistrhoClient(DistrhoCommon::PLUGIN_TYPE);
+    GodotDistrhoPluginClient *client = new GodotDistrhoPluginClient(DistrhoCommon::PLUGIN_TYPE);
     GodotDistrhoPluginServer *server = new GodotDistrhoPluginServer(client->get_godot_rpc_memory());
 
     uint32_t parameterCount = client->get_parameter_count();

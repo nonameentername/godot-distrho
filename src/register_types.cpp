@@ -16,12 +16,16 @@
 #include "distrho_launcher.h"
 #include "distrho_midi_event.h"
 #include "distrho_plugin_instance.h"
-#include "distrho_server.h"
-#include "distrho_server_node.h"
+#include "distrho_plugin_server.h"
+#include "distrho_plugin_server_node.h"
+#include "distrho_ui_instance.h"
+#include "distrho_ui_server.h"
+#include "distrho_ui_server_node.h"
 
 using namespace godot;
 
-static DistrhoServer *distrho_server;
+static DistrhoPluginServer *distrho_plugin_server;
+static DistrhoUIServer *distrho_ui_server;
 
 void initialize_godot_distrho_module(ModuleInitializationLevel p_level) {
     if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
@@ -34,13 +38,20 @@ void initialize_godot_distrho_module(ModuleInitializationLevel p_level) {
     ClassDB::register_class<AudioEffectSetDistrhoChannelInstance>();
     ClassDB::register_class<DistrhoConfig>();
     ClassDB::register_class<DistrhoAudioPort>();
-    ClassDB::register_class<DistrhoPluginInstance>();
     ClassDB::register_class<DistrhoLauncher>();
-    ClassDB::register_class<DistrhoServer>();
     ClassDB::register_class<DistrhoMidiEvent>();
-    ClassDB::register_class<DistrhoServerNode>();
-    distrho_server = memnew(DistrhoServer);
-    Engine::get_singleton()->register_singleton("DistrhoServer", DistrhoServer::get_singleton());
+
+    ClassDB::register_class<DistrhoPluginInstance>();
+    ClassDB::register_class<DistrhoPluginServerNode>();
+    ClassDB::register_class<DistrhoPluginServer>();
+    distrho_plugin_server = memnew(DistrhoPluginServer);
+    Engine::get_singleton()->register_singleton("DistrhoPluginServer", DistrhoPluginServer::get_singleton());
+
+    ClassDB::register_class<DistrhoUIInstance>();
+    ClassDB::register_class<DistrhoUIServerNode>();
+    ClassDB::register_class<DistrhoUIServer>();
+    distrho_ui_server = memnew(DistrhoUIServer);
+    Engine::get_singleton()->register_singleton("DistrhoUIServer", DistrhoUIServer::get_singleton());
 }
 
 void uninitialize_godot_distrho_module(ModuleInitializationLevel p_level) {
@@ -48,9 +59,13 @@ void uninitialize_godot_distrho_module(ModuleInitializationLevel p_level) {
         return;
     }
 
-    Engine::get_singleton()->unregister_singleton("DistrhoServer");
-    distrho_server->finish();
-    memdelete(distrho_server);
+    Engine::get_singleton()->unregister_singleton("DistrhoPluginServer");
+    distrho_plugin_server->finish();
+    memdelete(distrho_plugin_server);
+
+    Engine::get_singleton()->unregister_singleton("DistrhoUIServer");
+    distrho_ui_server->finish();
+    memdelete(distrho_ui_server);
 }
 
 extern "C" {

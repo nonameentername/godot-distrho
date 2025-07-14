@@ -4,7 +4,7 @@
 #include "DistrhoPlugin.hpp"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
-#include "godot_distrho_client.h"
+#include "godot_distrho_plugin_client.h"
 #include "godot_distrho_plugin_server.h"
 #include <boost/process.hpp>
 
@@ -12,11 +12,11 @@ START_NAMESPACE_DISTRHO
 
 class GodotDistrhoPlugin : public Plugin {
 private:
-    mutable GodotDistrhoClient *client;
+    mutable GodotDistrhoPluginClient *client;
     mutable GodotDistrhoPluginServer *server;
 
 public:
-    GodotDistrhoPlugin(GodotDistrhoClient *p_client, GodotDistrhoPluginServer *p_server, uint32_t parameterCount,
+    GodotDistrhoPlugin(GodotDistrhoPluginClient *p_client, GodotDistrhoPluginServer *p_server, uint32_t parameterCount,
                        uint32_t programCount, uint32_t stateCount);
     ~GodotDistrhoPlugin();
 

@@ -34,6 +34,7 @@ struct RPCBuffer {
 class DistrhoSharedMemoryRPC {
 
 private:
+    std::string name;
     boost::uuids::basic_random_generator<std::mt19937_64> generator;
     std::unique_ptr<boost::interprocess::managed_shared_memory> shared_memory;
 
@@ -48,7 +49,7 @@ public:
     DistrhoSharedMemoryRPC();
     ~DistrhoSharedMemoryRPC();
 
-    void initialize(std::string p_shared_memory_name = "");
+    void initialize(std::string p_name, std::string p_shared_memory_name = "");
 
     void write_request(capnp::MallocMessageBuilder *builder, uint64_t request_id);
     capnp::FlatArrayMessageReader read_request();

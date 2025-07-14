@@ -23,6 +23,7 @@ driver/mix_rate=48000
 [autoload]
 
 GlobalDistrhoPluginInstance="*res://distrho_plugin_instance.gd"
+GlobalDistrhoUiInstance="*res://distrho_ui_instance.gd"
 
 [rendering]
 

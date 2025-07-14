@@ -21,14 +21,14 @@ DistrhoSharedMemoryRPC::~DistrhoSharedMemoryRPC() {
     }
 }
 
-void DistrhoSharedMemoryRPC::initialize(std::string p_shared_memory_name) {
+void DistrhoSharedMemoryRPC::initialize(std::string p_name, std::string p_shared_memory_name) {
     if (p_shared_memory_name.length() == 0) {
         is_host = true;
         boost::uuids::uuid uuid = generator();
         shared_memory_name = boost::uuids::to_string(uuid);
 
 #if !DISTRHO_PLUGIN_ENABLE_SUBPROCESS && DEBUG
-        printf("export DISTRHO_SHARED_MEMORY_RPC=%s\n", shared_memory_name.c_str());
+        printf("export %s=%s\n", p_name.c_str(), shared_memory_name.c_str());
 #endif
 
         bip::shared_memory_object::remove(shared_memory_name.c_str());

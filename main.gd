@@ -4,15 +4,15 @@ extends Node2D
 func _ready() -> void:
 	print(
 		"godot-distrho version: ",
-		DistrhoServer.get_version(),
+		DistrhoPluginServer.get_version(),
 		" build: ",
-		DistrhoServer.get_build()
+		DistrhoPluginServer.get_build()
 	)
-	DistrhoServer.midi_event.connect(_on_midi_event)
-	DistrhoServer.midi_note_on.connect(_on_midi_note_on)
-	DistrhoServer.midi_note_off.connect(_on_midi_note_off)
-	DistrhoServer.midi_cc.connect(_on_midi_cc)
-	DistrhoServer.midi_program_change.connect(_on_midi_program_change)
+	DistrhoPluginServer.midi_event.connect(_on_midi_event)
+	DistrhoPluginServer.midi_note_on.connect(_on_midi_note_on)
+	DistrhoPluginServer.midi_note_off.connect(_on_midi_note_off)
+	DistrhoPluginServer.midi_cc.connect(_on_midi_cc)
+	DistrhoPluginServer.midi_program_change.connect(_on_midi_program_change)
 
 
 func _on_midi_event(midi_event: DistrhoMidiEvent) -> void:
@@ -28,7 +28,7 @@ func _on_midi_event(midi_event: DistrhoMidiEvent) -> void:
 		" frame: ",
 		midi_event.frame
 	)
-	DistrhoServer.send_midi_event(midi_event)
+	DistrhoPluginServer.send_midi_event(midi_event)
 
 
 func _on_midi_note_on(channel: int, note: int, velocity: int, frame: int) -> void:

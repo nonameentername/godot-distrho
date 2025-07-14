@@ -1,4 +1,4 @@
-#include "distrho_server.h"
+#include "distrho_plugin_server.h"
 #include "distrho_audio_port.h"
 #include "distrho_circular_buffer.h"
 #include "distrho_common.h"
@@ -6,10 +6,10 @@
 #include "distrho_launcher.h"
 #include "distrho_midi_event.h"
 #include "distrho_plugin_instance.h"
-#include "distrho_server_node.h"
+#include "distrho_plugin_server_node.h"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
-#include "distrho_ui_client.h"
+// #include "distrho_plugin_client.h"
 #include "godot_cpp/classes/audio_server.hpp"
 #include "godot_cpp/classes/engine.hpp"
 #include "godot_cpp/classes/os.hpp"
@@ -33,9 +33,9 @@ using namespace godot;
 using namespace boost::interprocess;
 using namespace boost::posix_time;
 
-DistrhoServer *DistrhoServer::singleton = NULL;
+DistrhoPluginServer *DistrhoPluginServer::singleton = NULL;
 
-DistrhoServer::DistrhoServer() {
+DistrhoPluginServer::DistrhoPluginServer() {
     process_sample_frame_size = 1024;
     buffer_start_time_usec = 0;
 
@@ -49,55 +49,57 @@ DistrhoServer::DistrhoServer() {
     initialized = false;
     active = false;
     exit_thread = false;
+    singleton = this;
+
     distrho_config = memnew(DistrhoConfig);
     distrho_plugin = memnew(DistrhoPluginInstance);
 
-    const char *audio_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_AUDIO");
-    if (audio_shared_memory == NULL) {
-        audio_shared_memory = "";
+    if (is_plugin) {
+        const char *audio_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_AUDIO");
+        if (audio_shared_memory == NULL) {
+            audio_shared_memory = "";
+        }
+        audio_memory = new DistrhoSharedMemoryAudio();
+        audio_memory->initialize(0, 0, audio_shared_memory);
+
+        const char *rpc_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_RPC");
+        if (rpc_shared_memory == NULL) {
+            rpc_shared_memory = "";
+        }
+        rpc_memory = new DistrhoSharedMemoryRPC();
+        rpc_memory->initialize("DISTRHO_SHARED_MEMORY_RPC", rpc_shared_memory);
+
+        const char *godot_rpc_shared_memory = std::getenv("GODOT_SHARED_MEMORY_RPC");
+        if (godot_rpc_shared_memory == NULL) {
+            godot_rpc_shared_memory = "";
+        }
+        godot_rpc_memory = new DistrhoSharedMemoryRPC();
+        godot_rpc_memory->initialize("GODOT_SHARED_MEMORY_RPC", godot_rpc_shared_memory);
+
+        // client = new DistrhoPluginClient(godot_rpc_memory);
+
+        // TODO: use the correct number of channels instad of num_channels (16)
+        for (int i = 0; i < num_channels; ++i) {
+            input_buffer[i] = input_data[i];
+            output_buffer[i] = output_data[i];
+        }
+
+        input_channels.resize(audio_memory->get_num_input_channels());
+        output_channels.resize(audio_memory->get_num_output_channels());
+
+        for (int channel = 0; channel < audio_memory->get_num_input_channels(); channel++) {
+            input_channels.write[channel] = new DistrhoCircularBuffer();
+        }
+
+        for (int channel = 0; channel < audio_memory->get_num_output_channels(); channel++) {
+            output_channels.write[channel] = new DistrhoCircularBuffer();
+        }
+
+        call_deferred("initialize");
     }
-    audio_memory = new DistrhoSharedMemoryAudio();
-    audio_memory->initialize(0, 0, audio_shared_memory);
-
-    const char *rpc_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_RPC");
-    if (rpc_shared_memory == NULL) {
-        rpc_shared_memory = "";
-    }
-    rpc_memory = new DistrhoSharedMemoryRPC();
-    rpc_memory->initialize(rpc_shared_memory);
-
-    const char *godot_rpc_shared_memory = std::getenv("GODOT_SHARED_MEMORY_RPC");
-    if (godot_rpc_shared_memory == NULL) {
-        godot_rpc_shared_memory = "";
-    }
-    godot_rpc_memory = new DistrhoSharedMemoryRPC();
-    godot_rpc_memory->initialize(godot_rpc_shared_memory);
-
-    client = new DistrhoUIClient(godot_rpc_memory);
-
-    singleton = this;
-
-    // TODO: use the correct number of channels instad of num_channels (16)
-    for (int i = 0; i < num_channels; ++i) {
-        input_buffer[i] = input_data[i];
-        output_buffer[i] = output_data[i];
-    }
-
-    input_channels.resize(audio_memory->get_num_input_channels());
-    output_channels.resize(audio_memory->get_num_output_channels());
-
-    for (int channel = 0; channel < audio_memory->get_num_input_channels(); channel++) {
-        input_channels.write[channel] = new DistrhoCircularBuffer();
-    }
-
-    for (int channel = 0; channel < audio_memory->get_num_output_channels(); channel++) {
-        output_channels.write[channel] = new DistrhoCircularBuffer();
-    }
-
-    call_deferred("initialize");
 }
 
-DistrhoServer::~DistrhoServer() {
+DistrhoPluginServer::~DistrhoPluginServer() {
     // delete distrho_shared_memory_audio;
     // delete distrho_shared_memory_rpc;
 
@@ -109,17 +111,17 @@ DistrhoServer::~DistrhoServer() {
         delete output_channels[channel];
     }
 
-    delete client;
+    // delete client;
     singleton = NULL;
 }
 
-DistrhoServer *DistrhoServer::get_singleton() {
+DistrhoPluginServer *DistrhoPluginServer::get_singleton() {
     return singleton;
 }
 
-void DistrhoServer::initialize() {
+void DistrhoPluginServer::initialize() {
     if (!initialized) {
-        Node *distrho_server_node = memnew(DistrhoServerNode);
+        Node *distrho_server_node = memnew(DistrhoPluginServerNode);
         SceneTree *tree = Object::cast_to<SceneTree>(Engine::get_singleton()->get_main_loop());
         tree->get_root()->add_child(distrho_server_node);
         distrho_server_node->set_process(true);
@@ -129,7 +131,7 @@ void DistrhoServer::initialize() {
     initialized = true;
 }
 
-void DistrhoServer::audio_thread_func() {
+void DistrhoPluginServer::audio_thread_func() {
     scoped_lock<interprocess_mutex> shared_memory_lock(audio_memory->buffer->mutex);
     audio_memory->buffer->ready = true;
     shared_memory_lock.unlock();
@@ -205,11 +207,12 @@ void DistrhoServer::audio_thread_func() {
 }
 
 template <typename T, typename R>
-void DistrhoServer::handle_rpc_call(std::function<void(typename T::Reader &, typename R::Builder &)> handle_request) {
+void DistrhoPluginServer::handle_rpc_call(
+    std::function<void(typename T::Reader &, typename R::Builder &)> handle_request) {
     return DistrhoCommon::handle_rpc_call<T, R>(*rpc_memory, handle_request);
 }
 
-void DistrhoServer::rpc_thread_func() {
+void DistrhoPluginServer::rpc_thread_func() {
     scoped_lock<interprocess_mutex> shared_memory_lock(rpc_memory->buffer->mutex);
     rpc_memory->buffer->ready = true;
     shared_memory_lock.unlock();
@@ -227,7 +230,7 @@ void DistrhoServer::rpc_thread_func() {
         switch (rpc_memory->buffer->request_id) {
         case GetLabelRequest::_capnpPrivate::typeId: {
             handle_rpc_call<GetLabelRequest, GetLabelResponse>([](auto &request, auto &response) {
-                String label = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_label();
+                String label = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_label();
                 response.setLabel(std::string(label.ascii()));
             });
             break;
@@ -235,7 +238,7 @@ void DistrhoServer::rpc_thread_func() {
 
         case GetDescriptionRequest::_capnpPrivate::typeId: {
             handle_rpc_call<GetDescriptionRequest, GetDescriptionResponse>([](auto &request, auto &response) {
-                String description = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_description();
+                String description = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_description();
                 response.setDescription(std::string(description.ascii()));
             });
             break;
@@ -243,7 +246,7 @@ void DistrhoServer::rpc_thread_func() {
 
         case GetMakerRequest::_capnpPrivate::typeId: {
             handle_rpc_call<GetMakerRequest, GetMakerResponse>([](auto &request, auto &response) {
-                String maker = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_maker();
+                String maker = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_maker();
                 response.setMaker(std::string(maker.ascii()));
             });
             break;
@@ -251,7 +254,7 @@ void DistrhoServer::rpc_thread_func() {
 
         case GetHomePageRequest::_capnpPrivate::typeId: {
             handle_rpc_call<GetHomePageRequest, GetHomePageResponse>([](auto &request, auto &response) {
-                String homepage = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_homepage();
+                String homepage = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_homepage();
                 response.setHomePage(std::string(homepage.ascii()));
             });
             break;
@@ -259,7 +262,7 @@ void DistrhoServer::rpc_thread_func() {
 
         case GetLicenseRequest::_capnpPrivate::typeId: {
             handle_rpc_call<GetLicenseRequest, GetLicenseResponse>([](auto &request, auto &response) {
-                String license = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_license();
+                String license = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_license();
                 response.setLicense(std::string(license.ascii()));
             });
             break;
@@ -267,7 +270,7 @@ void DistrhoServer::rpc_thread_func() {
 
         case GetVersionRequest::_capnpPrivate::typeId: {
             handle_rpc_call<GetVersionRequest, GetVersionResponse>([](auto &request, auto &response) {
-                String value = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_version();
+                String value = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_version();
                 PackedStringArray version = value.split(".");
                 if (version.size() == 3) {
                     response.setMajor(version.get(0).to_int());
@@ -280,7 +283,7 @@ void DistrhoServer::rpc_thread_func() {
 
         case GetUniqueIdRequest::_capnpPrivate::typeId: {
             handle_rpc_call<GetUniqueIdRequest, GetUniqueIdResponse>([](auto &request, auto &response) {
-                String unique_id = DistrhoServer::get_singleton()->get_distrho_plugin()->_get_unique_id();
+                String unique_id = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_unique_id();
                 if (unique_id.length() >= 4) {
                     response.setUniqueId(std::string(unique_id.ascii()));
                 }
@@ -292,7 +295,7 @@ void DistrhoServer::rpc_thread_func() {
             handle_rpc_call<GetNumberOfInputPortsRequest, GetNumberOfInputPortsResponse>(
                 [](auto &request, auto &response) {
                     int number_of_input_ports =
-                        DistrhoServer::get_singleton()->get_distrho_plugin()->_get_input_ports().size();
+                        DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_input_ports().size();
                     response.setNumberOfInputPorts(number_of_input_ports);
                 });
             break;
@@ -302,7 +305,7 @@ void DistrhoServer::rpc_thread_func() {
             handle_rpc_call<GetNumberOfOutputPortsRequest, GetNumberOfOutputPortsResponse>(
                 [](auto &request, auto &response) {
                     int number_of_input_ports =
-                        DistrhoServer::get_singleton()->get_distrho_plugin()->_get_output_ports().size();
+                        DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_output_ports().size();
                     response.setNumberOfOutputPorts(number_of_input_ports);
                 });
             break;
@@ -311,7 +314,7 @@ void DistrhoServer::rpc_thread_func() {
         case GetInputPortRequest::_capnpPrivate::typeId: {
             handle_rpc_call<GetInputPortRequest, GetInputPortResponse>([](auto &request, auto &response) {
                 Vector<Ref<DistrhoAudioPort>> input_ports =
-                    DistrhoServer::get_singleton()->get_distrho_plugin()->_get_input_ports();
+                    DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_input_ports();
                 if (request.getIndex() < input_ports.size()) {
                     Ref<DistrhoAudioPort> port = input_ports[request.getIndex()];
                     response.setHints(port->get_hints());
@@ -329,7 +332,7 @@ void DistrhoServer::rpc_thread_func() {
         case GetOutputPortRequest::_capnpPrivate::typeId: {
             handle_rpc_call<GetOutputPortRequest, GetOutputPortResponse>([](auto &request, auto &response) {
                 Vector<Ref<DistrhoAudioPort>> output_ports =
-                    DistrhoServer::get_singleton()->get_distrho_plugin()->_get_output_ports();
+                    DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_output_ports();
                 if (request.getIndex() < output_ports.size()) {
                     Ref<DistrhoAudioPort> port = output_ports[request.getIndex()];
                     response.setHints(port->get_hints());
@@ -359,7 +362,7 @@ void DistrhoServer::rpc_thread_func() {
     delete rpc_memory;
 }
 
-void DistrhoServer::process() {
+void DistrhoPluginServer::process() {
     std::lock_guard<std::mutex> lock(midi_input_mutex);
 
     while (!midi_input_queue.empty()) {
@@ -370,7 +373,7 @@ void DistrhoServer::process() {
     }
 }
 
-void DistrhoServer::emit_midi_event(MidiEvent &p_midi_event) {
+void DistrhoPluginServer::emit_midi_event(MidiEvent &p_midi_event) {
     Ref<DistrhoMidiEvent> midi_event = Ref<DistrhoMidiEvent>();
     midi_event.instantiate();
 
@@ -430,7 +433,7 @@ void DistrhoServer::emit_midi_event(MidiEvent &p_midi_event) {
     emit_signal("midi_event", midi_event);
 }
 
-void DistrhoServer::send_midi_event(Ref<DistrhoMidiEvent> p_midi_event) {
+void DistrhoPluginServer::send_midi_event(Ref<DistrhoMidiEvent> p_midi_event) {
     MidiEvent event;
     event.size = 3;
     event.frame = get_frame_offset_for_event(Time::get_singleton()->get_ticks_usec());
@@ -442,7 +445,7 @@ void DistrhoServer::send_midi_event(Ref<DistrhoMidiEvent> p_midi_event) {
     midi_output_queue.push(event);
 }
 
-void DistrhoServer::note_on(int p_channel, int p_note, int p_velocity) {
+void DistrhoPluginServer::note_on(int p_channel, int p_note, int p_velocity) {
     MidiEvent event;
     event.size = 3;
     event.frame = get_frame_offset_for_event(Time::get_singleton()->get_ticks_usec());
@@ -454,7 +457,7 @@ void DistrhoServer::note_on(int p_channel, int p_note, int p_velocity) {
     midi_output_queue.push(event);
 }
 
-void DistrhoServer::note_off(int p_channel, int p_note, int p_velocity) {
+void DistrhoPluginServer::note_off(int p_channel, int p_note, int p_velocity) {
     MidiEvent event;
     event.size = 3;
     event.frame = get_frame_offset_for_event(Time::get_singleton()->get_ticks_usec());
@@ -466,7 +469,7 @@ void DistrhoServer::note_off(int p_channel, int p_note, int p_velocity) {
     midi_output_queue.push(event);
 }
 
-void DistrhoServer::program_change(int p_channel, int p_program_number) {
+void DistrhoPluginServer::program_change(int p_channel, int p_program_number) {
     MidiEvent event;
     event.size = 2;
     event.frame = get_frame_offset_for_event(Time::get_singleton()->get_ticks_usec());
@@ -478,7 +481,7 @@ void DistrhoServer::program_change(int p_channel, int p_program_number) {
     midi_output_queue.push(event);
 }
 
-void DistrhoServer::control_change(int p_channel, int p_controller, int p_value) {
+void DistrhoPluginServer::control_change(int p_channel, int p_controller, int p_value) {
     MidiEvent event;
     event.size = 3;
     event.frame = get_frame_offset_for_event(Time::get_singleton()->get_ticks_usec());
@@ -490,7 +493,7 @@ void DistrhoServer::control_change(int p_channel, int p_controller, int p_value)
     midi_output_queue.push(event);
 }
 
-void DistrhoServer::pitch_bend(int p_channel, int p_value) {
+void DistrhoPluginServer::pitch_bend(int p_channel, int p_value) {
     p_value = std::clamp(p_value, 0, 16383);
 
     MidiEvent event;
@@ -504,7 +507,7 @@ void DistrhoServer::pitch_bend(int p_channel, int p_value) {
     midi_output_queue.push(event);
 }
 
-void DistrhoServer::channel_pressure(int p_channel, int p_pressure) {
+void DistrhoPluginServer::channel_pressure(int p_channel, int p_pressure) {
     p_pressure = std::clamp(p_pressure, 0, 127);
 
     MidiEvent event;
@@ -518,7 +521,7 @@ void DistrhoServer::channel_pressure(int p_channel, int p_pressure) {
     midi_output_queue.push(event);
 }
 
-void DistrhoServer::midi_poly_aftertouch(int p_channel, int p_note, int p_pressure) {
+void DistrhoPluginServer::midi_poly_aftertouch(int p_channel, int p_note, int p_pressure) {
     MidiEvent event;
     event.size = 3;
     event.frame = get_frame_offset_for_event(Time::get_singleton()->get_ticks_usec());
@@ -530,11 +533,11 @@ void DistrhoServer::midi_poly_aftertouch(int p_channel, int p_note, int p_pressu
     midi_output_queue.push(event);
 }
 
-void DistrhoServer::start_buffer_processing() {
+void DistrhoPluginServer::start_buffer_processing() {
     buffer_start_time_usec = Time::get_singleton()->get_ticks_usec();
 }
 
-uint32_t DistrhoServer::get_frame_offset_for_event(uint64_t p_event_time_usec) {
+uint32_t DistrhoPluginServer::get_frame_offset_for_event(uint64_t p_event_time_usec) {
     if (p_event_time_usec < buffer_start_time_usec) {
         return 0;
     }
@@ -550,7 +553,7 @@ uint32_t DistrhoServer::get_frame_offset_for_event(uint64_t p_event_time_usec) {
     return frame_offset;
 }
 
-int DistrhoServer::process_sample(AudioFrame *p_buffer, float p_rate, int p_frames) {
+int DistrhoPluginServer::process_sample(AudioFrame *p_buffer, float p_rate, int p_frames) {
     if (!is_plugin) {
         return p_frames;
     }
@@ -591,7 +594,7 @@ int DistrhoServer::process_sample(AudioFrame *p_buffer, float p_rate, int p_fram
     return p_frames;
 }
 
-void DistrhoServer::set_channel_sample(AudioFrame *p_buffer, float p_rate, int p_frames, int left, int right) {
+void DistrhoPluginServer::set_channel_sample(AudioFrame *p_buffer, float p_rate, int p_frames, int left, int right) {
     bool has_left_channel = left >= 0 && left < output_channels.size();
     bool has_right_channel = right >= 0 && right < output_channels.size();
 
@@ -618,7 +621,7 @@ void DistrhoServer::set_channel_sample(AudioFrame *p_buffer, float p_rate, int p
     unlock_audio();
 }
 
-int DistrhoServer::get_channel_sample(AudioFrame *p_buffer, float p_rate, int p_frames, int left, int right) {
+int DistrhoPluginServer::get_channel_sample(AudioFrame *p_buffer, float p_rate, int p_frames, int left, int right) {
     bool has_left_channel = left >= 0 && left < input_channels.size();
     bool has_right_channel = right >= 0 && right < input_channels.size();
 
@@ -648,35 +651,35 @@ int DistrhoServer::get_channel_sample(AudioFrame *p_buffer, float p_rate, int p_
     return p_frames;
 }
 
-Error DistrhoServer::start() {
+Error DistrhoPluginServer::start() {
     if (!godot::Engine::get_singleton()->is_editor_hint()) {
         if (is_plugin) {
             audio_thread.instantiate();
             audio_mutex.instantiate();
-            audio_thread->start(callable_mp(this, &DistrhoServer::audio_thread_func), Thread::PRIORITY_HIGH);
+            audio_thread->start(callable_mp(this, &DistrhoPluginServer::audio_thread_func), Thread::PRIORITY_HIGH);
         }
 
         rpc_thread.instantiate();
-        rpc_thread->start(callable_mp(this, &DistrhoServer::rpc_thread_func), Thread::PRIORITY_NORMAL);
+        rpc_thread->start(callable_mp(this, &DistrhoPluginServer::rpc_thread_func), Thread::PRIORITY_NORMAL);
     }
     return OK;
 }
 
-void DistrhoServer::lock_audio() {
+void DistrhoPluginServer::lock_audio() {
     if (audio_thread.is_null() || audio_mutex.is_null()) {
         return;
     }
     audio_mutex->lock();
 }
 
-void DistrhoServer::unlock_audio() {
+void DistrhoPluginServer::unlock_audio() {
     if (audio_thread.is_null() || audio_mutex.is_null()) {
         return;
     }
     audio_mutex->unlock();
 }
 
-void DistrhoServer::finish() {
+void DistrhoPluginServer::finish() {
     if (!godot::Engine::get_singleton()->is_editor_hint()) {
         exit_thread = true;
         if (is_plugin) {
@@ -686,50 +689,51 @@ void DistrhoServer::finish() {
     }
 }
 
-DistrhoConfig *DistrhoServer::get_config() {
+DistrhoConfig *DistrhoPluginServer::get_config() {
     return distrho_config;
 }
 
-godot::String DistrhoServer::get_version() {
+godot::String DistrhoPluginServer::get_version() {
     return GODOT_DISTRHO_VERSION;
 }
 
-godot::String DistrhoServer::get_build() {
+godot::String DistrhoPluginServer::get_build() {
     return GODOT_DISTRHO_BUILD;
 }
 
-void DistrhoServer::set_distrho_launcher(DistrhoLauncher *p_distrho_launcher) {
+void DistrhoPluginServer::set_distrho_launcher(DistrhoLauncher *p_distrho_launcher) {
     distrho_launcher = p_distrho_launcher;
 }
 
-DistrhoLauncher *DistrhoServer::get_distrho_launcher() {
+DistrhoLauncher *DistrhoPluginServer::get_distrho_launcher() {
     return distrho_launcher;
 }
 
-void DistrhoServer::set_distrho_plugin(DistrhoPluginInstance *p_distrho_plugin) {
+void DistrhoPluginServer::set_distrho_plugin(DistrhoPluginInstance *p_distrho_plugin) {
     distrho_plugin = p_distrho_plugin;
 }
 
-DistrhoPluginInstance *DistrhoServer::get_distrho_plugin() {
+DistrhoPluginInstance *DistrhoPluginServer::get_distrho_plugin() {
     return distrho_plugin;
 }
 
-void DistrhoServer::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("initialize"), &DistrhoServer::initialize);
+void DistrhoPluginServer::_bind_methods() {
+    ClassDB::bind_method(D_METHOD("initialize"), &DistrhoPluginServer::initialize);
 
-    ClassDB::bind_method(D_METHOD("send_midi_event"), &DistrhoServer::send_midi_event);
-    ClassDB::bind_method(D_METHOD("note_on", "channel", "note", "velocity"), &DistrhoServer::note_on);
-    ClassDB::bind_method(D_METHOD("note_off", "channel", "note", "velocity"), &DistrhoServer::note_off);
-    ClassDB::bind_method(D_METHOD("program_change", "channel", "program_number"), &DistrhoServer::program_change);
-    ClassDB::bind_method(D_METHOD("control_change", "channel", "controller", "value"), &DistrhoServer::control_change);
+    ClassDB::bind_method(D_METHOD("send_midi_event"), &DistrhoPluginServer::send_midi_event);
+    ClassDB::bind_method(D_METHOD("note_on", "channel", "note", "velocity"), &DistrhoPluginServer::note_on);
+    ClassDB::bind_method(D_METHOD("note_off", "channel", "note", "velocity"), &DistrhoPluginServer::note_off);
+    ClassDB::bind_method(D_METHOD("program_change", "channel", "program_number"), &DistrhoPluginServer::program_change);
+    ClassDB::bind_method(D_METHOD("control_change", "channel", "controller", "value"),
+                         &DistrhoPluginServer::control_change);
     ClassDB::bind_method(D_METHOD("midi_poly_aftertouch", "channel", "note", "pressure"),
-                         &DistrhoServer::midi_poly_aftertouch);
+                         &DistrhoPluginServer::midi_poly_aftertouch);
 
-    ClassDB::bind_method(D_METHOD("get_config"), &DistrhoServer::get_config);
-    ClassDB::bind_method(D_METHOD("set_distrho_plugin", "distrho_plugin"), &DistrhoServer::set_distrho_plugin);
+    ClassDB::bind_method(D_METHOD("get_config"), &DistrhoPluginServer::get_config);
+    ClassDB::bind_method(D_METHOD("set_distrho_plugin", "distrho_plugin"), &DistrhoPluginServer::set_distrho_plugin);
 
-    ClassDB::bind_method(D_METHOD("get_version"), &DistrhoServer::get_version);
-    ClassDB::bind_method(D_METHOD("get_build"), &DistrhoServer::get_build);
+    ClassDB::bind_method(D_METHOD("get_version"), &DistrhoPluginServer::get_version);
+    ClassDB::bind_method(D_METHOD("get_build"), &DistrhoPluginServer::get_build);
 
     ADD_SIGNAL(MethodInfo("midi_event",
                           PropertyInfo(Variant::OBJECT, "event", PROPERTY_HINT_RESOURCE_TYPE, "DistrhoMidiEvent")));

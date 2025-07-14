@@ -5,7 +5,7 @@
 #include "DistrhoPluginUtils.hpp"
 #include "DistrhoStandaloneUtils.hpp"
 #include "DistrhoUI.hpp"
-#include "godot_distrho_client.h"
+#include "godot_distrho_ui_client.h"
 #include "godot_distrho_ui_server.h"
 
 // #include "libgodot_distrho.h"
@@ -17,7 +17,7 @@ class GodotDistrhoUI : public UI {
 
 private:
     uintptr_t window_id;
-    mutable GodotDistrhoClient *client;
+    mutable GodotDistrhoUIClient *client;
     mutable GodotDistrhoUIServer *server;
 
 public:

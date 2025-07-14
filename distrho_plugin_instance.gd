@@ -2,7 +2,7 @@ extends DistrhoPluginInstance
 
 
 func _init() -> void:
-	DistrhoServer.set_distrho_plugin(self)
+	DistrhoPluginServer.set_distrho_plugin(self)
 
 
 func get_label() -> String:

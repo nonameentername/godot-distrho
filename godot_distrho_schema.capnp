@@ -1,6 +1,6 @@
 @0xd793ef6eb1602207;
 
-# DistrhoServer (godot)
+# DistrhoPluginServer (godot)
 
 struct GetLabelRequest {
 }
@@ -96,6 +96,15 @@ struct ShutdownRequest {
 
 struct ShutdownResponse {
   result @0 :Bool;
+}
+
+# DistrhoUIServer (godot)
+
+struct GetSomeTextRequest {
+}
+
+struct GetSomeTextResponse {
+  text @0 :Text;
 }
 
 # GodotDistrhoUIServer (distrho)

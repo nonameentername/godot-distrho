@@ -1,5 +1,5 @@
-#ifndef DISTRHO_SERVER_H
-#define DISTRHO_SERVER_H
+#ifndef DISTRHO_PLUGIN_SERVER_H
+#define DISTRHO_PLUGIN_SERVER_H
 
 #include "DistrhoDetails.hpp"
 #include "distrho_circular_buffer.h"
@@ -24,8 +24,8 @@ namespace godot {
 const int num_channels = 16;
 const int buffer_size = 2048;
 
-class DistrhoServer : public Object {
-    GDCLASS(DistrhoServer, Object);
+class DistrhoPluginServer : public Object {
+    GDCLASS(DistrhoPluginServer, Object);
 
 private:
     bool initialized;
@@ -41,7 +41,7 @@ private:
     DistrhoSharedMemoryAudio *audio_memory;
     DistrhoSharedMemoryRPC *rpc_memory;
     DistrhoSharedMemoryRPC *godot_rpc_memory;
-    DistrhoUIClient *client;
+    // DistrhoPluginClient *client;
 
     float temp_buffer[BUFFER_FRAME_SIZE];
 
@@ -69,13 +69,13 @@ private:
     std::mutex midi_output_mutex;
 
 protected:
-    static DistrhoServer *singleton;
+    static DistrhoPluginServer *singleton;
 
 public:
-    DistrhoServer();
-    ~DistrhoServer();
+    DistrhoPluginServer();
+    ~DistrhoPluginServer();
 
-    static DistrhoServer *get_singleton();
+    static DistrhoPluginServer *get_singleton();
 
     static void _bind_methods();
 

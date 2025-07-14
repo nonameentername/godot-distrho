@@ -160,7 +160,7 @@ target_link_libraries(godot-plugin PRIVATE
 dpf_add_plugin(godot-distrho
   #TARGETS au clap lv2 vst2 vst3
   #TARGETS au lv2 vst2 vst3 jack
-  TARGETS lv2 jack
+  TARGETS jack lv2
   NO_SHARED_RESOURCES
   UI_TYPE opengl
   NO_USE_FILE_BROWSER
@@ -169,7 +169,7 @@ dpf_add_plugin(godot-distrho
     src/plugin/godot_distrho_plugin.cpp
     src/plugin/godot_distrho_utils.cpp
     src/plugin/godot_distrho_plugin_server.cpp
-    src/plugin/godot_distrho_client.cpp
+    src/plugin/godot_distrho_plugin_client.cpp
     src/distrho_shared_memory_audio.cpp
     src/distrho_shared_memory_rpc.cpp
     src/distrho_common.cpp
@@ -179,7 +179,7 @@ dpf_add_plugin(godot-distrho
     src/plugin/godot_distrho_ui.cpp
     src/plugin/godot_distrho_utils.cpp
     src/plugin/godot_distrho_ui_server.cpp
-    src/plugin/godot_distrho_client.cpp
+    src/plugin/godot_distrho_ui_client.cpp
     src/distrho_shared_memory_audio.cpp
     src/distrho_shared_memory_rpc.cpp
     src/distrho_common.cpp

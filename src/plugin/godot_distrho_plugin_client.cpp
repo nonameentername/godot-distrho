@@ -1,4 +1,4 @@
-#include "godot_distrho_client.h"
+#include "godot_distrho_plugin_client.h"
 #include "distrho_common.h"
 #include "godot_distrho_schema.capnp.h"
 #include "godot_distrho_utils.h"
@@ -12,10 +12,10 @@ using namespace boost::posix_time;
 
 START_NAMESPACE_DISTRHO
 
-GodotDistrhoClient::GodotDistrhoClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type) {
+GodotDistrhoPluginClient::GodotDistrhoPluginClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type) {
     audio_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
-    rpc_memory.initialize();
-    godot_rpc_memory.initialize();
+    rpc_memory.initialize("DISTRHO_SHARED_MEMORY_RPC");
+    godot_rpc_memory.initialize("GODOT_SHARED_MEMORY_RPC");
 
 #if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
     boost::process::environment env = boost::this_process::environment();
@@ -66,7 +66,7 @@ GodotDistrhoClient::GodotDistrhoClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type
     printf("%d\n", unique_id);
 }
 
-GodotDistrhoClient::~GodotDistrhoClient() {
+GodotDistrhoPluginClient::~GodotDistrhoPluginClient() {
     if (plugin != NULL) {
         if (plugin->running()) {
             plugin->terminate();
@@ -77,50 +77,50 @@ GodotDistrhoClient::~GodotDistrhoClient() {
 }
 
 template <typename T, typename R>
-capnp::FlatArrayMessageReader GodotDistrhoClient::rpc_call(
+capnp::FlatArrayMessageReader GodotDistrhoPluginClient::rpc_call(
     std::function<void(typename T::Builder &)> build_request) const {
     return DistrhoCommon::rpc_call<T, R>(rpc_memory, build_request);
 }
 
-const char *GodotDistrhoClient::getLabel() const {
+const char *GodotDistrhoPluginClient::getLabel() const {
     capnp::FlatArrayMessageReader reader = rpc_call<GetLabelRequest, GetLabelResponse>([](auto &req) { req; });
 
     GetLabelResponse::Reader response = reader.getRoot<GetLabelResponse>();
     return response.getLabel().cStr();
 }
 
-const char *GodotDistrhoClient::getDescription() const {
+const char *GodotDistrhoPluginClient::getDescription() const {
     capnp::FlatArrayMessageReader reader = rpc_call<GetDescriptionRequest, GetDescriptionResponse>();
     GetDescriptionResponse::Reader response = reader.getRoot<GetDescriptionResponse>();
     return response.getDescription().cStr();
 }
 
-const char *GodotDistrhoClient::getMaker() const {
+const char *GodotDistrhoPluginClient::getMaker() const {
     capnp::FlatArrayMessageReader reader = rpc_call<GetMakerRequest, GetMakerResponse>();
     GetMakerResponse::Reader response = reader.getRoot<GetMakerResponse>();
     return response.getMaker().cStr();
 }
 
-const char *GodotDistrhoClient::getHomePage() const {
+const char *GodotDistrhoPluginClient::getHomePage() const {
     capnp::FlatArrayMessageReader reader = rpc_call<GetHomePageRequest, GetHomePageResponse>();
     GetHomePageResponse::Reader response = reader.getRoot<GetHomePageResponse>();
     return response.getHomePage().cStr();
 }
 
-const char *GodotDistrhoClient::getLicense() const {
+const char *GodotDistrhoPluginClient::getLicense() const {
     capnp::FlatArrayMessageReader reader = rpc_call<GetLicenseRequest, GetLicenseResponse>();
     GetLicenseResponse::Reader response = reader.getRoot<GetLicenseResponse>();
     return response.getLicense().cStr();
 }
 
-uint32_t GodotDistrhoClient::getVersion() const {
+uint32_t GodotDistrhoPluginClient::getVersion() const {
     capnp::FlatArrayMessageReader reader = rpc_call<GetVersionRequest, GetVersionResponse>();
     GetVersionResponse::Reader response = reader.getRoot<GetVersionResponse>();
 
     return d_version(response.getMajor(), response.getMinor(), response.getPatch());
 }
 
-int64_t GodotDistrhoClient::getUniqueId() const {
+int64_t GodotDistrhoPluginClient::getUniqueId() const {
     capnp::FlatArrayMessageReader reader = rpc_call<GetUniqueIdRequest, GetUniqueIdResponse>();
     GetUniqueIdResponse::Reader response = reader.getRoot<GetUniqueIdResponse>();
     std::string unique_id = response.getUniqueId();
@@ -132,24 +132,25 @@ int64_t GodotDistrhoClient::getUniqueId() const {
     }
 }
 
-void GodotDistrhoClient::initAudioPort(const bool input, const uint32_t index, AudioPort &port) {
+void GodotDistrhoPluginClient::initAudioPort(const bool input, const uint32_t index, AudioPort &port) {
 }
 
-void GodotDistrhoClient::initParameter(const uint32_t index, Parameter &parameter) {
+void GodotDistrhoPluginClient::initParameter(const uint32_t index, Parameter &parameter) {
 }
 
-float GodotDistrhoClient::getParameterValue(const uint32_t index) const {
+float GodotDistrhoPluginClient::getParameterValue(const uint32_t index) const {
     return 0;
 }
 
-void GodotDistrhoClient::setParameterValue(const uint32_t index, const float value) {
+void GodotDistrhoPluginClient::setParameterValue(const uint32_t index, const float value) {
 }
 
-void GodotDistrhoClient::activate() {
+void GodotDistrhoPluginClient::activate() {
 }
 
-void GodotDistrhoClient::run(const float **inputs, float **outputs, uint32_t numSamples, const MidiEvent *input_midi,
-                             int input_midi_size, MidiEvent *output_midi, int &output_midi_size) {
+void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32_t numSamples,
+                                   const MidiEvent *input_midi, int input_midi_size, MidiEvent *output_midi,
+                                   int &output_midi_size) {
     bool reinitialize = false;
 
     if (audio_memory.buffer->ready) {
@@ -189,35 +190,36 @@ void GodotDistrhoClient::run(const float **inputs, float **outputs, uint32_t num
         plugin = NULL;
 #endif
         audio_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
-        rpc_memory.initialize();
+        rpc_memory.initialize("DISTRHO_SHARED_MEMORY_RPC");
+        godot_rpc_memory.initialize("GODOT_SHARED_MEMORY_RPC");
     }
 }
 
-int GodotDistrhoClient::get_parameter_count() {
+int GodotDistrhoPluginClient::get_parameter_count() {
     return 0;
 }
 
-int GodotDistrhoClient::get_program_count() {
+int GodotDistrhoPluginClient::get_program_count() {
     return 0;
 }
 
-int GodotDistrhoClient::get_state_count() {
+int GodotDistrhoPluginClient::get_state_count() {
     return 0;
 }
 
-int GodotDistrhoClient::get_number_of_input_ports() {
+int GodotDistrhoPluginClient::get_number_of_input_ports() {
     capnp::FlatArrayMessageReader reader = rpc_call<GetNumberOfInputPortsRequest, GetNumberOfInputPortsResponse>();
     GetNumberOfInputPortsResponse::Reader response = reader.getRoot<GetNumberOfInputPortsResponse>();
     return response.getNumberOfInputPorts();
 }
 
-int GodotDistrhoClient::get_number_of_output_ports() {
+int GodotDistrhoPluginClient::get_number_of_output_ports() {
     capnp::FlatArrayMessageReader reader = rpc_call<GetNumberOfOutputPortsRequest, GetNumberOfOutputPortsResponse>();
     GetNumberOfOutputPortsResponse::Reader response = reader.getRoot<GetNumberOfOutputPortsResponse>();
     return response.getNumberOfOutputPorts();
 }
 
-bool GodotDistrhoClient::get_input_port(int p_index, AudioPort &port) {
+bool GodotDistrhoPluginClient::get_input_port(int p_index, AudioPort &port) {
     capnp::FlatArrayMessageReader reader =
         rpc_call<GetInputPortRequest, GetInputPortResponse>([p_index](auto &req) { req.setIndex(p_index); });
 
@@ -230,7 +232,7 @@ bool GodotDistrhoClient::get_input_port(int p_index, AudioPort &port) {
     return response.getResult();
 }
 
-bool GodotDistrhoClient::get_output_port(int p_index, AudioPort &port) {
+bool GodotDistrhoPluginClient::get_output_port(int p_index, AudioPort &port) {
     capnp::FlatArrayMessageReader reader =
         rpc_call<GetOutputPortRequest, GetOutputPortResponse>([p_index](auto &req) { req.setIndex(p_index); });
 
@@ -243,13 +245,13 @@ bool GodotDistrhoClient::get_output_port(int p_index, AudioPort &port) {
     return response.getResult();
 }
 
-bool GodotDistrhoClient::shutdown() {
+bool GodotDistrhoPluginClient::shutdown() {
     capnp::FlatArrayMessageReader reader = rpc_call<ShutdownRequest, ShutdownResponse>();
     ShutdownResponse::Reader response = reader.getRoot<ShutdownResponse>();
     return response.getResult();
 }
 
-godot::DistrhoSharedMemoryRPC *GodotDistrhoClient::get_godot_rpc_memory() {
+godot::DistrhoSharedMemoryRPC *GodotDistrhoPluginClient::get_godot_rpc_memory() {
     return &godot_rpc_memory;
 }
 

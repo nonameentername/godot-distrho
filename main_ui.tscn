@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://3j0mgt1s3jy4"]
 
-[ext_resource type="Script" uid="uid://b2rh8j1eddcra" path="res://main.gd" id="1_w37m7"]
+[ext_resource type="Script" uid="uid://ba4aigdjlk6pn" path="res://main_ui.gd" id="1_w37m7"]
 [ext_resource type="AudioStream" uid="uid://uc44d5w21u0q" path="res://hello.mp3" id="2_ktt6o"]
 
 [sub_resource type="AudioStreamDistrho" id="AudioStreamDistrho_0xm2m"]
@@ -28,6 +28,24 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
+[node name="NoteOnButton" type="Button" parent="Control/Panel"]
+layout_mode = 0
+offset_left = 54.0
+offset_top = 78.0
+offset_right = 190.0
+offset_bottom = 204.0
+text = "C4 - Note on
+"
+
+[node name="NoteOffButton" type="Button" parent="Control/Panel"]
+layout_mode = 0
+offset_left = 54.0
+offset_top = 244.0
+offset_right = 190.0
+offset_bottom = 370.0
+text = "C4 - Note off
+"
+
 [node name="Label" type="Label" parent="."]
 offset_right = 40.0
 offset_bottom = 23.0
@@ -41,3 +59,6 @@ playback_type = 1
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("2_ktt6o")
 autoplay = true
+
+[connection signal="pressed" from="Control/Panel/NoteOnButton" to="." method="_on_note_on_button_pressed"]
+[connection signal="pressed" from="Control/Panel/NoteOffButton" to="." method="_on_note_off_button_pressed"]

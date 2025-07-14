@@ -1,5 +1,5 @@
-#ifndef GODOT_DISTRHO_CLIENT_H
-#define GODOT_DISTRHO_CLIENT_H
+#ifndef GODOT_DISTRHO_PLUGIN_CLIENT_H
+#define GODOT_DISTRHO_PLUGIN_CLIENT_H
 
 #include "DistrhoDetails.hpp"
 #include "DistrhoPlugin.hpp"
@@ -11,7 +11,7 @@
 
 START_NAMESPACE_DISTRHO
 
-class GodotDistrhoClient {
+class GodotDistrhoPluginClient {
 private:
     boost::process::child *plugin;
     mutable godot::DistrhoSharedMemoryAudio audio_memory;
@@ -23,9 +23,9 @@ protected:
     capnp::FlatArrayMessageReader rpc_call(std::function<void(typename T::Builder &)> build_request = nullptr) const;
 
 public:
-    GodotDistrhoClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type);
+    GodotDistrhoPluginClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type);
 
-    ~GodotDistrhoClient();
+    ~GodotDistrhoPluginClient();
 
     const char *getLabel() const;
 

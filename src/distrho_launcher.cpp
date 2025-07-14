@@ -1,7 +1,7 @@
 #include "distrho_launcher.h"
 #include "distrho_common.h"
 #include "distrho_config.h"
-#include "distrho_server.h"
+#include "distrho_plugin_server.h"
 #include "godot_cpp/classes/display_server.hpp"
 #include "godot_cpp/classes/window.hpp"
 
@@ -25,11 +25,11 @@ void DistrhoLauncher::_ready() {
     DisplayServer::get_singleton()->window_set_flag(DisplayServer::WINDOW_FLAG_TRANSPARENT, true);
 
     initialize();
-    DistrhoServer::get_singleton()->set_distrho_launcher(this);
+    DistrhoPluginServer::get_singleton()->set_distrho_launcher(this);
 }
 
 void DistrhoLauncher::initialize() {
-    DistrhoConfig *config = DistrhoServer::get_singleton()->get_config();
+    DistrhoConfig *config = DistrhoPluginServer::get_singleton()->get_config();
 
     Ref<PackedScene> packed_scene;
 

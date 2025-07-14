@@ -44,7 +44,7 @@ void GodotDistrhoUI::visibilityChanged(const bool p_visible) {
 
     if (p_visible) {
         if (client == NULL) {
-            client = new GodotDistrhoClient(DistrhoCommon::UI_TYPE);
+            client = new GodotDistrhoUIClient(DistrhoCommon::UI_TYPE);
             server = new GodotDistrhoUIServer(this, client->get_godot_rpc_memory());
         }
     } else {
