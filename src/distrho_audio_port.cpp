@@ -6,28 +6,35 @@ using namespace godot;
 VARIANT_ENUM_CAST(DistrhoAudioPort::DistrhoAudioPortHint);
 VARIANT_ENUM_CAST(DistrhoAudioPort::DistrhoPredefinedPortGroupsIds);
 
-DistrhoAudioPort::DistrhoAudioPort(DistrhoAudioPortHint p_hints, String p_name, String p_symbol, int p_group_id) {
-    hints = p_hints;
-    name = p_name;
-    symbol = p_symbol;
-    group_id = p_group_id;
+DistrhoAudioPort::DistrhoAudioPort() {
 }
 
-DistrhoAudioPort *DistrhoAudioPort::create(DistrhoAudioPortHint p_hints, String p_name, String p_symbol,
-                                           int p_group_id) {
-    return memnew(DistrhoAudioPort(p_hints, p_name, p_symbol, p_group_id));
+void DistrhoAudioPort::set_hints(int p_hints) {
+    hints = p_hints;
 }
 
 int DistrhoAudioPort::get_hints() {
     return hints;
 }
 
+void DistrhoAudioPort::set_name(String p_name) {
+    name = p_name;
+}
+
 String DistrhoAudioPort::get_name() {
     return name;
 }
 
+void DistrhoAudioPort::set_symbol(String p_symbol) {
+    symbol = p_symbol;
+}
+
 String DistrhoAudioPort::get_symbol() {
     return symbol;
+}
+
+void DistrhoAudioPort::set_group_id(int p_group_id) {
+    group_id = p_group_id;
 }
 
 int DistrhoAudioPort::get_group_id() {
@@ -50,7 +57,4 @@ void DistrhoAudioPort::_bind_methods() {
     BIND_ENUM_CONSTANT(PORT_GROUP_NONE);
     BIND_ENUM_CONSTANT(PORT_GROUP_MONO);
     BIND_ENUM_CONSTANT(PORT_GROUP_STEREO);
-
-    ClassDB::bind_static_method("DistrhoAudioPort", D_METHOD("create", "hints", "name", "symbol", "group_id"),
-                                &DistrhoAudioPort::create);
 }

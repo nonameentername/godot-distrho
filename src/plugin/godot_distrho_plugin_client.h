@@ -41,7 +41,7 @@ public:
 
     int64_t getUniqueId() const;
 
-    void initAudioPort(const bool input, const uint32_t index, AudioPort &port);
+    // void initAudioPort(const bool input, const uint32_t index, AudioPort &port);
 
     void initParameter(const uint32_t index, Parameter &parameter);
 
@@ -54,7 +54,10 @@ public:
     void run(const float **inputs, float **outputs, uint32_t numSamples, const MidiEvent *input_midi,
              int input_midi_size, MidiEvent *output_midi, int &output_midi_size);
 
+    bool get_parameter(int p_index, Parameter &parameter);
     int get_parameter_count();
+    float get_parameter_value(int p_index) const;
+    void set_parameter_value(int p_index, float p_value);
 
     int get_program_count();
 

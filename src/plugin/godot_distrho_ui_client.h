@@ -29,6 +29,8 @@ public:
 
     std::string get_some_text();
 
+    void parameter_changed(int p_index, float p_value);
+
     bool shutdown();
 
     godot::DistrhoSharedMemoryRPC *get_godot_rpc_memory();

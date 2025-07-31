@@ -25,8 +25,6 @@ public:
 
     ~GodotDistrhoUI();
 
-    void create_godot_instance();
-
     void visibilityChanged(const bool visible) override;
 
     uintptr_t get_window_id();

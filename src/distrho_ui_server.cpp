@@ -117,6 +117,13 @@ void DistrhoUIServer::rpc_thread_func() {
             break;
         }
 
+        case ParameterChangedRequest::_capnpPrivate::typeId: {
+            handle_rpc_call<ParameterChangedRequest, ParameterChangedResponse>([this](auto &request, auto &response) {
+                call_deferred("emit_signal", "parameter_changed", request.getIndex(), request.getValue());
+            });
+            break;
+        }
+
         case ShutdownRequest::_capnpPrivate::typeId: {
             handle_rpc_call<ShutdownRequest, ShutdownResponse>([this](auto &request, auto &response) {
                 // TODO: remove duplicate
@@ -141,6 +148,10 @@ void DistrhoUIServer::send_note_on(int channel, int note, int velocity) {
 
 void DistrhoUIServer::send_note_off(int channel, int note) {
     client->send_note(channel, note, 0);
+}
+
+void DistrhoUIServer::set_parameter_value(int p_index, float p_value) {
+    client->set_parameter_value(p_index, p_value);
 }
 
 Error DistrhoUIServer::start() {
@@ -188,8 +199,13 @@ void DistrhoUIServer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("send_note_on", "channel", "note", "velocity"), &DistrhoUIServer::send_note_on);
     ClassDB::bind_method(D_METHOD("send_note_off", "channel", "note"), &DistrhoUIServer::send_note_off);
 
+    ClassDB::bind_method(D_METHOD("set_parameter_value", "index", "value"), &DistrhoUIServer::set_parameter_value);
+
     ClassDB::bind_method(D_METHOD("set_distrho_ui", "distrho_ui"), &DistrhoUIServer::set_distrho_ui);
 
     ClassDB::bind_method(D_METHOD("get_version"), &DistrhoUIServer::get_version);
     ClassDB::bind_method(D_METHOD("get_build"), &DistrhoUIServer::get_build);
+
+    ADD_SIGNAL(
+        MethodInfo("parameter_changed", PropertyInfo(Variant::INT, "index"), PropertyInfo(Variant::FLOAT, "value")));
 }

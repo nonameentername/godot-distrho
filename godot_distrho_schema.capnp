@@ -91,6 +91,65 @@ struct GetOutputPortResponse {
   result @4 :Bool;
 }
 
+struct GetParameterRequest {
+  index @0 :UInt32;
+}
+
+struct GetParameterResponse {
+  hints @0 :UInt32;
+  name @1 :Text;
+  shortName @2 :Text;
+  symbol @3 :Text;
+  unit @4 :Text;
+  description @5 :Text;
+  defaultValue @6 :Float32;
+  minValue @7 :Float32;
+  maxValue @8 :Float32;
+  designation @9 :UInt32;
+  midiCC @10 :UInt32;
+  groupId @11 :UInt32;
+  enumerationValues @12 :Text;
+  result @13 :Bool;
+}
+
+struct GetParameterValueRequest {
+  index @0 :UInt32;
+}
+
+struct GetParameterValueResponse {
+  value @0 :Float32;
+}
+
+#TODO: same as GodotDistrhoUIServer.  Maybe rename?
+#struct SetParameterValueRequest {
+#  index @0 :UInt32;
+#  value @1 :Float32;
+#}
+#
+#struct SetParameterValueResponse {
+#}
+
+struct GetParameterCountRequest {
+}
+
+struct GetParameterCountResponse {
+  count @0 :UInt32;
+}
+
+struct GetProgramCountRequest {
+}
+
+struct GetProgramCountResponse {
+  count @0 :UInt32;
+}
+
+struct GetStateCountRequest {
+}
+
+struct GetStateCountResponse {
+  count @0 :UInt32;
+}
+
 struct ShutdownRequest {
 }
 
@@ -105,6 +164,14 @@ struct GetSomeTextRequest {
 
 struct GetSomeTextResponse {
   text @0 :Text;
+}
+
+struct ParameterChangedRequest {
+  index @0 :UInt32;
+  value @1 :Float32;
+}
+
+struct ParameterChangedResponse {
 }
 
 # GodotDistrhoUIServer (distrho)

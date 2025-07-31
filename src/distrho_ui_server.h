@@ -59,6 +59,8 @@ public:
     void send_note_on(int channel, int note, int velocity);
     void send_note_off(int channel, int note);
 
+    void set_parameter_value(int p_index, float p_value);
+
     template <typename T, typename R>
     void handle_rpc_call(std::function<void(typename T::Reader &, typename R::Builder &)> handle_request);
 

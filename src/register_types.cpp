@@ -15,6 +15,7 @@
 #include "distrho_config.h"
 #include "distrho_launcher.h"
 #include "distrho_midi_event.h"
+#include "distrho_parameter.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_plugin_server.h"
 #include "distrho_plugin_server_node.h"
@@ -38,6 +39,7 @@ void initialize_godot_distrho_module(ModuleInitializationLevel p_level) {
     ClassDB::register_class<AudioEffectSetDistrhoChannelInstance>();
     ClassDB::register_class<DistrhoConfig>();
     ClassDB::register_class<DistrhoAudioPort>();
+    ClassDB::register_class<DistrhoParameter>();
     ClassDB::register_class<DistrhoLauncher>();
     ClassDB::register_class<DistrhoMidiEvent>();
 

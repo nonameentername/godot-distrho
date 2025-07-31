@@ -2,6 +2,7 @@
 #define DISTRHO_PLUGIN_SERVER_H
 
 #include "DistrhoDetails.hpp"
+#include "distrho_audio_port.h"
 #include "distrho_circular_buffer.h"
 #include "distrho_config.h"
 #include "distrho_launcher.h"
@@ -13,6 +14,7 @@
 #include "godot_cpp/classes/mutex.hpp"
 #include "godot_cpp/classes/semaphore.hpp"
 #include "godot_cpp/classes/thread.hpp"
+#include "godot_cpp/variant/dictionary.hpp"
 #include <functional>
 #include <godot_cpp/classes/audio_frame.hpp>
 #include <godot_cpp/classes/node.hpp>
@@ -28,6 +30,7 @@ class DistrhoPluginServer : public Object {
     GDCLASS(DistrhoPluginServer, Object);
 
 private:
+    Dictionary enumeration_values;
     bool initialized;
     bool is_plugin;
 
@@ -68,6 +71,8 @@ private:
     std::queue<MidiEvent> midi_output_queue;
     std::mutex midi_output_mutex;
 
+    Vector<float> parameters;
+
 protected:
     static DistrhoPluginServer *singleton;
 
@@ -95,6 +100,9 @@ public:
     void channel_pressure(int p_channel, int p_pressure);
     void midi_poly_aftertouch(int p_channel, int p_note, int p_pressure);
 
+    float get_parameter_value(int p_index);
+    void set_parameter_value(int p_index, float p_value);
+
     void start_buffer_processing();
     uint32_t get_frame_offset_for_event(uint64_t p_event_time_usec);
 
@@ -121,6 +129,9 @@ public:
 
     void set_distrho_plugin(DistrhoPluginInstance *p_distrho_plugin);
     DistrhoPluginInstance *get_distrho_plugin();
+
+    Ref<DistrhoParameter> create_parameter(const Dictionary &p_data);
+    Ref<DistrhoAudioPort> create_audio_port(const Dictionary &p_data);
 };
 } // namespace godot
 

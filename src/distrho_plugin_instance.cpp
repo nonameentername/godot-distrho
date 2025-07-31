@@ -66,6 +66,25 @@ String DistrhoPluginInstance::_get_unique_id() {
     }
 }
 
+Vector<Ref<DistrhoParameter>> DistrhoPluginInstance::_get_parameters() {
+    Vector<Ref<DistrhoParameter>> result;
+
+    if (has_method("get_parameters")) {
+        Variant v = call("get_parameters");
+        if (v.get_type() == Variant::ARRAY) {
+            Array array = v;
+            for (int i = 0; i < array.size(); i++) {
+                Ref<DistrhoParameter> parameter = array[i];
+                if (parameter.is_valid()) {
+                    result.push_back(parameter);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
 Vector<Ref<DistrhoAudioPort>> DistrhoPluginInstance::_get_input_ports() {
     Vector<Ref<DistrhoAudioPort>> result;
 

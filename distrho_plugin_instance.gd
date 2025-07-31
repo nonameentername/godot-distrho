@@ -34,29 +34,60 @@ func get_unique_id() -> String:
 	return "GDot"
 
 
-func get_input_ports() -> Array[DistrhoAudioPort]:
-	var ports: Array[DistrhoAudioPort] = []
-	for side in ["Left", "Right"]:
-		ports.append(
-			DistrhoAudioPort.create(
-				DistrhoAudioPort.HINT_NONE,
-				"Input " + side,
-				"input_" + side.to_lower(),
-				DistrhoAudioPort.PORT_GROUP_STEREO
-			)
-		)
-	return ports
+func get_parameters() -> Array:
+	var parameters = [
+		{
+			"hints": DistrhoParameter.HINT_NONE,
+			"name": "Volume",
+			"short_name": "vol",
+			"symbol": "V",
+			"unit": "dB",
+			"description": "Volume used to change how loud sound is played",
+			"default_value": 0.5,
+			"min_value": 0,
+			"max_value": 1,
+			"enumeration_values": {},
+			"designation": DistrhoParameter.PARAMETER_DESIGNATION_NONE,
+			"midi_cc": 0,
+			"group_id": DistrhoParameter.PORT_GROUP_NONE
+		}
+	]
+	return parameters.map(DistrhoPluginServer.create_parameter)
 
 
-func get_output_ports() -> Array[DistrhoAudioPort]:
-	var ports: Array[DistrhoAudioPort] = []
-	for side in ["Left", "Right"]:
-		ports.append(
-			DistrhoAudioPort.create(
-				DistrhoAudioPort.HINT_NONE,
-				"Output " + side,
-				"output_" + side.to_lower(),
-				DistrhoAudioPort.PORT_GROUP_STEREO
-			)
-		)
-	return ports
+func get_input_ports() -> Array:
+	var ports = [
+		{
+			"hints": DistrhoAudioPort.HINT_NONE,
+			"name": "Input Left",
+			"symbol": "input_left",
+			"group_id": DistrhoAudioPort.PORT_GROUP_STEREO
+		},
+		{
+			"hints": DistrhoAudioPort.HINT_NONE,
+			"name": "Input Right",
+			"symbol": "input_right",
+			"group_id": DistrhoAudioPort.PORT_GROUP_STEREO
+		}
+	]
+
+	return ports.map(DistrhoPluginServer.create_audio_port)
+
+
+func get_output_ports() -> Array:
+	var ports = [
+		{
+			"hints": DistrhoAudioPort.HINT_NONE,
+			"name": "Output Left",
+			"symbol": "output_left",
+			"group_id": DistrhoAudioPort.PORT_GROUP_STEREO
+		},
+		{
+			"hints": DistrhoAudioPort.HINT_NONE,
+			"name": "Output Right",
+			"symbol": "output_right",
+			"group_id": DistrhoAudioPort.PORT_GROUP_STEREO
+		}
+	]
+
+	return ports.map(DistrhoPluginServer.create_audio_port)

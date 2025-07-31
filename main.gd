@@ -1,5 +1,7 @@
 extends Node2D
 
+@onready var distrho_player = $DistrhoPlayer
+
 
 func _ready() -> void:
 	print(
@@ -8,11 +10,17 @@ func _ready() -> void:
 		" build: ",
 		DistrhoPluginServer.get_build()
 	)
+	DistrhoPluginServer.parameter_changed.connect(_on_parameter_changed)
 	DistrhoPluginServer.midi_event.connect(_on_midi_event)
 	DistrhoPluginServer.midi_note_on.connect(_on_midi_note_on)
 	DistrhoPluginServer.midi_note_off.connect(_on_midi_note_off)
 	DistrhoPluginServer.midi_cc.connect(_on_midi_cc)
 	DistrhoPluginServer.midi_program_change.connect(_on_midi_program_change)
+
+
+func _on_parameter_changed(index: int, value: float) -> void:
+	print("Plugin: Parameter Changed: index: ", index, " value: ", value)
+	distrho_player.volume_linear = value
 
 
 func _on_midi_event(midi_event: DistrhoMidiEvent) -> void:

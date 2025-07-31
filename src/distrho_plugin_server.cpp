@@ -5,6 +5,7 @@
 #include "distrho_config.h"
 #include "distrho_launcher.h"
 #include "distrho_midi_event.h"
+#include "distrho_parameter.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_plugin_server_node.h"
 #include "distrho_shared_memory_audio.h"
@@ -17,6 +18,7 @@
 #include "godot_cpp/classes/time.hpp"
 #include "godot_cpp/core/class_db.hpp"
 #include "godot_cpp/core/memory.hpp"
+#include "godot_cpp/variant/dictionary.hpp"
 #include "godot_cpp/variant/utility_functions.hpp"
 #include "godot_distrho_schema.capnp.h"
 #include "version_generated.gen.h"
@@ -125,6 +127,12 @@ void DistrhoPluginServer::initialize() {
         SceneTree *tree = Object::cast_to<SceneTree>(Engine::get_singleton()->get_main_loop());
         tree->get_root()->add_child(distrho_server_node);
         distrho_server_node->set_process(true);
+
+        parameters.resize(distrho_plugin->_get_parameters().size());
+
+        for (int i = 0; i < distrho_plugin->_get_parameters().size(); i++) {
+            parameters.set(i, distrho_plugin->_get_parameters().get(i)->get_default_value());
+        }
     }
 
     start();
@@ -228,6 +236,7 @@ void DistrhoPluginServer::rpc_thread_func() {
         }
 
         switch (rpc_memory->buffer->request_id) {
+
         case GetLabelRequest::_capnpPrivate::typeId: {
             handle_rpc_call<GetLabelRequest, GetLabelResponse>([](auto &request, auto &response) {
                 String label = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_label();
@@ -344,6 +353,70 @@ void DistrhoPluginServer::rpc_thread_func() {
                     response.setResult(false);
                 }
             });
+            break;
+        }
+
+        case GetParameterRequest::_capnpPrivate::typeId: {
+            handle_rpc_call<GetParameterRequest, GetParameterResponse>([this](auto &request, auto &response) {
+                Ref<DistrhoParameter> parameter =
+                    DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_parameters().get(
+                        request.getIndex());
+                if (parameter.is_valid()) {
+                    response.setHints(parameter->get_hints());
+                    response.setName(std::string(parameter->get_name().ascii()));
+                    response.setShortName(std::string(parameter->get_short_name().ascii()));
+                    response.setSymbol(std::string(parameter->get_symbol().ascii()));
+                    response.setUnit(std::string(parameter->get_unit().ascii()));
+                    response.setDescription(std::string(parameter->get_description().ascii()));
+
+                    response.setDefaultValue(parameter->get_default_value());
+                    response.setMinValue(parameter->get_min_value());
+                    response.setMaxValue(parameter->get_max_value());
+
+                    // TODO: enumeration_values
+                    response.setEnumerationValues("");
+                    response.setDesignation(parameter->get_designation());
+
+                    response.setMidiCC(parameter->get_midi_cc());
+                    response.setGroupId(parameter->get_group_id());
+                    response.setResult(true);
+                } else {
+                    response.setResult(false);
+                }
+            });
+            break;
+        }
+
+        case GetParameterValueRequest::_capnpPrivate::typeId: {
+            handle_rpc_call<GetParameterValueRequest, GetParameterValueResponse>(
+                [this](auto &request, auto &response) { response.setValue(parameters.get(request.getIndex())); });
+            break;
+        }
+
+        case SetParameterValueRequest::_capnpPrivate::typeId: {
+            handle_rpc_call<SetParameterValueRequest, SetParameterValueResponse>([this](auto &request, auto &response) {
+                parameters.set(request.getIndex(), request.getValue());
+                call_deferred("emit_signal", "parameter_changed", request.getIndex(), request.getValue());
+            });
+            break;
+        }
+
+        case GetParameterCountRequest::_capnpPrivate::typeId: {
+            handle_rpc_call<GetParameterCountRequest, GetParameterCountResponse>([this](auto &request, auto &response) {
+                response.setCount(DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_parameters().size());
+            });
+            break;
+        }
+
+        case GetProgramCountRequest::_capnpPrivate::typeId: {
+            handle_rpc_call<GetProgramCountRequest, GetProgramCountResponse>(
+                [this](auto &request, auto &response) { response.setCount(0); });
+            break;
+        }
+
+        case GetStateCountRequest::_capnpPrivate::typeId: {
+            handle_rpc_call<GetStateCountRequest, GetStateCountResponse>(
+                [this](auto &request, auto &response) { response.setCount(0); });
             break;
         }
 
@@ -533,6 +606,14 @@ void DistrhoPluginServer::midi_poly_aftertouch(int p_channel, int p_note, int p_
     midi_output_queue.push(event);
 }
 
+float DistrhoPluginServer::get_parameter_value(int p_index) {
+    return parameters[p_index];
+}
+
+void DistrhoPluginServer::set_parameter_value(int p_index, float p_value) {
+    parameters.ptrw()[p_index] = p_value;
+}
+
 void DistrhoPluginServer::start_buffer_processing() {
     buffer_start_time_usec = Time::get_singleton()->get_ticks_usec();
 }
@@ -717,6 +798,43 @@ DistrhoPluginInstance *DistrhoPluginServer::get_distrho_plugin() {
     return distrho_plugin;
 }
 
+Ref<DistrhoParameter> DistrhoPluginServer::create_parameter(const Dictionary &p_data) {
+    Ref<DistrhoParameter> parameter;
+    parameter.instantiate();
+
+    parameter->set_hints(p_data.get("hints", DistrhoParameter::HINT_NONE));
+    parameter->set_name(p_data.get("name", ""));
+    parameter->set_short_name(p_data.get("short_name", ""));
+    parameter->set_symbol(p_data.get("symbol", ""));
+    parameter->set_unit(p_data.get("unit", ""));
+    parameter->set_description(p_data.get("description", ""));
+
+    parameter->set_default_value(p_data.get("default_value", 0));
+    parameter->set_min_value(p_data.get("min_value", 0));
+    parameter->set_max_value(p_data.get("max_value", 0));
+
+    Dictionary enumeration_values;
+    parameter->set_enumeration_values(p_data.get("enumeration_values", enumeration_values));
+    parameter->set_designation(p_data.get("designation", 0));
+
+    parameter->set_midi_cc(p_data.get("midi_cc", 0));
+    parameter->set_group_id(p_data.get("midi_cc", DistrhoAudioPort::PORT_GROUP_NONE));
+
+    return parameter;
+}
+
+Ref<DistrhoAudioPort> DistrhoPluginServer::create_audio_port(const Dictionary &p_data) {
+    Ref<DistrhoAudioPort> audio_port;
+    audio_port.instantiate();
+
+    audio_port->set_hints(p_data.get("hints", DistrhoAudioPort::HINT_NONE));
+    audio_port->set_name(p_data.get("name", ""));
+    audio_port->set_symbol(p_data.get("symbol", ""));
+    audio_port->set_group_id(p_data.get("group_id", DistrhoAudioPort::PORT_GROUP_NONE));
+
+    return audio_port;
+}
+
 void DistrhoPluginServer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("initialize"), &DistrhoPluginServer::initialize);
 
@@ -729,11 +847,20 @@ void DistrhoPluginServer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("midi_poly_aftertouch", "channel", "note", "pressure"),
                          &DistrhoPluginServer::midi_poly_aftertouch);
 
+    ClassDB::bind_method(D_METHOD("get_parameter_value", "index"), &DistrhoPluginServer::get_parameter_value);
+    ClassDB::bind_method(D_METHOD("set_parameter_value", "index", "value"), &DistrhoPluginServer::set_parameter_value);
+
+    ClassDB::bind_method(D_METHOD("create_parameter", "data"), &DistrhoPluginServer::create_parameter);
+    ClassDB::bind_method(D_METHOD("create_audio_port", "data"), &DistrhoPluginServer::create_audio_port);
+
     ClassDB::bind_method(D_METHOD("get_config"), &DistrhoPluginServer::get_config);
     ClassDB::bind_method(D_METHOD("set_distrho_plugin", "distrho_plugin"), &DistrhoPluginServer::set_distrho_plugin);
 
     ClassDB::bind_method(D_METHOD("get_version"), &DistrhoPluginServer::get_version);
     ClassDB::bind_method(D_METHOD("get_build"), &DistrhoPluginServer::get_build);
+
+    ADD_SIGNAL(
+        MethodInfo("parameter_changed", PropertyInfo(Variant::INT, "index"), PropertyInfo(Variant::FLOAT, "value")));
 
     ADD_SIGNAL(MethodInfo("midi_event",
                           PropertyInfo(Variant::OBJECT, "event", PROPERTY_HINT_RESOURCE_TYPE, "DistrhoMidiEvent")));

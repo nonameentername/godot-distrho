@@ -67,6 +67,7 @@ public:
         HINT_CV_PORT_IS_OPTIONAL = 0x100
     };
 
+    // TODO: remove duplicate code
     enum DistrhoPredefinedPortGroupsIds {
         /**
           Null or unset port group.
@@ -85,15 +86,19 @@ public:
         PORT_GROUP_STEREO = -3
     };
 
-    DistrhoAudioPort(DistrhoAudioPortHint p_hints, String p_name, String p_symbol, int p_group_id);
-    DistrhoAudioPort() = default;
+    DistrhoAudioPort();
     ~DistrhoAudioPort();
 
-    static DistrhoAudioPort *create(DistrhoAudioPortHint p_hints, String p_name, String p_symbol, int p_group_id);
-
+    void set_hints(int p_hints);
     int get_hints();
+
+    void set_name(String p_name);
     String get_name();
+
+    void set_symbol(String p_symbol);
     String get_symbol();
+
+    void set_group_id(int p_group_id);
     int get_group_id();
 
     static void _bind_methods();

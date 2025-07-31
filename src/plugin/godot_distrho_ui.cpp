@@ -31,12 +31,12 @@ GodotDistrhoUI::~GodotDistrhoUI() {
 }
 
 void GodotDistrhoUI::parameterChanged(const uint32_t index, const float value) {
+    if (client != NULL) {
+        client->parameter_changed(index, value);
+    }
 }
 
 void GodotDistrhoUI::uiIdle() {
-}
-
-void GodotDistrhoUI::create_godot_instance() {
 }
 
 void GodotDistrhoUI::visibilityChanged(const bool p_visible) {

@@ -2,6 +2,7 @@
 #define DISTRHO_PLUGIN_INSTANCE_H
 
 #include "distrho_audio_port.h"
+#include "distrho_parameter.h"
 #include <godot_cpp/classes/node.hpp>
 
 namespace godot {
@@ -23,6 +24,7 @@ public:
     String _get_version();
     String _get_unique_id();
 
+    Vector<Ref<DistrhoParameter>> _get_parameters();
     Vector<Ref<DistrhoAudioPort>> _get_input_ports();
     Vector<Ref<DistrhoAudioPort>> _get_output_ports();
 

@@ -27,17 +27,13 @@ GodotDistrhoPluginClient::GodotDistrhoPluginClient(DistrhoCommon::DISTRHO_MODULE
 
 #if defined(_WIN32)
     plugin = GodotDistrhoUtils::launch_process("godot-plugin.exe", env);
-    // new boost::process::child("godot-plugin.exe", env);
 #else
     plugin = GodotDistrhoUtils::launch_process("godot-plugin", env);
-    // plugin = new boost::process::child("godot-plugin", env);
 #endif
 #endif
 
-    if (p_type == DistrhoCommon::PLUGIN_TYPE) {
-        while (!audio_memory.buffer->ready) {
-            sleep(1);
-        }
+    while (!audio_memory.buffer->ready) {
+        sleep(1);
     }
 
     while (!rpc_memory.buffer->ready) {
@@ -132,17 +128,19 @@ int64_t GodotDistrhoPluginClient::getUniqueId() const {
     }
 }
 
-void GodotDistrhoPluginClient::initAudioPort(const bool input, const uint32_t index, AudioPort &port) {
-}
+// void GodotDistrhoPluginClient::initAudioPort(const bool input, const uint32_t index, AudioPort &port) {
+// }
 
 void GodotDistrhoPluginClient::initParameter(const uint32_t index, Parameter &parameter) {
+    get_parameter(index, parameter);
 }
 
 float GodotDistrhoPluginClient::getParameterValue(const uint32_t index) const {
-    return 0;
+    return get_parameter_value(index);
 }
 
 void GodotDistrhoPluginClient::setParameterValue(const uint32_t index, const float value) {
+    set_parameter_value(index, value);
 }
 
 void GodotDistrhoPluginClient::activate() {
@@ -195,16 +193,66 @@ void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32
     }
 }
 
+bool GodotDistrhoPluginClient::get_parameter(int p_index, Parameter &parameter) {
+    capnp::FlatArrayMessageReader reader =
+        rpc_call<GetParameterRequest, GetParameterResponse>([p_index](auto &req) { req.setIndex(p_index); });
+
+    GetParameterResponse::Reader response = reader.getRoot<GetParameterResponse>();
+
+    if (response.getResult()) {
+        parameter.hints = response.getHints();
+        parameter.name = response.getName().cStr();
+        parameter.symbol = response.getSymbol().cStr();
+        parameter.unit = response.getUnit().cStr();
+        parameter.description = response.getDescription().cStr();
+
+        parameter.ranges.def = response.getDefaultValue();
+        parameter.ranges.min = response.getMinValue();
+        parameter.ranges.max = response.getMaxValue();
+
+        // TODO: enumeration values
+        // String enumeration_values = response.getEnumerationValues().cStr();
+        // parameter.enumValues = new ParameterEnumerationValue[count];
+
+        parameter.designation = (ParameterDesignation)response.getDesignation();
+
+        parameter.midiCC = response.getMidiCC();
+        parameter.groupId = response.getGroupId();
+    }
+
+    return response.getResult();
+}
+
 int GodotDistrhoPluginClient::get_parameter_count() {
-    return 0;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetParameterCountRequest, GetParameterCountResponse>();
+    GetParameterCountResponse::Reader response = reader.getRoot<GetParameterCountResponse>();
+    return response.getCount();
+}
+
+float GodotDistrhoPluginClient::get_parameter_value(int p_index) const {
+    capnp::FlatArrayMessageReader reader = rpc_call<GetParameterValueRequest, GetParameterValueResponse>();
+    GetParameterValueResponse::Reader response = reader.getRoot<GetParameterValueResponse>();
+    return response.getValue();
+}
+
+void GodotDistrhoPluginClient::set_parameter_value(int p_index, float p_value) {
+    capnp::FlatArrayMessageReader reader =
+        rpc_call<SetParameterValueRequest, SetParameterValueResponse>([p_index, p_value](auto &req) {
+            req.setIndex(p_index);
+            req.setValue(p_value);
+        });
 }
 
 int GodotDistrhoPluginClient::get_program_count() {
-    return 0;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetProgramCountRequest, GetProgramCountResponse>();
+    GetProgramCountResponse::Reader response = reader.getRoot<GetProgramCountResponse>();
+    return response.getCount();
 }
 
 int GodotDistrhoPluginClient::get_state_count() {
-    return 0;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetStateCountRequest, GetStateCountResponse>();
+    GetStateCountResponse::Reader response = reader.getRoot<GetStateCountResponse>();
+    return response.getCount();
 }
 
 int GodotDistrhoPluginClient::get_number_of_input_ports() {
