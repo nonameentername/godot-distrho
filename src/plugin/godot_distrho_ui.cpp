@@ -49,9 +49,9 @@ void GodotDistrhoUI::visibilityChanged(const bool p_visible) {
         }
     } else {
         if (client != NULL) {
-            client->shutdown();
-            delete client;
-            client = NULL;
+            // client->shutdown();
+            // delete client;
+            // client = NULL;
         }
 
         if (server != NULL) {

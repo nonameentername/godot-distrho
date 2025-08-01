@@ -55,6 +55,7 @@ DistrhoUIServer::DistrhoUIServer() {
         }
         godot_rpc_memory = new DistrhoSharedMemoryRPC();
         godot_rpc_memory->initialize("GODOT_SHARED_MEMORY_RPC", godot_rpc_shared_memory);
+        // godot_rpc_memory->buffer->is_alive = true;
 
         client = new DistrhoUIClient(godot_rpc_memory);
 
@@ -63,10 +64,20 @@ DistrhoUIServer::DistrhoUIServer() {
 }
 
 DistrhoUIServer::~DistrhoUIServer() {
-    // delete distrho_shared_memory_audio;
-    // delete distrho_shared_memory_rpc;
+    {
+        scoped_lock<interprocess_mutex> lock(godot_rpc_memory->buffer->mutex);
+        exit_thread = true;
+        godot_rpc_memory->buffer->input_condition.notify_all();
+    }
 
+    if (rpc_thread->is_alive()) {
+        rpc_thread->wait_to_finish();
+    }
+
+    rpc_memory = nullptr;
+    godot_rpc_memory = nullptr;
     delete client;
+
     singleton = NULL;
 }
 
@@ -93,50 +104,63 @@ void DistrhoUIServer::handle_rpc_call(std::function<void(typename T::Reader &, t
 }
 
 void DistrhoUIServer::rpc_thread_func() {
-    scoped_lock<interprocess_mutex> shared_memory_lock(rpc_memory->buffer->mutex);
-    rpc_memory->buffer->ready = true;
-    shared_memory_lock.unlock();
+    {
+        scoped_lock<interprocess_mutex> shared_memory_lock(rpc_memory->buffer->mutex);
+        rpc_memory->buffer->ready = true;
+    }
+
+    bool first_wait = true;
 
     while (!exit_thread) {
         scoped_lock<interprocess_mutex> shared_memory_lock(rpc_memory->buffer->mutex);
 
-        ptime timeout = microsec_clock::universal_time() + milliseconds(5000);
-        bool result = rpc_memory->buffer->input_condition.timed_wait(shared_memory_lock, timeout);
+        ptime timeout = microsec_clock::universal_time() + milliseconds(first_wait ? 1000 : 100);
 
-        if (!result) {
-            continue;
-        }
+        bool result = rpc_memory->buffer->input_condition.timed_wait(
+            shared_memory_lock, timeout, [this]() { return rpc_memory->buffer->request_id != 0; });
+        first_wait = false;
 
-        switch (rpc_memory->buffer->request_id) {
+        if (result) {
+            printf("Processing request_id: %ld", godot_rpc_memory->buffer->request_id);
 
-        case GetSomeTextRequest::_capnpPrivate::typeId: {
-            handle_rpc_call<GetSomeTextRequest, GetSomeTextResponse>([this](auto &request, auto &response) {
-                String value = DistrhoUIServer::get_singleton()->get_distrho_ui()->_get_some_text();
-                response.setText(std::string(value.ascii()));
-            });
-            break;
-        }
+            switch (rpc_memory->buffer->request_id) {
 
-        case ParameterChangedRequest::_capnpPrivate::typeId: {
-            handle_rpc_call<ParameterChangedRequest, ParameterChangedResponse>([this](auto &request, auto &response) {
-                call_deferred("emit_signal", "parameter_changed", request.getIndex(), request.getValue());
-            });
-            break;
-        }
+            case GetSomeTextRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetSomeTextRequest, GetSomeTextResponse>([this](auto &request, auto &response) {
+                    String value = DistrhoUIServer::get_singleton()->get_distrho_ui()->_get_some_text();
+                    response.setText(std::string(value.ascii()));
+                });
+                break;
+            }
 
-        case ShutdownRequest::_capnpPrivate::typeId: {
-            handle_rpc_call<ShutdownRequest, ShutdownResponse>([this](auto &request, auto &response) {
-                // TODO: remove duplicate
-                exit_thread = true;
-                SceneTree *tree = Object::cast_to<SceneTree>(Engine::get_singleton()->get_main_loop());
-                tree->quit();
-                response.setResult(true);
-            });
-            break;
-        }
+            case ParameterChangedRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<ParameterChangedRequest, ParameterChangedResponse>(
+                    [this](auto &request, auto &response) {
+                        call_deferred("emit_signal", "parameter_changed", request.getIndex(), request.getValue());
+                    });
+                break;
+            }
+
+            case ShutdownRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<ShutdownRequest, ShutdownResponse>([this](auto &request, auto &response) {
+                    // exit_thread = true;
+                    response.setResult(true);
+                });
+                break;
+            }
+            default: {
+                printf("Unknown request_id: %ld", rpc_memory->buffer->request_id);
+                break;
+            }
+            }
+            rpc_memory->buffer->request_id = 0;
+        } else {
+            printf("Timed out waiting for request_id");
         }
     }
-    delete rpc_memory;
+
+    SceneTree *tree = Object::cast_to<SceneTree>(Engine::get_singleton()->get_main_loop());
+    tree->quit();
 }
 
 void DistrhoUIServer::process() {

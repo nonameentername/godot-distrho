@@ -149,6 +149,8 @@ void DistrhoPluginServer::audio_thread_func() {
     static MidiEvent midi_input[godot::MIDI_BUFFER_SIZE];
     static MidiEvent midi_output[godot::MIDI_BUFFER_SIZE];
 
+    bool first_wait = true;
+
     while (!exit_thread) {
         scoped_lock<interprocess_mutex> shared_memory_lock(audio_memory->buffer->mutex);
 
@@ -157,8 +159,9 @@ void DistrhoPluginServer::audio_thread_func() {
             AudioServer::get_singleton()->process_external(BUFFER_FRAME_SIZE);
         }
 
-        ptime timeout = microsec_clock::universal_time() + milliseconds(5000);
+        ptime timeout = microsec_clock::universal_time() + milliseconds(first_wait ? 1000 : 100);
         bool result = audio_memory->buffer->input_condition.timed_wait(shared_memory_lock, timeout);
+        first_wait = false;
 
         if (!result) {
             if (!audio_memory->get_is_host()) {
@@ -225,11 +228,14 @@ void DistrhoPluginServer::rpc_thread_func() {
     rpc_memory->buffer->ready = true;
     shared_memory_lock.unlock();
 
+    bool first_wait = true;
+
     while (!exit_thread) {
         scoped_lock<interprocess_mutex> shared_memory_lock(rpc_memory->buffer->mutex);
 
-        ptime timeout = microsec_clock::universal_time() + milliseconds(5000);
+        ptime timeout = microsec_clock::universal_time() + milliseconds(first_wait ? 1000 : 100);
         bool result = rpc_memory->buffer->input_condition.timed_wait(shared_memory_lock, timeout);
+        first_wait = false;
 
         if (!result) {
             continue;

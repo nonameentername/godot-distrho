@@ -19,7 +19,7 @@ private:
     std::thread rpc_thread;
 
     boost::process::child *plugin;
-    godot::DistrhoSharedMemoryRPC *rpc_memory;
+    godot::DistrhoSharedMemoryRPC *godot_rpc_memory;
     UI *godot_distrho_ui;
 
 protected:
@@ -27,7 +27,7 @@ protected:
     void handle_rpc_call(std::function<void(typename T::Reader &, typename R::Builder &)> handle_request);
 
 public:
-    GodotDistrhoUIServer(UI *p_godot_distrho_ui, godot::DistrhoSharedMemoryRPC *p_rpc_memory);
+    GodotDistrhoUIServer(UI *p_godot_distrho_ui, godot::DistrhoSharedMemoryRPC *p_godot_rpc_memory);
 
     ~GodotDistrhoUIServer();
 

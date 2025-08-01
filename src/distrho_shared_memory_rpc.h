@@ -26,6 +26,7 @@ struct RPCBuffer {
     uint64_t request_id;
 
     bool ready = false;
+    // bool is_alive = false;
     boost::interprocess::interprocess_mutex mutex;
     boost::interprocess::interprocess_condition input_condition;
     boost::interprocess::interprocess_condition output_condition;

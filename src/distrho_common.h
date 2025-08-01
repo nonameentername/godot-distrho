@@ -42,7 +42,7 @@ public:
             rpc_memory.write_request(&builder, T::_capnpPrivate::typeId);
             rpc_memory.buffer->input_condition.notify_one();
 
-            ptime timeout = microsec_clock::universal_time() + milliseconds(1000);
+            ptime timeout = microsec_clock::universal_time() + milliseconds(100);
             bool result = rpc_memory.buffer->output_condition.timed_wait(lock, timeout);
 
             if (result) {

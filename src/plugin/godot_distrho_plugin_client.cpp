@@ -160,7 +160,7 @@ void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32
 
         audio_memory.buffer->input_condition.notify_one();
 
-        ptime timeout = microsec_clock::universal_time() + milliseconds(100);
+        ptime timeout = microsec_clock::universal_time() + milliseconds(1000);
 
         bool result = audio_memory.buffer->output_condition.timed_wait(lock, timeout);
 
