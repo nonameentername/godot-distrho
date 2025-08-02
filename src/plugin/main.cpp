@@ -1,7 +1,14 @@
 #include "distrho_common.h"
+#include "godot_distrho_utils.h"
 #include "libgodot_distrho.h"
 
+#include <dirent.h>
+#include <string>
+#include <vector>
+
 extern LibGodot libgodot;
+
+USE_NAMESPACE_DISTRHO
 
 int main(int argc, char **argv) {
     std::string program;
@@ -19,6 +26,10 @@ int main(int argc, char **argv) {
         module_type = std::to_string(DistrhoCommon::PLUGIN_TYPE).c_str();
     }
 
+    const char *distrho_path = std::getenv("DISTRHO_PATH");
+
+    std::string godot_package = GodotDistrhoUtils::find_godot_package();
+
     std::vector<std::string> args;
 
     if (std::stoi(module_type) == DistrhoCommon::PLUGIN_TYPE) {
@@ -26,9 +37,8 @@ int main(int argc, char **argv) {
                 "--display-driver",
                 "headless",
                 "--audio-driver",
-                "Distrho",
-                "--path",
-                "/home/wmendiza/source/godot-distrho"};
+                "Distrho"
+                };
     } else {
         args = {program,
                 "--rendering-method",
@@ -38,9 +48,16 @@ int main(int argc, char **argv) {
                 "--display-driver",
                 "x11",
                 "--audio-driver",
-                "Dummy",
-                "--path",
-                "/home/wmendiza/source/godot-distrho"};
+                "Dummy"
+                };
+    }
+
+    if (godot_package.size() > 0) {
+        args.push_back("--main-pack");
+        args.push_back(godot_package);
+    } else if (distrho_path != NULL){
+        args.push_back("--path");
+        args.push_back(distrho_path);
     }
 
     std::vector<char *> argvs;

@@ -33,6 +33,8 @@ scons platform=linux target=template_release
 
 # build godot-distrho (distrho)
 
+export DISTRHO_PATH=$dir
+
 mkdir -p $dir/addons/distrho/bin/linux/release 
 cd $dir/addons/distrho/bin/linux/release 
 

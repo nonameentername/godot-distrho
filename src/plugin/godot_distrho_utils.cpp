@@ -20,16 +20,6 @@ using namespace boost::process;
 
 START_NAMESPACE_DISTRHO
 
-Display *GodotDistrhoUtils::get_x11_display() {
-    Display *display = XOpenDisplay(NULL);
-    return display;
-}
-
-Window GodotDistrhoUtils::get_x11_window(Display *display) {
-    Window window = DefaultRootWindow(display);
-    return window;
-}
-
 std::string GodotDistrhoUtils::get_executable_path() {
 #if defined(_WIN32)
     char path[MAX_PATH];
@@ -91,6 +81,28 @@ child *GodotDistrhoUtils::launch_process(const std::string &p_name, environment 
     }
 
     return new child(executable, args(p_args), env = p_env);
+}
+
+std::string GodotDistrhoUtils::find_godot_package() {
+    namespace fs = std::filesystem;
+
+    std::vector<fs::path> search_dirs = {
+        fs::path(get_shared_library_path()).parent_path(),
+        fs::path(get_executable_path()).parent_path()
+    };
+
+    for (const fs::path &dir : search_dirs) {
+        if (!fs::exists(dir) || !fs::is_directory(dir))
+            continue;
+
+        for (const auto &entry : fs::directory_iterator(dir)) {
+            if (entry.path().extension() == ".pck") {
+                return entry.path().string();
+            }
+        }
+    }
+
+    return "";
 }
 
 END_NAMESPACE_DISTRHO

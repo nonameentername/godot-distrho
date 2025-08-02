@@ -33,6 +33,8 @@ scons platform=linux target=template_debug dev_build=yes debug_symbols=yes
 
 # build godot-distrho (distrho)
 
+export DISTRHO_PATH=$dir
+
 mkdir -p $dir/addons/distrho/bin/linux/debug
 cd $dir/addons/distrho/bin/linux/debug
 

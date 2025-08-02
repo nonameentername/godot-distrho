@@ -16,7 +16,11 @@ add_compile_definitions(KJ_USE_FIBERS=0)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISTRHO_NAMESPACE=GodotDISTRHO -DDGL_NAMESPACE=GodotDGL -DDISTRHO_PLUGIN_ENABLE_SUBPROCESS=1")
 
-set(CapnProto_DIR "${CMAKE_CURRENT_SOURCE_DIR}/modules/capnproto/build/install/lib/cmake/CapnProto")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CapnProto_DIR "${CMAKE_CURRENT_SOURCE_DIR}/addons/capnproto/bin/linux/debug/lib/cmake/CapnProto")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CapnProto_DIR "${CMAKE_CURRENT_SOURCE_DIR}/addons/capnproto/bin/linux/release/lib/cmake/CapnProto")
+endif()
 
 add_subdirectory(modules/dpf)
 
@@ -117,7 +121,12 @@ endforeach()
 
 #godot-plugin
 
-set(SOURCE src/plugin/libgodot_distrho.cpp src/plugin/main.cpp src/distrho_common.cpp)
+set(SOURCE
+  src/plugin/libgodot_distrho.cpp
+  src/plugin/main.cpp
+  src/distrho_common.cpp
+  src/plugin/godot_distrho_utils.cpp
+)
     
 set(HEADER src/plugin/libgodot_distrho.h)
 
@@ -132,6 +141,7 @@ set(CMAKE_SKIP_RPATH TRUE)
 target_include_directories(godot-plugin PUBLIC
   src/plugin
   src
+  modules/dpf/distrho
   modules/godot/core/extension
   godot-cpp/include
   godot-cpp/gen/src
