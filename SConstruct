@@ -94,12 +94,12 @@ elif env["platform"] == "linux":
     env.Append(LIBS=[capnp_rpc_library, capnp_library, "kj-async", "kj"])
 
     if env["dev_build"]:
-        env.Append(LIBPATH=["modules/capnproto/build/install/lib"])
-        env.Append(CPPPATH=["modules/capnproto/build/install/include", "modules/dpf/distrho"])
+        env.Append(LIBPATH=["addons/capnproto/bin/linux/debug/lib"])
+        env.Append(CPPPATH=["addons/capnproto/bin/linux/debug/include", "modules/dpf/distrho"])
         #env.Append(RPATH=["", "."])
     else:
-        env.Append(LIBPATH=["modules/capnproto/build/install/lib"])
-        env.Append(CPPPATH=["modules/capnproto/build/install/include", "modules/dpf/distrho"])
+        env.Append(LIBPATH=["addons/capnproto/bin/linux/release/lib"])
+        env.Append(CPPPATH=["addons/capnproto/bin/linux/release/include", "modules/dpf/distrho"])
         #env.Append(RPATH=["", "."])
 
 env.Append(CPPFLAGS=["-fexceptions", "-DKJ_USE_FIBERS=0", "-DDISTRHO_NAMESPACE=GodotDISTRHO"])

@@ -121,7 +121,7 @@ set(SOURCE src/plugin/libgodot_distrho.cpp src/plugin/main.cpp src/distrho_commo
     
 set(HEADER src/plugin/libgodot_distrho.h)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g3")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g3")
 
 add_executable(godot-plugin ${SOURCE} ${HEADER})
 
@@ -147,7 +147,8 @@ target_link_directories(godot-plugin PRIVATE
 target_link_libraries(godot-plugin PRIVATE
   ${CMAKE_THREAD_LIBS_INIT}
   godot.linuxbsd.editor.x86_64
-  godot-cpp.linux.template_debug.x86_64
+  debug godot-cpp.linux.template_debug.dev.x86_64
+  optimized godot-cpp.linux.template_release.x86_64.a
   CapnProto::capnp-rpc
   CapnProto::capnp
   CapnProto::kj-async
@@ -218,4 +219,20 @@ target_link_libraries(godot-distrho PUBLIC
   #${GODOT_LIBRARIES}
 )
 
+set(GODOT_PLUGIN_OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-plugin")
+set(GODOT_PLUGIN_COPY_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-distrho.lv2")
+set(GODOT_PLUGIN_COPY_DEST "${GODOT_PLUGIN_COPY_DEST_DIR}/godot-plugin")
 
+add_custom_command(
+  OUTPUT ${GODOT_PLUGIN_COPY_DEST}
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-distrho.lv2"
+  COMMAND ${CMAKE_COMMAND} -E copy ${GODOT_PLUGIN_OUTPUT_PATH} ${GODOT_PLUGIN_COPY_DEST}
+  DEPENDS godot-plugin
+  COMMENT "Copying godot-plugin to godot-distrho directory"
+)
+
+add_custom_target(copy_godot_plugin ALL
+  DEPENDS ${GODOT_PLUGIN_COPY_DEST}
+)
+
+add_dependencies(godot-distrho copy_godot_plugin)

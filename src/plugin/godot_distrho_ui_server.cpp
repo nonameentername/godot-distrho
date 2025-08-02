@@ -51,7 +51,8 @@ void GodotDistrhoUIServer::rpc_thread_func() {
                 first_wait = false;
 
                 if (result) {
-                    printf("Processing request_id: %ld", godot_rpc_memory->buffer->request_id);
+                    //TODO: log in debug mode
+                    //printf("Processing request_id: %ld", godot_rpc_memory->buffer->request_id);
 
                     switch (godot_rpc_memory->buffer->request_id) {
                     case EditParameterRequest::_capnpPrivate::typeId: {
@@ -77,13 +78,13 @@ void GodotDistrhoUIServer::rpc_thread_func() {
                         break;
                     }
                     default: {
-                        printf("Unknown request_id: %ld", godot_rpc_memory->buffer->request_id);
+                        //printf("Unknown request_id: %ld", godot_rpc_memory->buffer->request_id);
                         break;
                     }
                     }
                     godot_rpc_memory->buffer->request_id = 0;
                 } else {
-                    printf("Timed out waiting for request_id");
+                    //printf("Timed out waiting for request_id");
                 }
             }
         }

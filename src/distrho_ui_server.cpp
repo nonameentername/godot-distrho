@@ -121,7 +121,8 @@ void DistrhoUIServer::rpc_thread_func() {
         first_wait = false;
 
         if (result) {
-            printf("Processing request_id: %ld", godot_rpc_memory->buffer->request_id);
+            //TODO: log in debug only
+            //printf("Processing request_id: %ld", godot_rpc_memory->buffer->request_id);
 
             switch (rpc_memory->buffer->request_id) {
 
@@ -149,13 +150,13 @@ void DistrhoUIServer::rpc_thread_func() {
                 break;
             }
             default: {
-                printf("Unknown request_id: %ld", rpc_memory->buffer->request_id);
+                //printf("Unknown request_id: %ld", rpc_memory->buffer->request_id);
                 break;
             }
             }
             rpc_memory->buffer->request_id = 0;
         } else {
-            printf("Timed out waiting for request_id");
+            //printf("Timed out waiting for request_id");
         }
     }
 

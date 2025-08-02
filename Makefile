@@ -8,18 +8,20 @@ else
 PLATFORM=windows
 endif
 
-all: godot godot_dump_api godot_cpp godot_static_library dev-build
+all: common ubuntu
 
 #common
 
+common: capnproto schema godot
+
 capnproto:
-	cd modules/capnproto && git co v1.2.0 && mkdir -p build && cd build && \
-		cmake .. -DCMAKE_INSTALL_PREFIX:PATH=install -DCMAKE_POSITION_INDEPENDENT_CODE=ON && make && make install
+	$(MAKE) shell-ubuntu SHELL_COMMAND='./platform/ubuntu/build_capnproto.sh'
 
 schema:
-	modules/capnproto/build/install/bin/capnp compile \
-		-o modules/capnproto/build/install/bin/capnpc-c++:src \
-		godot_distrho_schema.capnp && mv src/godot_distrho_schema.capnp.c++ src/godot_distrho_schema.capnp.cpp
+	$(MAKE) shell-ubuntu SHELL_COMMAND='./platform/ubuntu/build_schema.sh'
+
+godot:
+	$(MAKE) shell-ubuntu SHELL_COMMAND='./platform/ubuntu/build_godot.sh'
 
 format:
 	clang-format -i src/*.cpp src/*.h
@@ -28,25 +30,6 @@ format:
 
 #distrho plugin
 
-godot:
-	cd modules/godot && scons platform=linux dev_build=yes debug_symbols=yes
-
-godot_shared_library:
-	#cd modules/godot && scons platform=linux dev_build=yes debug_symbols=yes library_type=shared_library verbose=yes
-	cd modules/godot && scons platform=linux debug_symbols=yes library_type=shared_library verbose=yes
-
-godot_static_library:
-	#cd modules/godot && scons platform=linux dev_build=yes debug_symbols=yes library_type=shared_library verbose=yes
-	cd modules/godot && scons platform=linux debug_symbols=yes library_type=static_library verbose=yes
-
-#check if this is really needed
-godot_dump_api:
-	cd godot-cpp/gdextension && ../../modules/godot/bin/godot.linuxbsd.editor.dev.x86_64 --dump-extension-api
-
-godot_cpp:
-	#cd godot-cpp && scons platform=linux dev_build=yes debug_symbols=yes
-	cd godot-cpp && scons platform=linux dev_build=yes debug_symbols=yes
-
 build:
 	cd build && make && rm -rf ~/.lv2/godot-distrho.lv2/ && cp -r bin/godot-distrho.lv2/ ~/.lv2/ && jalv.gtk https://github.com/nonameentername/godot-distrho
 
@@ -54,3 +37,24 @@ build:
 
 dev-build:
 	scons platform=$(PLATFORM) target=template_debug dev_build=yes debug_symbols=yes compiledb=true
+
+UNAME := $(shell uname)
+ifeq ($(UNAME), Windows)
+    UID=1000
+    GID=1000
+else
+    UID=`id -u`
+    GID=`id -g`
+endif
+
+SHELL_COMMAND = bash
+
+docker-ubuntu:
+	docker build -t godot-distrho-ubuntu ./platform/ubuntu
+
+shell-ubuntu: docker-ubuntu
+	docker run -it --rm -v ${CURDIR}:${CURDIR} --user ${UID}:${GID} -w ${CURDIR} godot-distrho-ubuntu ${SHELL_COMMAND}
+
+ubuntu:
+	$(MAKE) shell-ubuntu SHELL_COMMAND='./platform/ubuntu/build_debug.sh'
+	$(MAKE) shell-ubuntu SHELL_COMMAND='./platform/ubuntu/build_release.sh'

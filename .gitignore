@@ -7,7 +7,9 @@
 .mono
 .sconsign.dblite
 .vs
+.vscode
 addons/distrho/bin
+addons/capnproto/bin
 
 build
 build-log.txt
