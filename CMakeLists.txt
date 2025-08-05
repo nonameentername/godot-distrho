@@ -28,7 +28,11 @@ find_package(Threads REQUIRED)
 
 find_package(CapnProto REQUIRED)
 
-set(GODOT_LIBRARIES_SUFFIX ".linuxbsd.editor.x86_64")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(GODOT_LIBRARIES_SUFFIX ".linuxbsd.editor.dev.x86_64")
+else()
+    set(GODOT_LIBRARIES_SUFFIX ".linuxbsd.editor.x86_64")
+endif()
 
 set(GODOT_LINK_DIRECTORIES
   modules/godot/bin
@@ -156,7 +160,7 @@ target_link_directories(godot-plugin PRIVATE
 
 target_link_libraries(godot-plugin PRIVATE
   ${CMAKE_THREAD_LIBS_INIT}
-  godot.linuxbsd.editor.x86_64
+  godot${GODOT_LIBRARIES_SUFFIX}
   debug godot-cpp.linux.template_debug.dev.x86_64
   optimized godot-cpp.linux.template_release.x86_64.a
   CapnProto::capnp-rpc

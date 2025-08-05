@@ -31,6 +31,9 @@ scons platform=linux dev_build=yes debug_symbols=yes library_type=static_library
 cd $dir
 scons platform=linux target=template_debug dev_build=yes debug_symbols=yes
 
+$dir/modules/godot/bin/godot.linuxbsd.editor.dev.x86_64 --headless --import || true
+$dir/modules/godot/bin/godot.linuxbsd.editor.dev.x86_64 --headless --import || true
+
 # build godot-distrho (distrho)
 
 export DISTRHO_PATH=$dir
