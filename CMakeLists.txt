@@ -30,6 +30,7 @@ find_package(CapnProto REQUIRED)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(GODOT_LIBRARIES_SUFFIX ".linuxbsd.editor.dev.x86_64")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
 else()
     set(GODOT_LIBRARIES_SUFFIX ".linuxbsd.editor.x86_64")
 endif()
@@ -173,9 +174,7 @@ target_link_libraries(godot-plugin PRIVATE
 #godot-distrho
 
 dpf_add_plugin(godot-distrho
-  #TARGETS au clap lv2 vst2 vst3
-  #TARGETS au lv2 vst2 vst3 jack
-  TARGETS jack lv2
+  TARGETS au clap lv2 vst2 vst3 jack
   NO_SHARED_RESOURCES
   UI_TYPE opengl
   NO_USE_FILE_BROWSER
@@ -234,19 +233,23 @@ target_link_libraries(godot-distrho PUBLIC
 )
 
 set(GODOT_PLUGIN_OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-plugin")
-set(GODOT_PLUGIN_COPY_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-distrho.lv2")
-set(GODOT_PLUGIN_COPY_DEST "${GODOT_PLUGIN_COPY_DEST_DIR}/godot-plugin")
+set(GODOT_PLUGIN_LV2_COPY_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-distrho.lv2")
+set(GODOT_PLUGIN_LV2_COPY_DEST "${GODOT_PLUGIN_LV2_COPY_DEST_DIR}/godot-plugin")
+set(GODOT_PLUGIN_VST3_COPY_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-distrho.vst3/Contents/x86_64-linux")
+set(GODOT_PLUGIN_VST3_COPY_DEST "${GODOT_PLUGIN_VST3_COPY_DEST_DIR}/godot-plugin")
 
 add_custom_command(
-  OUTPUT ${GODOT_PLUGIN_COPY_DEST}
-  COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-distrho.lv2"
-  COMMAND ${CMAKE_COMMAND} -E copy ${GODOT_PLUGIN_OUTPUT_PATH} ${GODOT_PLUGIN_COPY_DEST}
+  OUTPUT ${GODOT_PLUGIN_LV2_COPY_DEST} ${GODOT_PLUGIN_VST3_COPY_DEST}
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${GODOT_PLUGIN_LV2_COPY_DEST_DIR}"
+  COMMAND ${CMAKE_COMMAND} -E copy ${GODOT_PLUGIN_OUTPUT_PATH} ${GODOT_PLUGIN_LV2_COPY_DEST}
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${GODOT_PLUGIN_VST3_COPY_DEST_DIR}"
+  COMMAND ${CMAKE_COMMAND} -E copy ${GODOT_PLUGIN_OUTPUT_PATH} ${GODOT_PLUGIN_VST3_COPY_DEST}
   DEPENDS godot-plugin
   COMMENT "Copying godot-plugin to godot-distrho directory"
 )
 
 add_custom_target(copy_godot_plugin ALL
-  DEPENDS ${GODOT_PLUGIN_COPY_DEST}
+  DEPENDS ${GODOT_PLUGIN_LV2_COPY_DEST} ${GODOT_PLUGIN_VST3_COPY_DEST}
 )
 
 add_dependencies(godot-distrho copy_godot_plugin)

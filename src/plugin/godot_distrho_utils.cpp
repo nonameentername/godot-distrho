@@ -86,10 +86,8 @@ child *GodotDistrhoUtils::launch_process(const std::string &p_name, environment 
 std::string GodotDistrhoUtils::find_godot_package() {
     namespace fs = std::filesystem;
 
-    std::vector<fs::path> search_dirs = {
-        fs::path(get_shared_library_path()).parent_path(),
-        fs::path(get_executable_path()).parent_path()
-    };
+    std::vector<fs::path> search_dirs = {fs::path(get_shared_library_path()).parent_path(),
+                                         fs::path(get_executable_path()).parent_path()};
 
     for (const fs::path &dir : search_dirs) {
         if (!fs::exists(dir) || !fs::is_directory(dir))

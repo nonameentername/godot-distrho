@@ -21,6 +21,7 @@ GodotDistrhoPlugin::GodotDistrhoPlugin(GodotDistrhoPluginClient *p_client, Godot
 }
 
 GodotDistrhoPlugin::~GodotDistrhoPlugin() {
+    client->shutdown();
 }
 
 const char *GodotDistrhoPlugin::getLabel() const {

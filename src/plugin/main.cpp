@@ -33,12 +33,7 @@ int main(int argc, char **argv) {
     std::vector<std::string> args;
 
     if (std::stoi(module_type) == DistrhoCommon::PLUGIN_TYPE) {
-        args = {program,
-                "--display-driver",
-                "headless",
-                "--audio-driver",
-                "Distrho"
-                };
+        args = {program, "--display-driver", "headless", "--audio-driver", "Distrho"};
     } else {
         args = {program,
                 "--rendering-method",
@@ -48,14 +43,13 @@ int main(int argc, char **argv) {
                 "--display-driver",
                 "x11",
                 "--audio-driver",
-                "Dummy"
-                };
+                "Dummy"};
     }
 
     if (godot_package.size() > 0) {
         args.push_back("--main-pack");
         args.push_back(godot_package);
-    } else if (distrho_path != NULL){
+    } else if (distrho_path != NULL) {
         args.push_back("--path");
         args.push_back(distrho_path);
     }

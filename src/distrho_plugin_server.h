@@ -12,7 +12,6 @@
 #include "distrho_shared_memory_rpc.h"
 #include "distrho_ui_client.h"
 
-
 #include "godot_cpp/classes/mutex.hpp"
 #include "godot_cpp/classes/semaphore.hpp"
 #include "godot_cpp/classes/thread.hpp"

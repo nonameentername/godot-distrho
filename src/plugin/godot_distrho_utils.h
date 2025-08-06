@@ -22,7 +22,7 @@ public:
     static boost::process::child *launch_process(const std::string &p_name, boost::process::environment p_env,
                                                  const std::vector<std::string> &p_args = {});
 
-	static std::string find_godot_package();
+    static std::string find_godot_package();
 
     static std::string get_shared_library_path();
 };

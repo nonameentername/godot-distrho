@@ -64,19 +64,22 @@ DistrhoUIServer::DistrhoUIServer() {
 }
 
 DistrhoUIServer::~DistrhoUIServer() {
-    {
+    if (is_ui) {
         scoped_lock<interprocess_mutex> lock(godot_rpc_memory->buffer->mutex);
         exit_thread = true;
         godot_rpc_memory->buffer->input_condition.notify_all();
     }
 
-    if (rpc_thread->is_alive()) {
+    if (rpc_thread != NULL && rpc_thread->is_alive()) {
         rpc_thread->wait_to_finish();
     }
 
     rpc_memory = nullptr;
     godot_rpc_memory = nullptr;
-    delete client;
+
+    if (is_ui) {
+        delete client;
+    }
 
     singleton = NULL;
 }
@@ -121,8 +124,8 @@ void DistrhoUIServer::rpc_thread_func() {
         first_wait = false;
 
         if (result) {
-            //TODO: log in debug only
-            //printf("Processing request_id: %ld", godot_rpc_memory->buffer->request_id);
+            // TODO: log in debug only
+            // printf("Processing request_id: %ld", godot_rpc_memory->buffer->request_id);
 
             switch (rpc_memory->buffer->request_id) {
 
@@ -149,14 +152,15 @@ void DistrhoUIServer::rpc_thread_func() {
                 });
                 break;
             }
+
             default: {
-                //printf("Unknown request_id: %ld", rpc_memory->buffer->request_id);
+                // printf("Unknown request_id: %ld", rpc_memory->buffer->request_id);
                 break;
             }
             }
             rpc_memory->buffer->request_id = 0;
         } else {
-            //printf("Timed out waiting for request_id");
+            // printf("Timed out waiting for request_id");
         }
     }
 
@@ -190,7 +194,9 @@ Error DistrhoUIServer::start() {
 void DistrhoUIServer::finish() {
     if (!godot::Engine::get_singleton()->is_editor_hint()) {
         exit_thread = true;
-        rpc_thread->wait_to_finish();
+        if (rpc_thread != NULL && rpc_thread->is_alive()) {
+            rpc_thread->wait_to_finish();
+        }
     }
 }
 
