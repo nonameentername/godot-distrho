@@ -1,5 +1,4 @@
 #include "godot_distrho_utils.h"
-#include <X11/Xlib.h>
 
 #if defined(_WIN32)
 #include <windows.h>

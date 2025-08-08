@@ -58,3 +58,13 @@ shell-ubuntu: docker-ubuntu
 ubuntu:
 	$(MAKE) shell-ubuntu SHELL_COMMAND='./platform/ubuntu/build_debug.sh'
 	$(MAKE) shell-ubuntu SHELL_COMMAND='./platform/ubuntu/build_release.sh'
+
+docker-osxcross:
+	docker build -t godot-distrho-osxcross ./platform/osxcross
+
+shell-osxcross: docker-osxcross
+	docker run -it --rm -v ${CURDIR}:${CURDIR} --user ${UID}:${GID} -w ${CURDIR} godot-distrho-osxcross ${SHELL_COMMAND}
+
+osxcross:
+	$(MAKE) shell-osxcross SHELL_COMMAND='./platform/osxcross/build_debug.sh'
+	$(MAKE) shell-osxcross SHELL_COMMAND='./platform/osxcross/build_release.sh'

@@ -1,0 +1,17 @@
+{
+  "name": "godot-distrho",
+  "version": "0.0.1",
+  "dependencies": [
+    "boost-date-time",
+    "boost-interprocess",
+    "boost-process",
+    "boost-uuid",
+    "capnproto"
+  ],
+  "overrides": [
+    {
+      "name": "boost-process",
+      "version": "1.78.0"
+    }
+  ]
+}

@@ -1,5 +1,49 @@
 cmake_minimum_required(VERSION 3.15)
+
+set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "" FORCE)
+
+set(VCPKG_FEATURE_FLAGS versions)
+set(X_VCPKG_APPLOCAL_DEPS_INSTALL ON)
+set(VCPKG_OVERLAY_TRIPLETS ${CMAKE_CURRENT_SOURCE_DIR}/platform/vcpkg/triplets)
+set(VCPKG_OVERLAY_PORTS ${CMAKE_CURRENT_SOURCE_DIR}/platform/vcpkg/ports)
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake CACHE STRING "Vcpkg toolchain file")
+
+if(OSXCROSS_TARGET)
+    if(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
+        set(VCPKG_TARGET_TRIPLET "x64-osxcross")
+        set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/platform/osxcross/osx-x86_64.cmake)
+    elseif(CMAKE_OSX_ARCHITECTURES STREQUAL "arm64")
+        set(VCPKG_TARGET_TRIPLET "arm64-osxcross")
+        set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/platform/osxcross/osx-arm64.cmake)
+    endif()
+
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(GODOT_LIBRARIES_SUFFIX ".macos.editor.dev.${CMAKE_OSX_ARCHITECTURES}")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
+    else()
+        set(GODOT_LIBRARIES_SUFFIX ".macos.editor.${CMAKE_OSX_ARCHITECTURES}")
+    endif()
+elseif(UNIX)
+    set(VCPKG_TARGET_TRIPLET "x64-linux")
+
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(GODOT_LIBRARIES_SUFFIX ".linuxbsd.editor.dev.x86_64")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
+    else()
+        set(GODOT_LIBRARIES_SUFFIX ".linuxbsd.editor.x86_64")
+    endif()
+endif()
+
+add_compile_definitions(-DBOOST_ASIO_DISABLE_BOOST_CONTEXT_FIBER)
+
+message(STATUS "VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}")
+message(STATUS "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}")
+
 project(godot-distrho VERSION 1.1.0)
+
+#if(CMAKE_CROSSCOMPILING)
+set(CMAKE_CROSSCOMPILING_EMULATOR echo)
+#endif()
 
 set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
 set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
@@ -16,10 +60,8 @@ add_compile_definitions(KJ_USE_FIBERS=0)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISTRHO_NAMESPACE=GodotDISTRHO -DDGL_NAMESPACE=GodotDGL -DDISTRHO_PLUGIN_ENABLE_SUBPROCESS=1")
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CapnProto_DIR "${CMAKE_CURRENT_SOURCE_DIR}/addons/capnproto/bin/linux/debug/lib/cmake/CapnProto")
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(CapnProto_DIR "${CMAKE_CURRENT_SOURCE_DIR}/addons/capnproto/bin/linux/release/lib/cmake/CapnProto")
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
 endif()
 
 add_subdirectory(modules/dpf)
@@ -27,13 +69,6 @@ add_subdirectory(modules/dpf)
 find_package(Threads REQUIRED)
 
 find_package(CapnProto REQUIRED)
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(GODOT_LIBRARIES_SUFFIX ".linuxbsd.editor.dev.x86_64")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
-else()
-    set(GODOT_LIBRARIES_SUFFIX ".linuxbsd.editor.x86_64")
-endif()
 
 set(GODOT_LINK_DIRECTORIES
   modules/godot/bin
@@ -162,8 +197,6 @@ target_link_directories(godot-plugin PRIVATE
 target_link_libraries(godot-plugin PRIVATE
   ${CMAKE_THREAD_LIBS_INIT}
   godot${GODOT_LIBRARIES_SUFFIX}
-  debug godot-cpp.linux.template_debug.dev.x86_64
-  optimized godot-cpp.linux.template_release.x86_64.a
   CapnProto::capnp-rpc
   CapnProto::capnp
   CapnProto::kj-async
@@ -171,10 +204,62 @@ target_link_libraries(godot-plugin PRIVATE
   ${GODOT_LIBRARIES}
 )
 
+if(OSXCROSS_TARGET)
+  target_link_libraries(godot-plugin PRIVATE
+    debug godot-cpp.macos.template_debug.dev.universal
+    optimized godot-cpp.macos.template_release.universal#.a
+  )
+
+  target_link_libraries(godot-plugin PRIVATE
+    "-framework AppKit"
+    "-framework Foundation"
+    "-framework CoreFoundation"
+    "-framework AVFoundation"
+    "-framework CoreMedia"
+    "-framework CoreVideo"
+    "-framework CoreGraphics"
+    "-framework IOSurface"
+    "-framework IOKit"
+    "-framework CoreMIDI"
+    "-framework QuartzCore"
+    "-framework UniformTypeIdentifiers"
+    "-framework AudioToolbox"
+    "-framework CoreAudio"
+    "-framework GameController"
+    "-framework Metal"
+    "-framework MetalKit"
+    "-framework Cocoa"
+    "-framework CoreText"
+    "-framework ApplicationServices"
+    "-framework Security"
+    "-framework Carbon"
+    "-framework CoreHaptics"
+	/MoltenVK/MoltenVK/static/MoltenVK.xcframework/macos-arm64_x86_64/libMoltenVK.a
+  )
+
+  if(CMAKE_OSX_ARCHITECTURES STREQUAL "arm64")
+    target_link_libraries(godot-plugin PRIVATE
+      "-framework MetalFX"
+    )
+  endif()
+
+elseif(UNIX)
+  target_link_libraries(godot-plugin PRIVATE
+    debug godot-cpp.linux.template_debug.dev.x86_64
+    optimized godot-cpp.linux.template_release.x86_64#.a
+  )
+endif()
+
 #godot-distrho
 
+set(PLUGIN_FORMATS clap lv2 vst2 vst3)
+
+if(NOT APPLE)
+  list(APPEND PLUGIN_FORMATS jack)
+endif()
+
 dpf_add_plugin(godot-distrho
-  TARGETS au clap lv2 vst2 vst3 jack
+  TARGETS ${PLUGIN_FORMATS}
   NO_SHARED_RESOURCES
   UI_TYPE opengl
   NO_USE_FILE_BROWSER
