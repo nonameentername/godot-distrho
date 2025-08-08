@@ -1,7 +1,7 @@
 #!/bin/bash
 
 dir=$(realpath .)
-bin_dir=$dir/addons/capnproto/bin/linux/release/bin
+bin_dir=$dir/addons/distrho/bin/linux/debug/vcpkg_installed/x64-linux/tools/capnproto
 
 $bin_dir/capnp compile -o $bin_dir/capnpc-c++:src $dir/godot_distrho_schema.capnp
 
