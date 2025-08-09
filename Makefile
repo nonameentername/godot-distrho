@@ -70,4 +70,4 @@ osxcross:
 	$(MAKE) shell-osxcross SHELL_COMMAND='./platform/osxcross/build_release.sh'
 
 clean:
-	rm -rf addons/distrho/bin modules/godot/bin
+	rm -rf addons/distrho/bin modules/godot/bin vcpkg_installed
