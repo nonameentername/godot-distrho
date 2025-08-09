@@ -68,3 +68,6 @@ shell-osxcross: docker-osxcross
 osxcross:
 	$(MAKE) shell-osxcross SHELL_COMMAND='./platform/osxcross/build_debug.sh'
 	$(MAKE) shell-osxcross SHELL_COMMAND='./platform/osxcross/build_release.sh'
+
+clean:
+	rm -rf addons/distrho/bin modules/godot/bin

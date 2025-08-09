@@ -43,6 +43,11 @@ for ARCH in x86_64 arm64; do
         $dir
 done
 
+$dir/scripts/lipo-dir.py  \
+    $dir/addons/distrho/bin/osxcross-arm64/release \
+    $dir/addons/distrho/bin/osxcross-x86_64/release \
+    $dir/addons/distrho/bin/osxcross/release 
+
 # build godot-distrho (gdextension)
 
 cd $dir
