@@ -121,11 +121,7 @@ jobs:
             ./platform/ubuntu/build_capnproto.sh
             ./platform/ubuntu/build_schema.sh
             ./platform/ubuntu/build_godot.sh
-
-      - name: Free Disk Space
-        run: |
-          make clean
-          docker system prune
+            make clean
 
       - name: Build godot-distrho (Debug)
         uses: addnab/docker-run-action@v3
