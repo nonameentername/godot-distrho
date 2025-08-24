@@ -8,10 +8,12 @@ using namespace godot;
 
 namespace bip = boost::interprocess;
 
+static boost::uuids::random_generator &uuid_gen() {
+    static boost::uuids::random_generator gen;
+    return gen;
+}
+
 DistrhoSharedMemoryAudio::DistrhoSharedMemoryAudio() {
-    std::random_device rd;
-    std::mt19937_64 rng(rd());
-    generator = boost::uuids::basic_random_generator<std::mt19937_64>(rng);
 }
 
 DistrhoSharedMemoryAudio::~DistrhoSharedMemoryAudio() {
@@ -24,7 +26,7 @@ void DistrhoSharedMemoryAudio::initialize(int p_number_of_input_channels, int p_
                                           std::string p_shared_memory_name) {
     if (p_shared_memory_name.length() == 0) {
         is_host = true;
-        boost::uuids::uuid uuid = generator();
+        boost::uuids::uuid uuid = uuid_gen()();
         shared_memory_name = boost::uuids::to_string(uuid);
 
 #if !DISTRHO_PLUGIN_ENABLE_SUBPROCESS && DEBUG

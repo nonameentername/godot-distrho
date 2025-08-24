@@ -52,7 +52,6 @@ struct AudioBuffer {
 class DistrhoSharedMemoryAudio {
 
 private:
-    boost::uuids::basic_random_generator<std::mt19937_64> generator;
     std::unique_ptr<boost::interprocess::managed_shared_memory> shared_memory;
 
 public:
