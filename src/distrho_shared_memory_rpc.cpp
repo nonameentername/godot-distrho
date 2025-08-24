@@ -9,10 +9,12 @@ using namespace godot;
 
 namespace bip = boost::interprocess;
 
+static boost::uuids::random_generator &uuid_gen() {
+    static boost::uuids::random_generator gen;
+    return gen;
+}
+
 DistrhoSharedMemoryRPC::DistrhoSharedMemoryRPC() {
-    std::random_device rd;
-    std::mt19937_64 rng(rd());
-    generator = boost::uuids::basic_random_generator<std::mt19937_64>(rng);
 }
 
 DistrhoSharedMemoryRPC::~DistrhoSharedMemoryRPC() {
@@ -24,7 +26,7 @@ DistrhoSharedMemoryRPC::~DistrhoSharedMemoryRPC() {
 void DistrhoSharedMemoryRPC::initialize(std::string p_name, std::string p_shared_memory_name) {
     if (p_shared_memory_name.length() == 0) {
         is_host = true;
-        boost::uuids::uuid uuid = generator();
+        boost::uuids::uuid uuid = uuid_gen()();
         shared_memory_name = boost::uuids::to_string(uuid);
 
 #if !DISTRHO_PLUGIN_ENABLE_SUBPROCESS && DEBUG
