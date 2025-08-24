@@ -9,6 +9,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 concurrency:
   group: ${{ github.ref }}
 
@@ -20,7 +23,7 @@ jobs:
       VERSION: v1
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
           submodules: recursive
@@ -55,7 +58,7 @@ jobs:
       VERSION: v1
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
           submodules: recursive
@@ -114,6 +117,7 @@ jobs:
           key: linux-artifacts-${{github.run_id}}
 
   macos-build-debug:
+    if: false
     name: MacOS build (Debug)
     runs-on: ubuntu-latest
     needs: common-build
@@ -126,7 +130,7 @@ jobs:
           docker-images: false
 
       - name: Checkout source code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
           submodules: recursive
@@ -174,6 +178,7 @@ jobs:
           key: macos-artifacts-debug-${{github.run_id}}
 
   macos-build-release:
+    if: false
     name: MacOS build (Release)
     runs-on: ubuntu-latest
     needs: common-build
@@ -186,7 +191,7 @@ jobs:
           docker-images: false
 
       - name: Checkout source code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
           submodules: recursive
@@ -232,3 +237,77 @@ jobs:
         with:
           path: addons/distrho/bin
           key: macos-artifacts-release-${{github.run_id}}
+
+  verify-linux-build:
+    name: Verify Linux/Ubuntu build
+    runs-on: ubuntu-latest
+    needs: linux-build
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Restore cached Linux artifacts
+        uses: actions/cache/restore@v4
+        with:
+          path: addons/distrho/bin
+          key: linux-artifacts-${{github.run_id}}
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: false
+          include-templates: false
+
+      - name: Verify godot-distrho
+        run: |
+          godot --headless --import || true
+          godot --headless --import || true
+          godot --headless -s distrho_run_scene.gd 2> /dev/null | grep 'output result is 2'
+
+  publish_artifacts:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    name: Publish Artifacts
+    runs-on: ubuntu-latest
+    needs: [verify-linux-build]
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Restore cached Linux artifacts
+        uses: actions/cache/restore@v4
+        with:
+          path: addons/distrho/bin
+          key: linux-artifacts-${{github.run_id}}
+
+      - name: Update minor version
+        id: tag
+        uses: anothrNick/github-tag-action@1.36.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+          DRY_RUN: true
+
+      - name: Zip godot-distrho artifact
+        run: zip -r godot-distrho_${{ env.TAG_VERSION }}.zip ./addons/distrho
+        env:
+          TAG_VERSION: ${{ steps.tag.outputs.new_tag }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+          token: ${{ github.token }}
+          tag_name: ${{ env.TAG_VERSION }}
+          generate_release_notes: true
+          make_latest: true
+          files: |
+            godot-distrho_${{ env.TAG_VERSION }}.zip
+        env:
+          TAG_VERSION: ${{ steps.tag.outputs.new_tag }}

@@ -156,7 +156,9 @@ void DistrhoPluginServer::audio_thread_func() {
 
         if (initialized) {
             start_buffer_processing();
-            AudioServer::get_singleton()->process_external(BUFFER_FRAME_SIZE);
+            if (AudioServer::get_singleton()->has_method("process_external")) {
+                AudioServer::get_singleton()->call("process_external", BUFFER_FRAME_SIZE);
+            }
         }
 
         ptime timeout = microsec_clock::universal_time() + milliseconds(first_wait ? 1000 : 100);
