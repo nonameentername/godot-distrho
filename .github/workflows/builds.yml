@@ -73,7 +73,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
           DRY_RUN: true
-          PRERELEASE: true
+          RELEASE_BRANCHES: none
+
 
       - uses: benjlevesque/short-sha@v3.0
         id: short-sha
@@ -146,7 +147,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
           DRY_RUN: true
-          PRERELEASE: true
+          RELEASE_BRANCHES: none
 
       - uses: benjlevesque/short-sha@v3.0
         id: short-sha
@@ -208,7 +209,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
           DRY_RUN: true
-          PRERELEASE: true
+          RELEASE_BRANCHES: none
 
       - uses: benjlevesque/short-sha@v3.0
         id: short-sha
@@ -296,7 +297,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
           DRY_RUN: true
-          PRERELEASE: true
+          RELEASE_BRANCHES: none
 
       - name: Zip godot-distrho artifact
         run: zip -r godot-distrho_${{ env.TAG_VERSION }}.zip ./addons/distrho
