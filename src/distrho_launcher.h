@@ -17,6 +17,7 @@ public:
 
     void _ready() override;
     void initialize();
+    void load_scene(String p_scene, bool p_visible = true);
 
     static void _bind_methods();
 };

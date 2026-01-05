@@ -23,7 +23,8 @@ public:
 
     enum DISTRHO_MODULE_TYPE {
         PLUGIN_TYPE,
-        UI_TYPE
+        UI_TYPE,
+        BOTH_TYPE
     };
 
     template <typename T, typename R>
