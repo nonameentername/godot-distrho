@@ -100,16 +100,16 @@ jobs:
           BUILD_SHA: ${{ steps.short-sha.outputs.sha }}
           TAG_VERSION: ${{ steps.tag.outputs.new_tag }}
 
-      - name: Build godot-distrho (Release)
-        uses: addnab/docker-run-action@v3
-        with:
-          image: ghcr.io/nonameentername/godot-distrho-ubuntu:${{ env.VERSION }}
-          options: -v ${{ github.workspace }}:${{ github.workspace }} --workdir ${{ github.workspace }} -e BUILD_SHA -e TAG_VERSION
-          run: |
-            ./platform/ubuntu/build_release.sh
-        env:
-          BUILD_SHA: ${{ steps.short-sha.outputs.sha }}
-          TAG_VERSION: ${{ steps.tag.outputs.new_tag }}
+#      - name: Build godot-distrho (Release)
+#        uses: addnab/docker-run-action@v3
+#        with:
+#          image: ghcr.io/nonameentername/godot-distrho-ubuntu:${{ env.VERSION }}
+#          options: -v ${{ github.workspace }}:${{ github.workspace }} --workdir ${{ github.workspace }} -e BUILD_SHA -e TAG_VERSION
+#          run: |
+#            ./platform/ubuntu/build_release.sh
+#        env:
+#          BUILD_SHA: ${{ steps.short-sha.outputs.sha }}
+#          TAG_VERSION: ${{ steps.tag.outputs.new_tag }}
 
       - name: Create cache for build
         uses: actions/cache@v4
