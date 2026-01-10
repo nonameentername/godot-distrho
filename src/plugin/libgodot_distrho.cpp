@@ -40,8 +40,7 @@ LibGodot::~LibGodot() {
 }
 
 godot::GodotInstance *LibGodot::create_godot_instance(int p_argc, char *p_argv[]) {
-    GDExtensionObjectPtr instance =
-        libgodot_create_godot_instance(p_argc, p_argv, gdextension_default_init, NULL, NULL, NULL, NULL);
+    instance = libgodot_create_godot_instance(p_argc, p_argv, gdextension_default_init);
     if (instance == nullptr) {
         return nullptr;
     }
@@ -49,9 +48,7 @@ godot::GodotInstance *LibGodot::create_godot_instance(int p_argc, char *p_argv[]
 }
 
 void LibGodot::destroy_godot_instance(godot::GodotInstance *instance) {
-    GDExtensionObjectPtr obj =
-        godot::internal::gdextension_interface_object_get_instance_from_id(instance->get_instance_id());
-    libgodot_destroy_godot_instance(obj);
+    libgodot_destroy_godot_instance(instance);
 }
 
 char *LibGodot::get_absolute_path() {

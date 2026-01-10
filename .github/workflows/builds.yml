@@ -39,7 +39,7 @@ jobs:
           run: |
             ./platform/ubuntu/build_capnproto.sh
             ./platform/ubuntu/build_schema.sh
-            ./platform/ubuntu/build_godot.sh
+            #./platform/ubuntu/build_godot.sh
 
       - name: Create cache for build
         uses: actions/cache@v4
@@ -47,7 +47,7 @@ jobs:
           path: |
             src/godot_distrho_schema.capnp.cpp
             src/godot_distrho_schema.capnp.h
-            godot-cpp/gdextension/extension_api.json
+            #godot-cpp/gdextension/extension_api.json
           key: common-artifacts-${{github.run_id}}
 
   linux-build:
@@ -75,7 +75,6 @@ jobs:
           DRY_RUN: true
           RELEASE_BRANCHES: none
 
-
       - uses: benjlevesque/short-sha@v3.0
         id: short-sha
         with:
@@ -87,7 +86,7 @@ jobs:
           path: |
             src/godot_distrho_schema.capnp.cpp
             src/godot_distrho_schema.capnp.h
-            godot-cpp/gdextension/extension_api.json
+            #godot-cpp/gdextension/extension_api.json
           key: common-artifacts-${{github.run_id}}
 
       - name: Build godot-distrho (Debug)
@@ -160,7 +159,7 @@ jobs:
           path: |
             src/godot_distrho_schema.capnp.cpp
             src/godot_distrho_schema.capnp.h
-            godot-cpp/gdextension/extension_api.json
+            #godot-cpp/gdextension/extension_api.json
           key: common-artifacts-${{github.run_id}}
 
       - name: Build godot-distrho (Debug)
@@ -222,7 +221,7 @@ jobs:
           path: |
             src/godot_distrho_schema.capnp.cpp
             src/godot_distrho_schema.capnp.h
-            godot-cpp/gdextension/extension_api.json
+            #godot-cpp/gdextension/extension_api.json
           key: common-artifacts-${{github.run_id}}
 
       - name: Build godot-distrho (Release)
