@@ -318,24 +318,21 @@ target_link_libraries(godot-distrho PUBLIC
   #${GODOT_LIBRARIES}
 )
 
-set(GODOT_PLUGIN_OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-plugin")
 set(GODOT_PLUGIN_LV2_COPY_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-distrho.lv2")
 set(GODOT_PLUGIN_LV2_COPY_DEST "${GODOT_PLUGIN_LV2_COPY_DEST_DIR}/godot-plugin")
 set(GODOT_PLUGIN_VST3_COPY_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-distrho.vst3/Contents/x86_64-linux")
 set(GODOT_PLUGIN_VST3_COPY_DEST "${GODOT_PLUGIN_VST3_COPY_DEST_DIR}/godot-plugin")
 
-add_custom_command(
-  OUTPUT ${GODOT_PLUGIN_LV2_COPY_DEST} ${GODOT_PLUGIN_VST3_COPY_DEST}
-  COMMAND ${CMAKE_COMMAND} -E make_directory "${GODOT_PLUGIN_LV2_COPY_DEST_DIR}"
-  COMMAND ${CMAKE_COMMAND} -E copy ${GODOT_PLUGIN_OUTPUT_PATH} ${GODOT_PLUGIN_LV2_COPY_DEST}
-  COMMAND ${CMAKE_COMMAND} -E make_directory "${GODOT_PLUGIN_VST3_COPY_DEST_DIR}"
-  COMMAND ${CMAKE_COMMAND} -E copy ${GODOT_PLUGIN_OUTPUT_PATH} ${GODOT_PLUGIN_VST3_COPY_DEST}
-  DEPENDS godot-plugin
-  COMMENT "Copying godot-plugin to godot-distrho directory"
-)
-
-add_custom_target(copy_godot_plugin ALL
-  DEPENDS ${GODOT_PLUGIN_LV2_COPY_DEST} ${GODOT_PLUGIN_VST3_COPY_DEST}
-)
-
-add_dependencies(godot-distrho copy_godot_plugin)
+if (TARGET godot-plugin)
+  add_custom_target(copy_godot_plugin ALL
+    COMMENT "Copy built godot-plugin into LV2/VST3 bundles"
+    COMMAND ${CMAKE_COMMAND} -E echo "Copying $<TARGET_FILE:godot-plugin> to ${GODOT_PLUGIN_LV2_COPY_DEST_DIR} and ${GODOT_PLUGIN_VST3_COPY_DEST_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${GODOT_PLUGIN_LV2_COPY_DEST_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:godot-plugin>" "${GODOT_PLUGIN_LV2_COPY_DEST}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${GODOT_PLUGIN_VST3_COPY_DEST_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:godot-plugin>" "${GODOT_PLUGIN_VST3_COPY_DEST}"
+  )
+  add_dependencies(copy_godot_plugin godot-plugin)
+else()
+  message(WARNING "Target 'godot-plugin' not found; copy_godot_plugin not created")
+endif()
