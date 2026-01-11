@@ -34,7 +34,7 @@ elseif(UNIX)
     endif()
 endif()
 
-add_compile_definitions(-DBOOST_ASIO_DISABLE_BOOST_CONTEXT_FIBER)
+add_compile_definitions(BOOST_ASIO_DISABLE_BOOST_CONTEXT_FIBER)
 
 message(STATUS "VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}")
 message(STATUS "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}")
@@ -58,7 +58,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_compile_definitions(KJ_USE_FIBERS=0)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISTRHO_NAMESPACE=GodotDISTRHO -DDGL_NAMESPACE=GodotDGL -DDISTRHO_PLUGIN_ENABLE_SUBPROCESS=1")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISTRHO_NAMESPACE=GodotDISTRHO -DDGL_NAMESPACE=GodotDGL -DUSE_GDEXTENSION=1 -DDISTRHO_PLUGIN_ENABLE_SUBPROCESS=1")
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
@@ -72,17 +72,17 @@ find_package(CapnProto REQUIRED)
 
 set(GODOT_LINK_DIRECTORIES
   modules/godot/bin
-  modules/godot/core
-  modules/godot/drivers
-  modules/godot/editor
-  modules/godot/main
-  modules/godot/modules
-  modules/godot/modules/freetype
-  modules/godot/modules/msdfgen
-  modules/godot/modules/text_server_adv
-  modules/godot/platform
-  modules/godot/scene
-  modules/godot/servers
+  modules/godot/bin/obj/core
+  modules/godot/bin/obj/drivers
+  modules/godot/bin/obj/editor
+  modules/godot/bin/obj/main
+  modules/godot/bin/obj/modules
+  modules/godot/bin/obj/modules/freetype
+  modules/godot/bin/obj/modules/msdfgen
+  modules/godot/bin/obj/modules/text_server_adv
+  modules/godot/bin/obj/platform
+  modules/godot/bin/obj/scene
+  modules/godot/bin/obj/servers
 )
 
 set(GODOT_LIBRARIES_NAMES
@@ -107,7 +107,7 @@ set(GODOT_LIBRARIES_NAMES
   module_enet
   module_etcpak
   module_fbx
-  module_freetype
+  module_objectdb_profiler
   module_gdscript
   module_glslang
   module_gltf
@@ -122,11 +122,11 @@ set(GODOT_LIBRARIES_NAMES
   module_ktx
   module_lightmapper_rd
   module_meshoptimizer
-  module_minimp3
+  module_mp3
   module_mobile_vr
-  module_msdfgen
   module_multiplayer
-  module_navigation
+  module_navigation_2d
+  module_navigation_3d
   module_noise
   module_ogg
   module_openxr
@@ -146,6 +146,7 @@ set(GODOT_LIBRARIES_NAMES
   module_webxr
   module_xatlas_unwrap
   module_zip
+  msdfgen_builtin
   freetype_builtin
   graphite_builtin
   harfbuzz_builtin
@@ -317,24 +318,21 @@ target_link_libraries(godot-distrho PUBLIC
   #${GODOT_LIBRARIES}
 )
 
-set(GODOT_PLUGIN_OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-plugin")
-set(GODOT_PLUGIN_LV2_COPY_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-distrho.lv2")
-set(GODOT_PLUGIN_LV2_COPY_DEST "${GODOT_PLUGIN_LV2_COPY_DEST_DIR}/godot-plugin")
-set(GODOT_PLUGIN_VST3_COPY_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-distrho.vst3/Contents/x86_64-linux")
-set(GODOT_PLUGIN_VST3_COPY_DEST "${GODOT_PLUGIN_VST3_COPY_DEST_DIR}/godot-plugin")
-
-add_custom_command(
-  OUTPUT ${GODOT_PLUGIN_LV2_COPY_DEST} ${GODOT_PLUGIN_VST3_COPY_DEST}
-  COMMAND ${CMAKE_COMMAND} -E make_directory "${GODOT_PLUGIN_LV2_COPY_DEST_DIR}"
-  COMMAND ${CMAKE_COMMAND} -E copy ${GODOT_PLUGIN_OUTPUT_PATH} ${GODOT_PLUGIN_LV2_COPY_DEST}
-  COMMAND ${CMAKE_COMMAND} -E make_directory "${GODOT_PLUGIN_VST3_COPY_DEST_DIR}"
-  COMMAND ${CMAKE_COMMAND} -E copy ${GODOT_PLUGIN_OUTPUT_PATH} ${GODOT_PLUGIN_VST3_COPY_DEST}
-  DEPENDS godot-plugin
-  COMMENT "Copying godot-plugin to godot-distrho directory"
-)
-
-add_custom_target(copy_godot_plugin ALL
-  DEPENDS ${GODOT_PLUGIN_LV2_COPY_DEST} ${GODOT_PLUGIN_VST3_COPY_DEST}
-)
-
-add_dependencies(godot-distrho copy_godot_plugin)
+#set(GODOT_PLUGIN_LV2_COPY_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-distrho.lv2")
+#set(GODOT_PLUGIN_LV2_COPY_DEST "${GODOT_PLUGIN_LV2_COPY_DEST_DIR}/godot-plugin")
+#set(GODOT_PLUGIN_VST3_COPY_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-distrho.vst3/Contents/x86_64-linux")
+#set(GODOT_PLUGIN_VST3_COPY_DEST "${GODOT_PLUGIN_VST3_COPY_DEST_DIR}/godot-plugin")
+#
+#if (TARGET godot-plugin)
+#  add_custom_target(copy_godot_plugin ALL
+#    COMMENT "Copy built godot-plugin into LV2/VST3 bundles"
+#    COMMAND ${CMAKE_COMMAND} -E echo "Copying $<TARGET_FILE:godot-plugin> to ${GODOT_PLUGIN_LV2_COPY_DEST_DIR} and ${GODOT_PLUGIN_VST3_COPY_DEST_DIR}"
+#    COMMAND ${CMAKE_COMMAND} -E make_directory "${GODOT_PLUGIN_LV2_COPY_DEST_DIR}"
+#    COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:godot-plugin>" "${GODOT_PLUGIN_LV2_COPY_DEST}"
+#    COMMAND ${CMAKE_COMMAND} -E make_directory "${GODOT_PLUGIN_VST3_COPY_DEST_DIR}"
+#    COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:godot-plugin>" "${GODOT_PLUGIN_VST3_COPY_DEST}"
+#  )
+#  add_dependencies(copy_godot_plugin godot-plugin)
+#else()
+#  message(WARNING "Target 'godot-plugin' not found; copy_godot_plugin not created")
+#endif()

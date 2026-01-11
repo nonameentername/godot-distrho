@@ -22,6 +22,7 @@ public:
 private:
     void *handle = nullptr;
     char *absolute_path = nullptr;
+    GDExtensionObjectPtr instance;
 
     // GDExtensionObjectPtr (*func_libgodot_create_godot_instance)(int, char *[], GDExtensionInitializationFunction,
     // InvokeCallbackFunction, ExecutorData, InvokeCallbackFunction, ExecutorData);

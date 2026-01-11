@@ -29,7 +29,7 @@ DistrhoUIServer *DistrhoUIServer::singleton = NULL;
 DistrhoUIServer::DistrhoUIServer() {
     const char *module_type = std::getenv("DISTRHO_MODULE_TYPE");
     if (module_type == NULL) {
-        module_type = std::to_string(DistrhoCommon::PLUGIN_TYPE).c_str();
+        module_type = std::to_string(DistrhoCommon::UI_TYPE).c_str();
     }
 
     is_ui = std::stoi(module_type) == DistrhoCommon::UI_TYPE;

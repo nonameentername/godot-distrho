@@ -79,8 +79,12 @@ child *GodotDistrhoUtils::launch_process(const std::string &p_name, environment 
         executable = fallback_tool_path.string();
     }
 
-    return new child(executable, boost::process::std_out > boost::process::null,
-                     boost::process::std_err > boost::process::null, args(p_args), env = p_env);
+    //TODO: set config option to show/hide the logs
+
+    return new child(executable, args(p_args), env = p_env);
+
+    //return new child(executable, boost::process::std_out > boost::process::null,
+                     //boost::process::std_err > boost::process::null, args(p_args), env = p_env);
 }
 
 std::string GodotDistrhoUtils::find_godot_package() {

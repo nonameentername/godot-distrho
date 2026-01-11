@@ -30,8 +30,9 @@ format:
 
 #distrho plugin
 
+.PHONY: build
 build:
-	cd build && make && rm -rf ~/.lv2/godot-distrho.lv2/ && cp -r bin/godot-distrho.lv2/ ~/.lv2/ && jalv.gtk https://github.com/nonameentername/godot-distrho
+	cd build && make && rm -rf ~/.lv2/godot-distrho.lv2/ && cp -r bin/godot-distrho.lv2/ ~/.lv2/ && jalv -s https://github.com/nonameentername/godot-distrho
 
 #godot library
 
@@ -53,7 +54,7 @@ docker-ubuntu:
 	docker build -t godot-distrho-ubuntu ./platform/ubuntu
 
 shell-ubuntu: docker-ubuntu
-	docker run -it --rm -v ${CURDIR}:${CURDIR} --user ${UID}:${GID} -w ${CURDIR} godot-distrho-ubuntu ${SHELL_COMMAND}
+	docker run -it --rm -v ${CURDIR}:${CURDIR} -w ${CURDIR} godot-distrho-ubuntu ${SHELL_COMMAND}
 
 ubuntu:
 	$(MAKE) shell-ubuntu SHELL_COMMAND='./platform/ubuntu/build_debug.sh'

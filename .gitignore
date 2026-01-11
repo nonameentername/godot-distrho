@@ -10,6 +10,7 @@
 .vscode
 addons/distrho/bin
 addons/capnproto/bin
+vcpkg_installed
 
 build
 build-log.txt
