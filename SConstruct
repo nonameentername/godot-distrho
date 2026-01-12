@@ -93,12 +93,12 @@ elif env["platform"] == "macos":
     env.Append(LIBS=[capnp_rpc_library, capnp_library, "kj-async", "kj"])
 
     if env["dev_build"]:
-        env.Append(LIBPATH=["addons/distrho/bin/osxcross/debug/vcpkg_installed/univeral-osxcross/lib"])
-        env.Append(CPPPATH=["addons/distrho/bin/osxcross/debug/vcpkg_installed/univeral-osxcross/include", "modules/dpf/distrho"])
+        env.Append(LIBPATH=["addons/distrho/bin/macos/debug/vcpkg_installed/univeral-osxcross/lib"])
+        env.Append(CPPPATH=["addons/distrho/bin/macos/debug/vcpkg_installed/univeral-osxcross/include", "modules/dpf/distrho"])
         #env.Append(RPATH=["", "."])
     else:
-        env.Append(LIBPATH=["addons/distrho/bin/osxcross/release/vcpkg_installed/univeral-osxcross/lib"])
-        env.Append(CPPPATH=["addons/distrho/bin/osxcross/release/vcpkg_installed/univeral-osxcross/include", "modules/dpf/distrho"])
+        env.Append(LIBPATH=["addons/distrho/bin/macos/release/vcpkg_installed/univeral-osxcross/lib"])
+        env.Append(CPPPATH=["addons/distrho/bin/macos/release/vcpkg_installed/univeral-osxcross/include", "modules/dpf/distrho"])
         #env.Append(RPATH=["", "."])
 elif env["platform"] == "linux":
     capnp_library = "capnp"

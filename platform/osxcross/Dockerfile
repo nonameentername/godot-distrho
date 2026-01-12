@@ -14,6 +14,8 @@ RUN chmod 777 /.config
 RUN mkdir /.cache 
 RUN chmod 777 /.cache
 
+RUN sed -i '/for file in \$(ls build_\$arch1\/lib\/darwin\/); do/a\        # Skip non-library files\n        case "$file" in\n          *.a|*.dylib) ;;\n          *) continue ;;\n        esac' /osxcross/build_compiler_rt.sh
+
 #TODO: move to base image
 RUN /osxcross/build_compiler_rt.sh
 
@@ -22,5 +24,5 @@ RUN wget https://github.com/godotengine/moltenvk-osxcross/releases/download/vulk
 RUN tar xvf MoltenVK-all.tar
 RUN rm MoltenVK-all.tar
 
-FROM ubuntu:24.04
-COPY --from=base-image / /
+#FROM ubuntu:24.04
+#COPY --from=base-image / /
