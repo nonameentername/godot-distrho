@@ -17,7 +17,7 @@ cd $dir/modules/godot
 
 for ARCH in x86_64 arm64; do
     scons platform=macos arch=$ARCH library_type=static_library verbose=yes \
-        osxcross_sdk=$OSXCROSS_TARGET vulkan_sdk_path=/MoltenVK/MoltenVK/static/MoltenVK.xcframework
+        osxcross_sdk=$OSXCROSS_TARGET vulkan_sdk_path=/MoltenVK/MoltenVK/static/MoltenVK.xcframework metal=no
 done
 
 $dir/scripts/lipo-dir.py  \
@@ -46,7 +46,7 @@ done
 $dir/scripts/lipo-dir.py  \
     $dir/addons/distrho/bin/osxcross-arm64/release \
     $dir/addons/distrho/bin/osxcross-x86_64/release \
-    $dir/addons/distrho/bin/osxcross/release 
+    $dir/addons/distrho/bin/macos/release 
 
 # build godot-distrho (gdextension)
 
@@ -66,6 +66,6 @@ done
 $dir/scripts/lipo-dir.py  \
     $dir/addons/distrho/bin/osxcross-arm64/release \
     $dir/addons/distrho/bin/osxcross-x86_64/release \
-    $dir/addons/distrho/bin/osxcross/release 
+    $dir/addons/distrho/bin/macos/release 
 
 zsign -a $dir/addons/distrho/bin/macos/macos.framework/libdistrhogodot.macos.template_release

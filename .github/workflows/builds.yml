@@ -39,7 +39,6 @@ jobs:
           run: |
             ./platform/ubuntu/build_capnproto.sh
             ./platform/ubuntu/build_schema.sh
-            #./platform/ubuntu/build_godot.sh
 
       - name: Create cache for build
         uses: actions/cache@v4
@@ -47,7 +46,6 @@ jobs:
           path: |
             src/godot_distrho_schema.capnp.cpp
             src/godot_distrho_schema.capnp.h
-            #godot-cpp/gdextension/extension_api.json
           key: common-artifacts-${{github.run_id}}
 
   linux-build:
@@ -89,7 +87,6 @@ jobs:
           path: |
             src/godot_distrho_schema.capnp.cpp
             src/godot_distrho_schema.capnp.h
-            #godot-cpp/gdextension/extension_api.json
           key: common-artifacts-${{github.run_id}}
 
       - name: Build godot-distrho
@@ -109,11 +106,13 @@ jobs:
           path: addons/distrho/bin
           key: linux-artifacts-${{ matrix.environment }}-${{github.run_id}}
 
-  macos-build-debug:
-    if: false
-    name: MacOS build (Debug)
+  macos-build:
+    name: MacOS build
     runs-on: ubuntu-latest
     needs: common-build
+    strategy:
+      matrix:
+        environment: [debug, release]
     env:
       VERSION: v1
     steps:
@@ -151,16 +150,15 @@ jobs:
           path: |
             src/godot_distrho_schema.capnp.cpp
             src/godot_distrho_schema.capnp.h
-            #godot-cpp/gdextension/extension_api.json
           key: common-artifacts-${{github.run_id}}
 
-      - name: Build godot-distrho (Debug)
+      - name: Build godot-distrho
         uses: addnab/docker-run-action@v3
         with:
           image: ghcr.io/nonameentername/godot-distrho-osxcross:${{ env.VERSION }}
           options: -v ${{ github.workspace }}:${{ github.workspace }} --workdir ${{ github.workspace }} -e BUILD_SHA -e TAG_VERSION
           run: |
-            ./platform/osxcross/build_debug.sh
+            ./platform/osxcross/build_${{ matrix.environment }}.sh
         env:
           BUILD_SHA: ${{ steps.short-sha.outputs.sha }}
           TAG_VERSION: ${{ steps.tag.outputs.new_tag }}
@@ -169,69 +167,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: addons/distrho/bin
-          key: macos-artifacts-debug-${{github.run_id}}
-
-  macos-build-release:
-    if: false
-    name: MacOS build (Release)
-    runs-on: ubuntu-latest
-    needs: common-build
-    env:
-      VERSION: v1
-    steps:
-      - name: Free Disk Space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          docker-images: false
-
-      - name: Checkout source code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-          submodules: recursive
-
-      - name: Bootstrap VCPKG
-        run: ./vcpkg/bootstrap-vcpkg.sh
-
-      - name: Update minor version
-        id: tag
-        uses: anothrNick/github-tag-action@1.36.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WITH_V: true
-          DRY_RUN: true
-          RELEASE_BRANCHES: none
-
-      - uses: benjlevesque/short-sha@v3.0
-        id: short-sha
-        with:
-          length: 6
-
-      - name: Restore cache for build
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            src/godot_distrho_schema.capnp.cpp
-            src/godot_distrho_schema.capnp.h
-            #godot-cpp/gdextension/extension_api.json
-          key: common-artifacts-${{github.run_id}}
-
-      - name: Build godot-distrho (Release)
-        uses: addnab/docker-run-action@v3
-        with:
-          image: ghcr.io/nonameentername/godot-distrho-osxcross:${{ env.VERSION }}
-          options: -v ${{ github.workspace }}:${{ github.workspace }} --workdir ${{ github.workspace }} -e BUILD_SHA -e TAG_VERSION
-          run: |
-            ./platform/osxcross/build_release.sh
-        env:
-          BUILD_SHA: ${{ steps.short-sha.outputs.sha }}
-          TAG_VERSION: ${{ steps.tag.outputs.new_tag }}
-
-      - name: Create cache for build
-        uses: actions/cache@v4
-        with:
-          path: addons/distrho/bin
-          key: macos-artifacts-release-${{github.run_id}}
+          key: macos-artifacts-${{ matrix.environment }}-${{github.run_id}}
 
   verify-linux-build:
     if: false
@@ -268,7 +204,7 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     name: Publish Artifacts
     runs-on: ubuntu-latest
-#    needs: [verify-linux-build]
+    needs: [verify-linux-build]
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -287,6 +223,18 @@ jobs:
         with:
           path: addons/distrho/bin
           key: linux-artifacts-release-${{github.run_id}}
+
+      - name: Restore cached MacOS artifacts (debug)
+        uses: actions/cache/restore@v4
+        with:
+          path: addons/distrho/bin
+          key: macos-artifacts-debug-${{github.run_id}}
+
+      - name: Restore cached MacOS artifacts (release)
+        uses: actions/cache/restore@v4
+        with:
+          path: addons/distrho/bin
+          key: macos-artifacts-release-${{github.run_id}}
 
       - name: Update minor version
         id: tag

@@ -235,6 +235,7 @@ if(OSXCROSS_TARGET)
     "-framework Security"
     "-framework Carbon"
     "-framework CoreHaptics"
+    "-framework ForceFeedback"
 	/MoltenVK/MoltenVK/static/MoltenVK.xcframework/macos-arm64_x86_64/libMoltenVK.a
   )
 
