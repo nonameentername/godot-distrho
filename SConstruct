@@ -83,6 +83,18 @@ env = SConscript("godot-cpp/SConstruct", {"env": env, "customs": customs})
 
 if env["platform"] == "windows":
     env.Append(CPPFLAGS=["-DMINGW"])
+    capnp_library = "capnp"
+    capnp_rpc_library = "capnp-rpc"
+    env.Append(LIBS=[capnp_rpc_library, capnp_library, "kj-async", "kj"])
+
+    if env["dev_build"]:
+        env.Append(LIBPATH=["addons/distrho/bin/windows/debug/vcpkg_installed/x64-mingw-static/lib"])
+        env.Append(CPPPATH=["addons/distrho/bin/windows/debug/vcpkg_installed/x64-mingw-static/include",
+                            "modules/dpf/distrho"])
+    else:
+        env.Append(LIBPATH=["addons/distrho/bin/windows/release/vcpkg_installed/x64-mingw-static/lib"])
+        env.Append(CPPPATH=["addons/distrho/bin/windows/release/vcpkg_installed/x64-mingw-static/include",
+                            "modules/dpf/distrho"])
 elif env["platform"] == "web":
     if env["dev_build"]:
         env.Append(CPPFLAGS=["-g"])
@@ -94,11 +106,13 @@ elif env["platform"] == "macos":
 
     if env["dev_build"]:
         env.Append(LIBPATH=["addons/distrho/bin/macos/debug/vcpkg_installed/univeral-osxcross/lib"])
-        env.Append(CPPPATH=["addons/distrho/bin/macos/debug/vcpkg_installed/univeral-osxcross/include", "modules/dpf/distrho"])
+        env.Append(CPPPATH=["addons/distrho/bin/macos/debug/vcpkg_installed/univeral-osxcross/include",
+                            "modules/dpf/distrho"])
         #env.Append(RPATH=["", "."])
     else:
         env.Append(LIBPATH=["addons/distrho/bin/macos/release/vcpkg_installed/univeral-osxcross/lib"])
-        env.Append(CPPPATH=["addons/distrho/bin/macos/release/vcpkg_installed/univeral-osxcross/include", "modules/dpf/distrho"])
+        env.Append(CPPPATH=["addons/distrho/bin/macos/release/vcpkg_installed/univeral-osxcross/include",
+                            "modules/dpf/distrho"])
         #env.Append(RPATH=["", "."])
 elif env["platform"] == "linux":
     capnp_library = "capnp"
@@ -107,11 +121,13 @@ elif env["platform"] == "linux":
 
     if env["dev_build"]:
         env.Append(LIBPATH=["addons/distrho/bin/linux/debug/vcpkg_installed/x64-linux/lib"])
-        env.Append(CPPPATH=["addons/distrho/bin/linux/debug/vcpkg_installed/x64-linux/include", "modules/dpf/distrho"])
+        env.Append(CPPPATH=["addons/distrho/bin/linux/debug/vcpkg_installed/x64-linux/include",
+                            "modules/dpf/distrho"])
         #env.Append(RPATH=["", "."])
     else:
         env.Append(LIBPATH=["addons/distrho/bin/linux/release/vcpkg_installed/x64-linux/lib"])
-        env.Append(CPPPATH=["addons/distrho/bin/linux/release/vcpkg_installed/x64-linux/include", "modules/dpf/distrho"])
+        env.Append(CPPPATH=["addons/distrho/bin/linux/release/vcpkg_installed/x64-linux/include",
+                            "modules/dpf/distrho"])
         #env.Append(RPATH=["", "."])
 
 env.Append(CPPFLAGS=["-fexceptions", "-DKJ_USE_FIBERS=0", "-DDISTRHO_NAMESPACE=GodotDISTRHO"])
