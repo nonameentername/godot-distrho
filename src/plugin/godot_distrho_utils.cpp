@@ -48,7 +48,7 @@ std::string GodotDistrhoUtils::get_shared_library_path() {
 #if defined(_WIN32)
     HMODULE hModule = nullptr;
     GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                      (LPCSTR)&getSharedLibraryPath, &hModule);
+                      (LPCSTR)&get_shared_library_path, &hModule);
     char path[MAX_PATH];
     GetModuleFileName(hModule, path, MAX_PATH);
     return std::string(path);

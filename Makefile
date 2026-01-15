@@ -70,5 +70,15 @@ osxcross:
 	$(MAKE) shell-osxcross SHELL_COMMAND='./platform/osxcross/build_debug.sh'
 	$(MAKE) shell-osxcross SHELL_COMMAND='./platform/osxcross/build_release.sh'
 
+docker-mingw:
+	docker build -t godot-distrho-mingw ./platform/mingw
+
+shell-mingw: docker-mingw
+	docker run -it --rm -v ${CURDIR}:${CURDIR} -w ${CURDIR} godot-distrho-mingw ${SHELL_COMMAND}
+
+mingw:
+	$(MAKE) shell-mingw SHELL_COMMAND='./platform/mingw/build_debug.sh'
+	$(MAKE) shell-mingw SHELL_COMMAND='./platform/mingw/build_release.sh'
+
 clean:
 	rm -rf addons/distrho/bin modules/godot/bin vcpkg_installed

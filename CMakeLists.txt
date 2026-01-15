@@ -23,6 +23,19 @@ if(OSXCROSS_TARGET)
     else()
         set(GODOT_LIBRARIES_SUFFIX ".macos.editor.${CMAKE_OSX_ARCHITECTURES}")
     endif()
+elseif (CMAKE_SYSTEM_NAME STREQUAL "MinGW" AND UNIX)
+    set(VCPKG_TARGET_TRIPLET "x64-mingw-static")
+    set(VCPKG_INSTALL_OPTIONS "--allow-unsupported")
+    set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/toolchains/mingw.cmake)
+    set(VCPKG_CMAKE_SYSTEM_NAME MinGW)
+    set(VCPKG_TARGET_ARCHITECTURE x64)
+
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(GODOT_LIBRARIES_SUFFIX ".windows.editor.dev.x86_64")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
+    else()
+        set(GODOT_LIBRARIES_SUFFIX ".windows.editor.x86_64")
+    endif()
 elseif(UNIX)
     set(VCPKG_TARGET_TRIPLET "x64-linux")
 
@@ -205,10 +218,13 @@ target_link_libraries(godot-plugin PRIVATE
   ${GODOT_LIBRARIES}
 )
 
+find_package(Boost REQUIRED COMPONENTS filesystem)
+target_link_libraries(godot-plugin PRIVATE Boost::filesystem)
+
 if(OSXCROSS_TARGET)
   target_link_libraries(godot-plugin PRIVATE
     debug godot-cpp.macos.template_debug.dev.universal
-    optimized godot-cpp.macos.template_release.universal#.a
+    optimized godot-cpp.macos.template_release.universal
   )
 
   target_link_libraries(godot-plugin PRIVATE
@@ -245,10 +261,59 @@ if(OSXCROSS_TARGET)
     )
   endif()
 
+elseif (MINGW)
+  target_link_libraries(godot-plugin PRIVATE
+    # Open the linker group "sandwich"
+    "-Wl,--start-group"
+
+    # These keywords work because we are inside target_link_libraries
+    debug godot-cpp.windows.template_debug.dev.x86_64
+    optimized godot-cpp.windows.template_release.x86_64
+
+    # System libraries inside the group
+    winmm
+    dsound
+    kernel32
+    ole32
+    oleaut32
+    sapi
+    user32
+    gdi32
+    iphlpapi
+    shlwapi
+    shcore
+    wsock32
+    ws2_32
+    shell32
+    advapi32
+    dinput8
+    dxguid
+    imm32
+    bcrypt
+    crypt32
+    avrt
+    dwmapi
+    dwrite
+    wbemuuid
+    ntdll
+    hid
+    hidparse
+    setupapi
+    ksuser
+    uuid
+    debug psapi
+    #TODO: should be only for debug
+    dbghelp
+    #debug dbghelp
+
+    # Close the linker group
+    "-Wl,--end-group"
+  )
+
 elseif(UNIX)
   target_link_libraries(godot-plugin PRIVATE
     debug godot-cpp.linux.template_debug.dev.x86_64
-    optimized godot-cpp.linux.template_release.x86_64#.a
+    optimized godot-cpp.linux.template_release.x86_64
   )
 endif()
 
@@ -318,6 +383,8 @@ target_link_libraries(godot-distrho PUBLIC
   #godot-cpp.linux.template_debug.x86_64
   #${GODOT_LIBRARIES}
 )
+
+target_link_libraries(godot-distrho PRIVATE Boost::filesystem)
 
 #set(GODOT_PLUGIN_LV2_COPY_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-distrho.lv2")
 #set(GODOT_PLUGIN_LV2_COPY_DEST "${GODOT_PLUGIN_LV2_COPY_DEST_DIR}/godot-plugin")

@@ -58,6 +58,11 @@ jobs:
     env:
       VERSION: v1
     steps:
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          docker-images: false
+
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
@@ -169,6 +174,64 @@ jobs:
           path: addons/distrho/bin
           key: macos-artifacts-${{ matrix.environment }}-${{github.run_id}}
 
+  windows-build:
+    name: Windows build
+    runs-on: ubuntu-latest
+    needs: common-build
+    strategy:
+      matrix:
+        environment: [debug, release]
+    env:
+      VERSION: v1
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Bootstrap VCPKG
+        run: ./vcpkg/bootstrap-vcpkg.sh
+
+      - name: Update minor version
+        id: tag
+        uses: anothrNick/github-tag-action@1.36.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+          DRY_RUN: true
+          RELEASE_BRANCHES: none
+
+      - uses: benjlevesque/short-sha@v3.0
+        id: short-sha
+        with:
+          length: 6
+
+      - name: Restore cache for build
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            src/godot_distrho_schema.capnp.cpp
+            src/godot_distrho_schema.capnp.h
+          key: common-artifacts-${{github.run_id}}
+
+      - name: Build godot-distrho
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ghcr.io/nonameentername/godot-distrho-mingw:${{ env.VERSION }}
+          options: -v ${{ github.workspace }}:${{ github.workspace }} --workdir ${{ github.workspace }} -e BUILD_SHA -e TAG_VERSION
+          run: |
+            ./platform/mingw/build_${{ matrix.environment }}.sh
+        env:
+          BUILD_SHA: ${{ steps.short-sha.outputs.sha }}
+          TAG_VERSION: ${{ steps.tag.outputs.new_tag }}
+
+      - name: Create cache for build
+        uses: actions/cache@v4
+        with:
+          path: addons/distrho/bin
+          key: windows-artifacts-${{ matrix.environment }}-${{github.run_id}}
+
   verify-linux-build:
     if: false
     name: Verify Linux/Ubuntu build
@@ -235,6 +298,18 @@ jobs:
         with:
           path: addons/distrho/bin
           key: macos-artifacts-release-${{github.run_id}}
+
+      - name: Restore cached Windows artifacts (debug)
+        uses: actions/cache/restore@v4
+        with:
+          path: addons/distrho/bin
+          key: windows-artifacts-debug-${{github.run_id}}
+
+      - name: Restore cached Windows artifacts (release)
+        uses: actions/cache/restore@v4
+        with:
+          path: addons/distrho/bin
+          key: windows-artifacts-release-${{github.run_id}}
 
       - name: Update minor version
         id: tag
