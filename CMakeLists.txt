@@ -317,6 +317,14 @@ elseif(UNIX)
   )
 endif()
 
+if (MINGW AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+  add_custom_command(TARGET godot-plugin POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} --only-keep-debug $<TARGET_FILE:godot-plugin> $<TARGET_FILE:godot-plugin>.dbg
+    COMMAND ${CMAKE_STRIP} --strip-debug $<TARGET_FILE:godot-plugin>
+    COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=$<TARGET_FILE:godot-plugin>.dbg $<TARGET_FILE:godot-plugin>
+  )
+endif()
+
 #godot-distrho
 
 set(PLUGIN_FORMATS clap lv2 vst2 vst3)

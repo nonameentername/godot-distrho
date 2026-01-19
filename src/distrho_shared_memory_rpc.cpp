@@ -18,8 +18,10 @@ DistrhoSharedMemoryRPC::DistrhoSharedMemoryRPC() {
 }
 
 DistrhoSharedMemoryRPC::~DistrhoSharedMemoryRPC() {
-    if (is_host) {
+    if (is_host && !shared_memory_name.empty()) {
+#ifndef _WIN32
         bip::shared_memory_object::remove(shared_memory_name.c_str());
+#endif
     }
 }
 
@@ -33,16 +35,25 @@ void DistrhoSharedMemoryRPC::initialize(std::string p_name, std::string p_shared
         printf("export %s=%s\n", p_name.c_str(), shared_memory_name.c_str());
 #endif
 
+#ifdef _WIN32
+        shared_memory = std::make_unique<boost::interprocess::managed_windows_shared_memory>(
+            bip::create_only, shared_memory_name.c_str(), SHARED_MEMORY_SIZE);
+#else
         bip::shared_memory_object::remove(shared_memory_name.c_str());
         shared_memory = std::make_unique<boost::interprocess::managed_shared_memory>(
             bip::create_only, shared_memory_name.c_str(), SHARED_MEMORY_SIZE);
+#endif
 
         buffer = shared_memory->construct<RPCBuffer>("RPCBuffer")();
     } else {
         is_host = false;
         shared_memory_name = p_shared_memory_name;
 
+#ifdef _WIN32
+        shared_memory = std::make_unique<bip::managed_windows_shared_memory>(bip::open_only, shared_memory_name.c_str());
+#else
         shared_memory = std::make_unique<bip::managed_shared_memory>(bip::open_only, shared_memory_name.c_str());
+#endif
         buffer = shared_memory->find<RPCBuffer>("RPCBuffer").first;
     }
 }

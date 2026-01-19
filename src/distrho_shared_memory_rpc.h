@@ -13,6 +13,10 @@
 #include <capnp/message.h>
 #include <capnp/serialize-packed.h>
 
+#ifdef _WIN32
+#include <boost/interprocess/managed_windows_shared_memory.hpp>
+#endif
+
 namespace godot {
 
 const int RPC_BUFFER_SIZE = 4096;
@@ -36,7 +40,12 @@ class DistrhoSharedMemoryRPC {
 
 private:
     std::string name;
+#ifdef _WIN32
+    std::unique_ptr<boost::interprocess::managed_windows_shared_memory> shared_memory;
+#else
     std::unique_ptr<boost::interprocess::managed_shared_memory> shared_memory;
+#endif
+
 
 public:
     RPCBuffer *buffer;

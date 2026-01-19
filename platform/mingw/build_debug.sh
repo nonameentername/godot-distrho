@@ -15,6 +15,7 @@ scons platform=windows dev_build=yes debug_symbols=yes library_type=static_libra
 build_dir=$dir/addons/distrho/bin/windows/debug
 
 mkdir -p $build_dir
+mkdir -p $build_dir/bin
 cd $build_dir
 
 cmake -DCMAKE_TOOLCHAIN_FILE=$dir/vcpkg/scripts/buildsystems/vcpkg.cmake \
@@ -33,6 +34,10 @@ cmake -DCMAKE_TOOLCHAIN_FILE=$dir/vcpkg/scripts/buildsystems/vcpkg.cmake \
     $dir
 
 # build godot-distrho (gdextension)
+
+cp /usr/lib/gcc/x86_64-w64-mingw32/*-posix/libstdc++-6.dll $build_dir/bin/
+cp /usr/lib/gcc/x86_64-w64-mingw32/*-posix/libgcc_s_seh-1.dll $build_dir/bin/
+cp /usr/x86_64-w64-mingw32/lib/libwinpthread-1.dll $build_dir/bin/
 
 cd $dir
 scons platform=windows target=template_debug dev_build=yes debug_symbols=yes
