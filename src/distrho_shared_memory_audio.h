@@ -10,6 +10,10 @@
 #include <memory>
 #include <random>
 
+#ifdef _WIN32
+#include <boost/interprocess/managed_windows_shared_memory.hpp>
+#endif
+
 namespace godot {
 
 const int BUFFER_SIZE = 4096;
@@ -52,7 +56,11 @@ struct AudioBuffer {
 class DistrhoSharedMemoryAudio {
 
 private:
+#ifdef _WIN32
+    std::unique_ptr<boost::interprocess::managed_windows_shared_memory> shared_memory;
+#else
     std::unique_ptr<boost::interprocess::managed_shared_memory> shared_memory;
+#endif
 
 public:
     AudioBuffer *buffer;

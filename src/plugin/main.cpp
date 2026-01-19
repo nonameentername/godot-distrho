@@ -41,7 +41,11 @@ int main(int argc, char **argv) {
                 "--rendering-driver",
                 "opengl3",
                 "--display-driver",
+#ifdef _WIN32
+                "windows",
+#else
                 "x11",
+#endif
                 "--audio-driver",
                 "Dummy"};
     }

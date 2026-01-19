@@ -1,0 +1,14 @@
+@prefix lv2:  <http://lv2plug.in/ns/lv2core#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ui:   <http://lv2plug.in/ns/extensions/ui#> .
+
+<https://github.com/nonameentername/godot-distrho>
+    a lv2:Plugin ;
+    lv2:binary <godot-distrho_dsp.dylib> ;
+    rdfs:seeAlso <godot-distrho_dsp.ttl> .
+
+<https://github.com/nonameentername/godot-distrho#DPF_UI>
+    a ui:UI ;
+    ui:binary <godot-distrho_ui.dylib> ;
+    rdfs:seeAlso <godot-distrho_ui.ttl> .
+
