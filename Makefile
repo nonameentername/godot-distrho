@@ -32,7 +32,7 @@ format:
 
 .PHONY: build
 build:
-	cd build && make && rm -rf ~/.lv2/godot-distrho.lv2/ && cp -r bin/godot-distrho.lv2/ ~/.lv2/ && jalv -s https://github.com/nonameentername/godot-distrho
+	cd addons/distrho/bin/linux/debug && make && rm -rf ~/.lv2/godot-distrho.lv2/ && cp -r bin/godot-distrho.lv2/ ~/.lv2/ && jalv -s https://github.com/nonameentername/godot-distrho
 
 #godot library
 

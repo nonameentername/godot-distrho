@@ -12,7 +12,7 @@ using namespace boost::posix_time;
 
 START_NAMESPACE_DISTRHO
 
-GodotDistrhoUIClient::GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type) {
+GodotDistrhoUIClient::GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type, int64_t parent_window_id) {
     rpc_memory.initialize("DISTRHO_SHARED_MEMORY_RPC");
     godot_rpc_memory.initialize("GODOT_SHARED_MEMORY_RPC");
 
@@ -22,6 +22,9 @@ GodotDistrhoUIClient::GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_
     env["DISTRHO_MODULE_TYPE"] = std::to_string(p_type);
     env["DISTRHO_SHARED_MEMORY_RPC"] = rpc_memory.shared_memory_name.c_str();
     env["GODOT_SHARED_MEMORY_RPC"] = godot_rpc_memory.shared_memory_name.c_str();
+    if (parent_window_id > 0) {
+        env["GODOT_PARENT_WINDOW_ID"] = std::to_string(parent_window_id);
+    }
 
 #if defined(_WIN32)
     plugin = GodotDistrhoUtils::launch_process("godot-plugin.exe", env);
@@ -38,6 +41,9 @@ GodotDistrhoUIClient::GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_
 
     std::string some_text = get_some_text();
     printf("%s\n", some_text.c_str());
+
+    native_window_id = get_native_window_id();
+    printf("native_window_id = %ld\n", native_window_id);
 }
 
 GodotDistrhoUIClient::~GodotDistrhoUIClient() {
@@ -63,6 +69,19 @@ std::string GodotDistrhoUIClient::get_some_text() {
     capnp::FlatArrayMessageReader reader = rpc_call<GetSomeTextRequest, GetSomeTextResponse>();
     GetSomeTextResponse::Reader response = reader.getRoot<GetSomeTextResponse>();
     return response.getText();
+}
+
+
+int64_t GodotDistrhoUIClient::get_native_window_id() {
+    if (native_window_id != 0) {
+        return native_window_id;
+    }
+
+    capnp::FlatArrayMessageReader reader = rpc_call<GetNativeWindowIdRequest, GetNativeWindowIdResponse>();
+    GetNativeWindowIdResponse::Reader response = reader.getRoot<GetNativeWindowIdResponse>();
+    native_window_id = response.getId();
+
+    return native_window_id;
 }
 
 void GodotDistrhoUIClient::parameter_changed(int p_index, float p_value) {
