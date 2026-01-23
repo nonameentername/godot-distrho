@@ -311,9 +311,11 @@ elseif (MINGW)
   )
 
 elseif(UNIX)
+  #find_package(X11 REQUIRED)
   target_link_libraries(godot-plugin PRIVATE
     debug godot-cpp.linux.template_debug.dev.x86_64
     optimized godot-cpp.linux.template_release.x86_64
+    #${X11_LIBRARIES}
   )
 endif()
 

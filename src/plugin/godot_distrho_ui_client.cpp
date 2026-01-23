@@ -35,15 +35,15 @@ GodotDistrhoUIClient::GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_
 #endif
 #endif
 
-    while (!rpc_memory.buffer->ready) {
-        sleep(1);
-    }
+    //while (!rpc_memory.buffer->ready) {
+    //    sleep(1);
+    //}
 
-    std::string some_text = get_some_text();
-    printf("%s\n", some_text.c_str());
+    //std::string some_text = get_some_text();
+    //printf("%s\n", some_text.c_str());
 
-    native_window_id = get_native_window_id();
-    printf("native_window_id = %ld\n", native_window_id);
+    //native_window_id = get_native_window_id();
+    //printf("native_window_id = %ld\n", native_window_id);
 }
 
 GodotDistrhoUIClient::~GodotDistrhoUIClient() {

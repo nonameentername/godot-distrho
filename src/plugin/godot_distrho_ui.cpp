@@ -11,21 +11,29 @@ GodotDistrhoUI::GodotDistrhoUI() : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAU
     client = NULL;
     server = NULL;
 
+    //window_id = getParentWindowHandle();
+    window_id = 0;
+    fprintf(stderr, "parentWindowHandle = %ld\n", window_id);
+
+    //if (isVisible() || isEmbed()) {
     if (isVisible()) {
         visibilityChanged(true);
     }
 }
 
 GodotDistrhoUI::~GodotDistrhoUI() {
-    if (server != NULL) {
-        delete server;
-        server = NULL;
-    }
+    //if (isEmbed()) {
+    if (true) {
+        if (server != NULL) {
+            delete server;
+            server = NULL;
+        }
 
-    if (client != NULL) {
-        client->shutdown();
-        delete client;
-        client = NULL;
+        if (client != NULL) {
+            client->shutdown();
+            delete client;
+            client = NULL;
+        }
     }
 }
 
@@ -38,18 +46,23 @@ void GodotDistrhoUI::parameterChanged(const uint32_t index, const float value) {
 void GodotDistrhoUI::uiIdle() {
 }
 
+/*
 uintptr_t GodotDistrhoUI::getNativeWindowHandle() const noexcept {
-    return window_id; //getParentWindowHandle();
+    return window_id;
 }
+*/
 
 void GodotDistrhoUI::visibilityChanged(const bool p_visible) {
     printf("visibility changed\n");
 
     if (p_visible) {
         if (client == NULL) {
-            window_id = 0; //getParentWindowHandle();
-            fprintf(stderr, "parentWindowHandle = %ld\n", window_id);
-            client = new GodotDistrhoUIClient(DistrhoCommon::UI_TYPE, window_id);
+            //if (isEmbed()) {
+            if (false) {
+                client = new GodotDistrhoUIClient(DistrhoCommon::UI_TYPE, window_id);
+            } else {
+                client = new GodotDistrhoUIClient(DistrhoCommon::UI_TYPE, 0);
+            }
             //window_id = client->get_native_window_id();
             server = new GodotDistrhoUIServer(this, client->get_godot_rpc_memory());
         }
@@ -68,7 +81,8 @@ void GodotDistrhoUI::visibilityChanged(const bool p_visible) {
 }
 
 uintptr_t GodotDistrhoUI::get_window_id() {
-    return window_id;
+    //return window_id;
+    return 0;
 }
 
 /*

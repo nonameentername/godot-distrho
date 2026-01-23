@@ -30,9 +30,23 @@ format:
 
 #distrho plugin
 
-.PHONY: build
-build:
-	cd addons/distrho/bin/linux/debug && make && rm -rf ~/.lv2/godot-distrho.lv2/ && cp -r bin/godot-distrho.lv2/ ~/.lv2/ && jalv -s https://github.com/nonameentername/godot-distrho
+.PHONY: lv2
+lv2:
+	cd addons/distrho/bin/linux/debug && \
+		make && \
+		cp bin/godot-plugin bin/godot-distrho.lv2 && \
+		cp ../libdistrhogodot.linux.template_debug.dev.x86_64.so bin/godot-distrho.lv2 && \
+		rm -rf ~/.lv2/godot-distrho.lv2 && \
+		cp -r bin/godot-distrho.lv2/ ~/.lv2 && \
+		jalv -s https://github.com/nonameentername/godot-distrho
+
+vst3:
+	cd addons/distrho/bin/linux/debug && \
+		make && \
+		cp bin/godot-plugin bin/godot-distrho.vst3/Contents/x86_64-linux && \
+		cp ../libdistrhogodot.linux.template_debug.dev.x86_64.so bin/godot-distrho.vst3/Contents/x86_64-linux && \
+		rm -rf ~/.vst3/godot-distrho.vst3 && \
+		cp -r bin/godot-distrho.vst3/ ~/.vst3
 
 #godot library
 

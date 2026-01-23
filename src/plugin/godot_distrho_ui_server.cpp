@@ -43,8 +43,7 @@ void GodotDistrhoUIServer::rpc_thread_func() {
         {
             scoped_lock<interprocess_mutex> shared_memory_lock(godot_rpc_memory->buffer->mutex);
 
-            // if (godot_rpc_memory->buffer->is_alive) {
-            if (true) {
+            if (godot_rpc_memory->buffer->ready) {
                 ptime timeout = microsec_clock::universal_time() + milliseconds(first_wait ? 1000 : 100);
                 bool result = godot_rpc_memory->buffer->input_condition.timed_wait(
                     shared_memory_lock, timeout, [this]() { return godot_rpc_memory->buffer->request_id != 0; });
@@ -52,7 +51,7 @@ void GodotDistrhoUIServer::rpc_thread_func() {
 
                 if (result) {
                     // TODO: log in debug mode
-                    // printf("Processing request_id: %ld", godot_rpc_memory->buffer->request_id);
+                    printf("Processing request_id: %ld\n", godot_rpc_memory->buffer->request_id);
 
                     switch (godot_rpc_memory->buffer->request_id) {
                     case EditParameterRequest::_capnpPrivate::typeId: {
@@ -78,13 +77,13 @@ void GodotDistrhoUIServer::rpc_thread_func() {
                         break;
                     }
                     default: {
-                        // printf("Unknown request_id: %ld", godot_rpc_memory->buffer->request_id);
+                        printf("Unknown request_id: %ld\n", godot_rpc_memory->buffer->request_id);
                         break;
                     }
                     }
                     godot_rpc_memory->buffer->request_id = 0;
                 } else {
-                    // printf("Timed out waiting for request_id");
+                    //printf("Timed out waiting for request_id\n");
                 }
             }
         }

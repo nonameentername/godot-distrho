@@ -149,7 +149,7 @@ void GodotDistrhoPluginClient::activate() {
 void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32_t numSamples,
                                    const MidiEvent *input_midi, int input_midi_size, MidiEvent *output_midi,
                                    int &output_midi_size) {
-    bool reinitialize = false;
+    //bool reinitialize = false;
 
     if (audio_memory.buffer->ready) {
         scoped_lock<interprocess_mutex> lock(audio_memory.buffer->mutex);
@@ -169,7 +169,7 @@ void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32
             audio_memory.advance_output_read_index(godot::BUFFER_FRAME_SIZE);
             output_midi_size = audio_memory.read_output_midi(output_midi);
         } else {
-            reinitialize = true;
+            //reinitialize = true;
         }
     } else {
         for (int channel = 0; channel < DISTRHO_PLUGIN_NUM_OUTPUTS; channel++) {
@@ -179,6 +179,7 @@ void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32
         }
     }
 
+    /*
     if (reinitialize) {
 #if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
         if (plugin->running()) {
@@ -191,6 +192,7 @@ void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32
         rpc_memory.initialize("DISTRHO_SHARED_MEMORY_RPC");
         godot_rpc_memory.initialize("GODOT_SHARED_MEMORY_RPC");
     }
+    */
 }
 
 bool GodotDistrhoPluginClient::get_parameter(int p_index, Parameter &parameter) {
