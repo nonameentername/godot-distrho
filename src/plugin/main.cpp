@@ -8,7 +8,9 @@
 #include <string>
 #include <vector>
 
-//#include <X11/Xlib.h>
+#include <X11/Xlib.h>
+
+#include <sys/prctl.h>
 
 
 extern LibGodot libgodot;
@@ -16,6 +18,13 @@ extern LibGodot libgodot;
 USE_NAMESPACE_DISTRHO
 
 int main(int argc, char **argv) {
+
+	prctl(PR_SET_PDEATHSIG, SIGTERM);
+
+    if (getppid() == 1) {
+        exit(0); 
+    }
+
     std::string program;
     std::string shared_memory_id;
     if (argc > 0) {
@@ -27,6 +36,22 @@ int main(int argc, char **argv) {
     }
 
     const char *parent_window_id = std::getenv("GODOT_PARENT_WINDOW_ID");
+
+	/*
+	if (parent_window_id != NULL) {
+        Window hostWindow = std::stol(parent_window_id);
+		// Get the native window handle provided by the host
+		Display* display = XOpenDisplay(nullptr);
+
+		if (display && hostWindow) {
+			XSetWindowAttributes attr;
+			attr.event_mask = StructureNotifyMask | ExposureMask; 
+			XChangeWindowAttributes(display, hostWindow, CWEventMask, &attr);
+
+			XCloseDisplay(display);
+		}
+	}
+	*/
 
     const char *module_type = std::getenv("DISTRHO_MODULE_TYPE");
     if (module_type == NULL) {
@@ -56,12 +81,10 @@ int main(int argc, char **argv) {
                 "--audio-driver",
                 "Dummy"};
 
-		/*
         if (parent_window_id != NULL) {
             args.push_back("--wid");
             args.push_back(parent_window_id);
         }
-		*/
     }
 
     if (godot_package.size() > 0) {

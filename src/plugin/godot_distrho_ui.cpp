@@ -1,8 +1,9 @@
 #include "godot_distrho_ui.h"
 #include "godot_distrho_plugin.h"
 #include "godot_distrho_utils.h"
+#include "godot_distrho_gui_x11.h"
 
-#include "Window.hpp"
+//#include "Window.hpp"
 #include <string>
 
 START_NAMESPACE_DISTRHO
@@ -11,19 +12,16 @@ GodotDistrhoUI::GodotDistrhoUI() : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAU
     client = NULL;
     server = NULL;
 
-    //window_id = getParentWindowHandle();
-    window_id = 0;
+    window_id = getParentWindowHandle();
     fprintf(stderr, "parentWindowHandle = %ld\n", window_id);
 
-    //if (isVisible() || isEmbed()) {
-    if (isVisible()) {
+    if (isVisible() || isEmbed()) {
         visibilityChanged(true);
     }
 }
 
 GodotDistrhoUI::~GodotDistrhoUI() {
-    //if (isEmbed()) {
-    if (true) {
+    if (isEmbed()) {
         if (server != NULL) {
             delete server;
             server = NULL;
@@ -44,21 +42,42 @@ void GodotDistrhoUI::parameterChanged(const uint32_t index, const float value) {
 }
 
 void GodotDistrhoUI::uiIdle() {
+	if (client != NULL && godot_window_id == 0) {
+		if (client->is_ready()) {
+			godot_window_id = client->get_native_window_id();
+    		fprintf(stderr, "GodotWindowHandle = %ld\n", godot_window_id);
+
+			if (isEmbed()) {
+				int w, h;
+				get_godot_size(godot_window_id, w, h);
+				set_host_size(window_id, w, h);
+			}
+
+			//set_godot_transient(godot_window_id, window_id);
+		}
+	}
+
+	if (godot_window_id > 0) {
+        if (isEmbed()) {
+            int x, y;
+            get_host_position(window_id, x, y);
+            //set_godot_transient(godot_window_id, window_id);
+            set_godot_position(godot_window_id, x, y);
+            //update_godot_window(window_id, godot_window_id);
+        }
+	}
 }
 
-/*
 uintptr_t GodotDistrhoUI::getNativeWindowHandle() const noexcept {
     return window_id;
 }
-*/
 
 void GodotDistrhoUI::visibilityChanged(const bool p_visible) {
     printf("visibility changed\n");
 
     if (p_visible) {
         if (client == NULL) {
-            //if (isEmbed()) {
-            if (false) {
+            if (isEmbed()) {
                 client = new GodotDistrhoUIClient(DistrhoCommon::UI_TYPE, window_id);
             } else {
                 client = new GodotDistrhoUIClient(DistrhoCommon::UI_TYPE, 0);
@@ -92,7 +111,6 @@ void GodotDistrhoUI::onDisplay() {
 
 UI *createUI() {
     GodotDistrhoUI *godot_distrho_ui = new GodotDistrhoUI();
-
     return godot_distrho_ui;
 }
 

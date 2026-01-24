@@ -71,6 +71,9 @@ std::string GodotDistrhoUIClient::get_some_text() {
     return response.getText();
 }
 
+bool GodotDistrhoUIClient::is_ready() {
+    return rpc_memory.buffer->ready;
+}
 
 int64_t GodotDistrhoUIClient::get_native_window_id() {
     if (native_window_id != 0) {

@@ -311,11 +311,11 @@ elseif (MINGW)
   )
 
 elseif(UNIX)
-  #find_package(X11 REQUIRED)
+  find_package(X11 REQUIRED)
   target_link_libraries(godot-plugin PRIVATE
     debug godot-cpp.linux.template_debug.dev.x86_64
     optimized godot-cpp.linux.template_release.x86_64
-    #${X11_LIBRARIES}
+    ${X11_LIBRARIES}
   )
 endif()
 
@@ -360,6 +360,8 @@ dpf_add_plugin(godot-distrho
     src/distrho_shared_memory_rpc.cpp
     src/distrho_common.cpp
     #src/plugin/libgodot_distrho.cpp
+    #TODO: should only be for linux
+    src/plugin/godot_distrho_gui_x11.cpp
 )
 
 target_compile_definitions(dgl-opengl PUBLIC

@@ -31,6 +31,8 @@ public:
 
     std::string get_some_text();
 
+    bool is_ready();
+
     int64_t get_native_window_id();
 
     void parameter_changed(int p_index, float p_value);
