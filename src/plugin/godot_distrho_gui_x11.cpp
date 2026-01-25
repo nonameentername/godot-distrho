@@ -1,6 +1,8 @@
 #include "godot_distrho_gui_x11.h"
+#include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/shape.h>
+#include <cstring>
 
 void x11_disable_input(uint64_t win_id) {
 	// 1. Get the X11 Display connection
@@ -146,4 +148,42 @@ void set_host_size(uint64_t window_id, int width, int height) {
     XResizeWindow(dpy, hostWin, width, height);
     XFlush(dpy);
     XCloseDisplay(dpy);
+}
+
+void set_transient_window(uint64_t window_id, uint64_t godot_window_id) {
+    Display* dpy = XOpenDisplay(nullptr);
+    Window hostWin = (Window)window_id;
+    Window godot_xid = (Window) godot_window_id;
+
+	//XSetTransientForHint(dpy, godot_xid, hostWin);
+
+	//XSetWindowAttributes attrs;
+	//attrs.background_pixmap = None; // This prevents the parent from clearing over you
+	//XChangeWindowAttributes(dpy, hostWin, CWBackPixmap, &attrs);
+
+	//XSetWindowAttributes attrs;
+	//attrs.override_redirect = True;
+	//XChangeWindowAttributes(dpy, godot_xid, CWOverrideRedirect, &attrs);
+
+    XFlush(dpy);
+    XCloseDisplay(dpy);
+}
+
+void force_redraw(uint64_t window_id, uint64_t godot_window_id) {
+    Display* display = XOpenDisplay(nullptr);
+    Window host_xid = (Window)window_id;
+    Window godot_xid = (Window) godot_window_id;
+
+	//Window children[] = { godot_xid };
+	//XRestackWindows(display, children, 1); 
+	//XMapRaised(display, godot_xid);
+
+	//XSetTransientForHint(display, godot_xid, host_xid);
+
+	//XRaiseWindow(display, godot_xid);
+
+	//XMapWindow(display, godot_xid);
+
+	XFlush(display);
+    XCloseDisplay(display);
 }

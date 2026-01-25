@@ -58,15 +58,16 @@ GodotDistrhoUIClient::~GodotDistrhoUIClient() {
 
 template <typename T, typename R>
 capnp::FlatArrayMessageReader GodotDistrhoUIClient::rpc_call(
-    std::function<void(typename T::Builder &)> build_request) const {
-    return DistrhoCommon::rpc_call<T, R>(rpc_memory, build_request);
+    bool &result, std::function<void(typename T::Builder &)> build_request) const {
+    return DistrhoCommon::rpc_call<T, R>(rpc_memory, build_request, result);
 }
 
 void GodotDistrhoUIClient::run() {
 }
 
 std::string GodotDistrhoUIClient::get_some_text() {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetSomeTextRequest, GetSomeTextResponse>();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetSomeTextRequest, GetSomeTextResponse>(result);
     GetSomeTextResponse::Reader response = reader.getRoot<GetSomeTextResponse>();
     return response.getText();
 }
@@ -80,7 +81,8 @@ int64_t GodotDistrhoUIClient::get_native_window_id() {
         return native_window_id;
     }
 
-    capnp::FlatArrayMessageReader reader = rpc_call<GetNativeWindowIdRequest, GetNativeWindowIdResponse>();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetNativeWindowIdRequest, GetNativeWindowIdResponse>(result);
     GetNativeWindowIdResponse::Reader response = reader.getRoot<GetNativeWindowIdResponse>();
     native_window_id = response.getId();
 
@@ -88,17 +90,22 @@ int64_t GodotDistrhoUIClient::get_native_window_id() {
 }
 
 void GodotDistrhoUIClient::parameter_changed(int p_index, float p_value) {
+    bool result;
     capnp::FlatArrayMessageReader reader =
-        rpc_call<ParameterChangedRequest, ParameterChangedResponse>([p_index, p_value](auto &req) {
+        rpc_call<ParameterChangedRequest, ParameterChangedResponse>(result, [p_index, p_value](auto &req) {
             req.setIndex(p_index);
             req.setValue(p_value);
         });
 }
 
 bool GodotDistrhoUIClient::shutdown() {
-    capnp::FlatArrayMessageReader reader = rpc_call<ShutdownRequest, ShutdownResponse>();
-    ShutdownResponse::Reader response = reader.getRoot<ShutdownResponse>();
-    return response.getResult();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<ShutdownRequest, ShutdownResponse>(result);
+    if (result) {
+        ShutdownResponse::Reader response = reader.getRoot<ShutdownResponse>();
+        return response.getResult();
+    }
+    return false;
 }
 
 godot::DistrhoSharedMemoryRPC *GodotDistrhoUIClient::get_godot_rpc_memory() {

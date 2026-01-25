@@ -48,9 +48,11 @@ void GodotDistrhoUI::uiIdle() {
     		fprintf(stderr, "GodotWindowHandle = %ld\n", godot_window_id);
 
 			if (isEmbed()) {
-				int w, h;
-				get_godot_size(godot_window_id, w, h);
-				set_host_size(window_id, w, h);
+				//int w, h;
+				//get_godot_size(godot_window_id, w, h);
+				//set_host_size(window_id, w, h);
+                //setGeometryConstraints(w, h, true); 
+                //setSize(w, h);
 			}
 
 			//set_godot_transient(godot_window_id, window_id);
@@ -60,12 +62,18 @@ void GodotDistrhoUI::uiIdle() {
 	if (godot_window_id > 0) {
         if (isEmbed()) {
             int x, y;
-            get_host_position(window_id, x, y);
+            //get_host_position(window_id, x, y);
             //set_godot_transient(godot_window_id, window_id);
-            set_godot_position(godot_window_id, x, y);
+            //set_godot_position(godot_window_id, x, y);
+			//set_transient_window(window_id, godot_window_id);
             //update_godot_window(window_id, godot_window_id);
+    		//force_redraw(window_id, godot_window_id);
         }
 	}
+}
+
+void GodotDistrhoUI::uiFocus(bool, DGL_NAMESPACE::CrossingMode) {
+	set_transient_window(window_id, godot_window_id);
 }
 
 uintptr_t GodotDistrhoUI::getNativeWindowHandle() const noexcept {

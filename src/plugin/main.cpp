@@ -81,10 +81,12 @@ int main(int argc, char **argv) {
                 "--audio-driver",
                 "Dummy"};
 
+        /*
         if (parent_window_id != NULL) {
             args.push_back("--wid");
             args.push_back(parent_window_id);
         }
+        */
     }
 
     if (godot_package.size() > 0) {

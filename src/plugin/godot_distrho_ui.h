@@ -38,6 +38,8 @@ protected:
 
     void uiIdle() override;
 
+    void uiFocus(bool focus, DGL_NAMESPACE::CrossingMode mode);
+
     uintptr_t getNativeWindowHandle() const noexcept;
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GodotDistrhoUI)

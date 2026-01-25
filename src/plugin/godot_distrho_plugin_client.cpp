@@ -74,50 +74,57 @@ GodotDistrhoPluginClient::~GodotDistrhoPluginClient() {
 
 template <typename T, typename R>
 capnp::FlatArrayMessageReader GodotDistrhoPluginClient::rpc_call(
-    std::function<void(typename T::Builder &)> build_request) const {
-    return DistrhoCommon::rpc_call<T, R>(rpc_memory, build_request);
+    bool &result, std::function<void(typename T::Builder &)> build_request) const {
+    return DistrhoCommon::rpc_call<T, R>(rpc_memory, build_request, result);
 }
 
 const char *GodotDistrhoPluginClient::getLabel() const {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetLabelRequest, GetLabelResponse>([](auto &req) { req; });
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetLabelRequest, GetLabelResponse>(result, [](auto &req) { req; });
 
     GetLabelResponse::Reader response = reader.getRoot<GetLabelResponse>();
     return response.getLabel().cStr();
 }
 
 const char *GodotDistrhoPluginClient::getDescription() const {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetDescriptionRequest, GetDescriptionResponse>();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetDescriptionRequest, GetDescriptionResponse>(result);
     GetDescriptionResponse::Reader response = reader.getRoot<GetDescriptionResponse>();
     return response.getDescription().cStr();
 }
 
 const char *GodotDistrhoPluginClient::getMaker() const {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetMakerRequest, GetMakerResponse>();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetMakerRequest, GetMakerResponse>(result);
     GetMakerResponse::Reader response = reader.getRoot<GetMakerResponse>();
     return response.getMaker().cStr();
 }
 
 const char *GodotDistrhoPluginClient::getHomePage() const {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetHomePageRequest, GetHomePageResponse>();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetHomePageRequest, GetHomePageResponse>(result);
     GetHomePageResponse::Reader response = reader.getRoot<GetHomePageResponse>();
     return response.getHomePage().cStr();
 }
 
 const char *GodotDistrhoPluginClient::getLicense() const {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetLicenseRequest, GetLicenseResponse>();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetLicenseRequest, GetLicenseResponse>(result);
     GetLicenseResponse::Reader response = reader.getRoot<GetLicenseResponse>();
     return response.getLicense().cStr();
 }
 
 uint32_t GodotDistrhoPluginClient::getVersion() const {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetVersionRequest, GetVersionResponse>();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetVersionRequest, GetVersionResponse>(result);
     GetVersionResponse::Reader response = reader.getRoot<GetVersionResponse>();
 
     return d_version(response.getMajor(), response.getMinor(), response.getPatch());
 }
 
 int64_t GodotDistrhoPluginClient::getUniqueId() const {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetUniqueIdRequest, GetUniqueIdResponse>();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetUniqueIdRequest, GetUniqueIdResponse>(result);
     GetUniqueIdResponse::Reader response = reader.getRoot<GetUniqueIdResponse>();
     std::string unique_id = response.getUniqueId();
 
@@ -196,8 +203,9 @@ void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32
 }
 
 bool GodotDistrhoPluginClient::get_parameter(int p_index, Parameter &parameter) {
+    bool result;
     capnp::FlatArrayMessageReader reader =
-        rpc_call<GetParameterRequest, GetParameterResponse>([p_index](auto &req) { req.setIndex(p_index); });
+        rpc_call<GetParameterRequest, GetParameterResponse>(result, [p_index](auto &req) { req.setIndex(p_index); });
 
     GetParameterResponse::Reader response = reader.getRoot<GetParameterResponse>();
 
@@ -226,52 +234,60 @@ bool GodotDistrhoPluginClient::get_parameter(int p_index, Parameter &parameter) 
 }
 
 int GodotDistrhoPluginClient::get_parameter_count() {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetParameterCountRequest, GetParameterCountResponse>();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetParameterCountRequest, GetParameterCountResponse>(result);
     GetParameterCountResponse::Reader response = reader.getRoot<GetParameterCountResponse>();
     return response.getCount();
 }
 
 float GodotDistrhoPluginClient::get_parameter_value(int p_index) const {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetParameterValueRequest, GetParameterValueResponse>();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetParameterValueRequest, GetParameterValueResponse>(result);
     GetParameterValueResponse::Reader response = reader.getRoot<GetParameterValueResponse>();
     return response.getValue();
 }
 
 void GodotDistrhoPluginClient::set_parameter_value(int p_index, float p_value) {
+    bool result;
     capnp::FlatArrayMessageReader reader =
-        rpc_call<SetParameterValueRequest, SetParameterValueResponse>([p_index, p_value](auto &req) {
+        rpc_call<SetParameterValueRequest, SetParameterValueResponse>(result, [p_index, p_value](auto &req) {
             req.setIndex(p_index);
             req.setValue(p_value);
         });
 }
 
 int GodotDistrhoPluginClient::get_program_count() {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetProgramCountRequest, GetProgramCountResponse>();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetProgramCountRequest, GetProgramCountResponse>(result);
     GetProgramCountResponse::Reader response = reader.getRoot<GetProgramCountResponse>();
     return response.getCount();
 }
 
 int GodotDistrhoPluginClient::get_state_count() {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetStateCountRequest, GetStateCountResponse>();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetStateCountRequest, GetStateCountResponse>(result);
     GetStateCountResponse::Reader response = reader.getRoot<GetStateCountResponse>();
     return response.getCount();
 }
 
 int GodotDistrhoPluginClient::get_number_of_input_ports() {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetNumberOfInputPortsRequest, GetNumberOfInputPortsResponse>();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetNumberOfInputPortsRequest, GetNumberOfInputPortsResponse>(result);
     GetNumberOfInputPortsResponse::Reader response = reader.getRoot<GetNumberOfInputPortsResponse>();
     return response.getNumberOfInputPorts();
 }
 
 int GodotDistrhoPluginClient::get_number_of_output_ports() {
-    capnp::FlatArrayMessageReader reader = rpc_call<GetNumberOfOutputPortsRequest, GetNumberOfOutputPortsResponse>();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetNumberOfOutputPortsRequest, GetNumberOfOutputPortsResponse>(result);
     GetNumberOfOutputPortsResponse::Reader response = reader.getRoot<GetNumberOfOutputPortsResponse>();
     return response.getNumberOfOutputPorts();
 }
 
 bool GodotDistrhoPluginClient::get_input_port(int p_index, AudioPort &port) {
+    bool result;
     capnp::FlatArrayMessageReader reader =
-        rpc_call<GetInputPortRequest, GetInputPortResponse>([p_index](auto &req) { req.setIndex(p_index); });
+        rpc_call<GetInputPortRequest, GetInputPortResponse>(result, [p_index](auto &req) { req.setIndex(p_index); });
 
     GetInputPortResponse::Reader response = reader.getRoot<GetInputPortResponse>();
     port.hints = response.getHints();
@@ -283,8 +299,9 @@ bool GodotDistrhoPluginClient::get_input_port(int p_index, AudioPort &port) {
 }
 
 bool GodotDistrhoPluginClient::get_output_port(int p_index, AudioPort &port) {
+    bool result;
     capnp::FlatArrayMessageReader reader =
-        rpc_call<GetOutputPortRequest, GetOutputPortResponse>([p_index](auto &req) { req.setIndex(p_index); });
+        rpc_call<GetOutputPortRequest, GetOutputPortResponse>(result, [p_index](auto &req) { req.setIndex(p_index); });
 
     GetOutputPortResponse::Reader response = reader.getRoot<GetOutputPortResponse>();
     port.hints = response.getHints();
@@ -296,7 +313,8 @@ bool GodotDistrhoPluginClient::get_output_port(int p_index, AudioPort &port) {
 }
 
 bool GodotDistrhoPluginClient::shutdown() {
-    capnp::FlatArrayMessageReader reader = rpc_call<ShutdownRequest, ShutdownResponse>();
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<ShutdownRequest, ShutdownResponse>(result);
     ShutdownResponse::Reader response = reader.getRoot<ShutdownResponse>();
     return response.getResult();
 }

@@ -12,4 +12,8 @@ void update_godot_window(uint64_t window_id, uint64_t godot_window_id);
 void get_godot_size(uint64_t godot_window_id, int &out_width, int &out_height);
 void set_host_size(uint64_t window_id, int width, int height);
 
+void set_transient_window(uint64_t window_id, uint64_t godot_window_id);
+
+void force_redraw(uint64_t window_id, uint64_t godot_window_id);
+
 #endif
