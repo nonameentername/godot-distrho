@@ -8,9 +8,9 @@
 #include <string>
 #include <vector>
 
-#include <X11/Xlib.h>
-
+#ifndef __WIN32__
 #include <sys/prctl.h>
+#endif
 
 
 extern LibGodot libgodot;
@@ -19,11 +19,14 @@ USE_NAMESPACE_DISTRHO
 
 int main(int argc, char **argv) {
 
+#ifndef __WIN32__
+    //TODO: windows and macos equivalent
 	prctl(PR_SET_PDEATHSIG, SIGTERM);
 
     if (getppid() == 1) {
         exit(0); 
     }
+#endif
 
     std::string program;
     std::string shared_memory_id;
@@ -36,22 +39,6 @@ int main(int argc, char **argv) {
     }
 
     const char *parent_window_id = std::getenv("GODOT_PARENT_WINDOW_ID");
-
-	/*
-	if (parent_window_id != NULL) {
-        Window hostWindow = std::stol(parent_window_id);
-		// Get the native window handle provided by the host
-		Display* display = XOpenDisplay(nullptr);
-
-		if (display && hostWindow) {
-			XSetWindowAttributes attr;
-			attr.event_mask = StructureNotifyMask | ExposureMask; 
-			XChangeWindowAttributes(display, hostWindow, CWEventMask, &attr);
-
-			XCloseDisplay(display);
-		}
-	}
-	*/
 
     const char *module_type = std::getenv("DISTRHO_MODULE_TYPE");
     if (module_type == NULL) {
@@ -81,12 +68,10 @@ int main(int argc, char **argv) {
                 "--audio-driver",
                 "Dummy"};
 
-        /*
         if (parent_window_id != NULL) {
             args.push_back("--wid");
             args.push_back(parent_window_id);
         }
-        */
     }
 
     if (godot_package.size() > 0) {
@@ -110,29 +95,6 @@ int main(int argc, char **argv) {
     }
 
     instance->start();
-
-	/*
-    if (parent_window_id != NULL) {
-        Window new_parent = std::stol(parent_window_id);
-
-        Window godot_window_id = godot::DisplayServer::get_singleton()->window_get_native_handle(godot::DisplayServer::WINDOW_HANDLE, 0);
-        fprintf(stderr, "werner:native_window_id = %ld\n", godot_window_id);
-
-        Display *display = XOpenDisplay(NULL);
-
-        XUnmapWindow(display, godot_window_id);
-        XSync(display, false);
-
-        XReparentWindow(display, godot_window_id, new_parent, 0, 0);
-
-        XMapWindow(display, godot_window_id);
-
-        XFlush(display);
-        XSync(display, false);
-
-        fprintf(stderr, "reparent = %ld %ld\n", godot_window_id, new_parent);
-    }
-	*/
 
     while (!instance->iteration()) {
     }

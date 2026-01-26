@@ -352,6 +352,7 @@ dpf_add_plugin(godot-distrho
     #src/plugin/libgodot_distrho.cpp
   FILES_UI
     src/plugin/godot_distrho_gui_widget.cpp
+    src/plugin/godot_distrho_images.cpp
     src/plugin/godot_distrho_ui.cpp
     src/plugin/godot_distrho_utils.cpp
     src/plugin/godot_distrho_ui_server.cpp
@@ -360,8 +361,6 @@ dpf_add_plugin(godot-distrho
     src/distrho_shared_memory_rpc.cpp
     src/distrho_common.cpp
     #src/plugin/libgodot_distrho.cpp
-    #TODO: should only be for linux
-    src/plugin/godot_distrho_gui_x11.cpp
 )
 
 target_compile_definitions(dgl-opengl PUBLIC

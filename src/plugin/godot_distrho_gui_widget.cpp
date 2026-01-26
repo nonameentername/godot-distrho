@@ -1,21 +1,30 @@
 #include "godot_distrho_gui_widget.h"
-#include "godot_distrho_gui_x11.h"
 #include "TopLevelWidget.hpp"
 #include "Window.hpp"
 #include "Widget.hpp"
+#include "DistrhoUI.hpp"
+#include "Image.hpp"
+
+#include "godot_distrho_images.hpp"
 
 
 START_NAMESPACE_DGL
 
+
 GodotDistrhoGuiWidget::GodotDistrhoGuiWidget(Window &p_window) : TopLevelWidget(p_window) {
     window_id = p_window.getNativeWindowHandle();
-	x11_disable_input(window_id);
 }
 
 GodotDistrhoGuiWidget::~GodotDistrhoGuiWidget() {
 }
 
 void GodotDistrhoGuiWidget::onDisplay() {
+    Image godot_distrho(godot_distrho::godot_distrhoData,
+            godot_distrho::godot_distrhoWidth,
+            godot_distrho::godot_distrhoHeight,
+            ImageFormat::kImageFormatRGBA);
+
+    godot_distrho.draw();
 }
 
 bool GodotDistrhoGuiWidget::onKeyboard(const Widget::KeyboardEvent&) {

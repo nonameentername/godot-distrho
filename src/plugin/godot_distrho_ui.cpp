@@ -1,7 +1,7 @@
+#include "godot_distrho_gui_widget.h"
 #include "godot_distrho_ui.h"
 #include "godot_distrho_plugin.h"
 #include "godot_distrho_utils.h"
-#include "godot_distrho_gui_x11.h"
 
 //#include "Window.hpp"
 #include <string>
@@ -12,26 +12,24 @@ GodotDistrhoUI::GodotDistrhoUI() : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAU
     client = NULL;
     server = NULL;
 
-    window_id = getParentWindowHandle();
+    window_id = 0;
     fprintf(stderr, "parentWindowHandle = %ld\n", window_id);
 
-    if (isVisible() || isEmbed()) {
+    if (isVisible()) {
         visibilityChanged(true);
     }
 }
 
 GodotDistrhoUI::~GodotDistrhoUI() {
-    if (isEmbed()) {
-        if (server != NULL) {
-            delete server;
-            server = NULL;
-        }
+    if (server != NULL) {
+        delete server;
+        server = NULL;
+    }
 
-        if (client != NULL) {
-            client->shutdown();
-            delete client;
-            client = NULL;
-        }
+    if (client != NULL) {
+        client->shutdown();
+        delete client;
+        client = NULL;
     }
 }
 
@@ -46,34 +44,11 @@ void GodotDistrhoUI::uiIdle() {
 		if (client->is_ready()) {
 			godot_window_id = client->get_native_window_id();
     		fprintf(stderr, "GodotWindowHandle = %ld\n", godot_window_id);
-
-			if (isEmbed()) {
-				//int w, h;
-				//get_godot_size(godot_window_id, w, h);
-				//set_host_size(window_id, w, h);
-                //setGeometryConstraints(w, h, true); 
-                //setSize(w, h);
-			}
-
-			//set_godot_transient(godot_window_id, window_id);
 		}
-	}
-
-	if (godot_window_id > 0) {
-        if (isEmbed()) {
-            int x, y;
-            //get_host_position(window_id, x, y);
-            //set_godot_transient(godot_window_id, window_id);
-            //set_godot_position(godot_window_id, x, y);
-			//set_transient_window(window_id, godot_window_id);
-            //update_godot_window(window_id, godot_window_id);
-    		//force_redraw(window_id, godot_window_id);
-        }
 	}
 }
 
 void GodotDistrhoUI::uiFocus(bool, DGL_NAMESPACE::CrossingMode) {
-	set_transient_window(window_id, godot_window_id);
 }
 
 uintptr_t GodotDistrhoUI::getNativeWindowHandle() const noexcept {
@@ -85,11 +60,7 @@ void GodotDistrhoUI::visibilityChanged(const bool p_visible) {
 
     if (p_visible) {
         if (client == NULL) {
-            if (isEmbed()) {
-                client = new GodotDistrhoUIClient(DistrhoCommon::UI_TYPE, window_id);
-            } else {
-                client = new GodotDistrhoUIClient(DistrhoCommon::UI_TYPE, 0);
-            }
+            client = new GodotDistrhoUIClient(DistrhoCommon::UI_TYPE, window_id);
             //window_id = client->get_native_window_id();
             server = new GodotDistrhoUIServer(this, client->get_godot_rpc_memory());
         }
