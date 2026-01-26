@@ -21,38 +21,79 @@ GodotDistrhoPlugin::GodotDistrhoPlugin(GodotDistrhoPluginClient *p_client, Godot
 }
 
 GodotDistrhoPlugin::~GodotDistrhoPlugin() {
-    client->shutdown();
+    if (server != NULL) {
+        delete server;
+        server = NULL;
+    }
+
+    if (client != NULL) {
+        client->shutdown();
+        delete client;
+        client = NULL;
+    }
 }
 
 const char *GodotDistrhoPlugin::getLabel() const {
-    return client->getLabel();
+    if (client != NULL) {
+        return client->getLabel();
+    } else {
+        return "";
+    }
 }
 
 const char *GodotDistrhoPlugin::getDescription() const {
-    return client->getDescription();
+    if (client != NULL) {
+        return client->getDescription();
+    } else {
+        return "";
+    }
 }
 
 const char *GodotDistrhoPlugin::getMaker() const {
-    return client->getMaker();
+    if (client != NULL) {
+        return client->getMaker();
+    } else {
+        return "";
+    }
 }
 
 const char *GodotDistrhoPlugin::getHomePage() const {
-    return client->getHomePage();
+    if (client != NULL) {
+        return client->getHomePage();
+    } else {
+        return "";
+    }
 }
 
 const char *GodotDistrhoPlugin::getLicense() const {
-    return client->getLicense();
+    if (client != NULL) {
+        return client->getLicense();
+    } else {
+        return "";
+    }
 }
 
 uint32_t GodotDistrhoPlugin::getVersion() const {
-    return client->getVersion();
+    if (client != NULL) {
+        return client->getVersion();
+    } else {
+        return d_version(0, 0, 1);
+    }
 }
 
 int64_t GodotDistrhoPlugin::getUniqueId() const {
-    return client->getUniqueId();
+    if (client != NULL) {
+        return client->getUniqueId();
+    } else {
+        return d_cconst('n', 'o', 'n', 'e');
+    }
 }
 
 void GodotDistrhoPlugin::initAudioPort(const bool input, const uint32_t index, AudioPort &port) {
+    if (client == NULL) {
+        return;
+    }
+
     if (input) {
         if (client->get_input_port(index, port)) {
             return;
@@ -67,19 +108,29 @@ void GodotDistrhoPlugin::initAudioPort(const bool input, const uint32_t index, A
 }
 
 void GodotDistrhoPlugin::initParameter(const uint32_t index, Parameter &parameter) {
-    client->initParameter(index, parameter);
+    if (client != NULL) {
+        client->initParameter(index, parameter);
+    }
 }
 
 float GodotDistrhoPlugin::getParameterValue(const uint32_t index) const {
-    return client->getParameterValue(index);
+    if (client != NULL) {
+        return client->getParameterValue(index);
+    } else {
+        return 0;
+    }
 }
 
 void GodotDistrhoPlugin::setParameterValue(const uint32_t index, const float value) {
-    client->setParameterValue(index, value);
+    if (client != NULL) {
+        client->setParameterValue(index, value);
+    }
 }
 
 void GodotDistrhoPlugin::activate() {
-    client->activate();
+    if (client == NULL) {
+        client->activate();
+    }
 }
 
 void GodotDistrhoPlugin::run(const float **inputs, float **outputs, uint32_t numSamples, const MidiEvent *midiEvents,
@@ -87,7 +138,9 @@ void GodotDistrhoPlugin::run(const float **inputs, float **outputs, uint32_t num
     static MidiEvent midi_output[godot::MIDI_BUFFER_SIZE];
     int midi_output_size = 0;
 
-    client->run(inputs, outputs, numSamples, midiEvents, midiEventCount, midi_output, midi_output_size);
+    if (client != NULL) {
+        client->run(inputs, outputs, numSamples, midiEvents, midiEventCount, midi_output, midi_output_size);
+    }
 
     for (int i = 0; i < midi_output_size; i++) {
         writeMidiEvent(midi_output[i]);

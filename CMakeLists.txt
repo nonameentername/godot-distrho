@@ -311,9 +311,11 @@ elseif (MINGW)
   )
 
 elseif(UNIX)
+  find_package(X11 REQUIRED)
   target_link_libraries(godot-plugin PRIVATE
     debug godot-cpp.linux.template_debug.dev.x86_64
     optimized godot-cpp.linux.template_release.x86_64
+    ${X11_LIBRARIES}
   )
 endif()
 
@@ -350,6 +352,7 @@ dpf_add_plugin(godot-distrho
     #src/plugin/libgodot_distrho.cpp
   FILES_UI
     src/plugin/godot_distrho_gui_widget.cpp
+    src/plugin/godot_distrho_images.cpp
     src/plugin/godot_distrho_ui.cpp
     src/plugin/godot_distrho_utils.cpp
     src/plugin/godot_distrho_ui_server.cpp

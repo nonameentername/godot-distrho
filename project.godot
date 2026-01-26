@@ -21,6 +21,7 @@ config/icon="res://icon.svg"
 
 [audio]
 
+buses/default_bus_layout="uid://dtc6cqgxrqcqp"
 driver/output_latency=1
 driver/mix_rate=48000
 

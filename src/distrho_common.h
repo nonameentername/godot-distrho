@@ -29,7 +29,8 @@ public:
 
     template <typename T, typename R>
     static capnp::FlatArrayMessageReader rpc_call(godot::DistrhoSharedMemoryRPC &rpc_memory,
-                                                  std::function<void(typename T::Builder &)> build_request) {
+                                                  std::function<void(typename T::Builder &)> build_request,
+                                                  bool &result) {
         if (rpc_memory.buffer->ready) {
             scoped_lock<interprocess_mutex> lock(rpc_memory.buffer->mutex);
 
@@ -44,7 +45,7 @@ public:
             rpc_memory.buffer->input_condition.notify_one();
 
             ptime timeout = microsec_clock::universal_time() + milliseconds(100);
-            bool result = rpc_memory.buffer->output_condition.timed_wait(lock, timeout);
+            result = rpc_memory.buffer->output_condition.timed_wait(lock, timeout);
 
             if (result) {
                 return rpc_memory.read_reponse();

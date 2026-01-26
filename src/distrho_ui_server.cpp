@@ -137,6 +137,14 @@ void DistrhoUIServer::rpc_thread_func() {
                 break;
             }
 
+            case GetNativeWindowIdRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetNativeWindowIdRequest, GetNativeWindowIdResponse>([this](auto &request, auto &response) {
+                    int64_t value = DisplayServer::get_singleton()->window_get_native_handle(DisplayServer::WINDOW_HANDLE, 0);
+                    response.setId(value);
+                });
+                break;
+            }
+
             case ParameterChangedRequest::_capnpPrivate::typeId: {
                 handle_rpc_call<ParameterChangedRequest, ParameterChangedResponse>(
                     [this](auto &request, auto &response) {
