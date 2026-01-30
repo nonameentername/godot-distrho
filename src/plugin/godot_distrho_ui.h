@@ -16,7 +16,9 @@ START_NAMESPACE_DISTRHO
 class GodotDistrhoUI : public UI {
 
 private:
-    uintptr_t window_id;
+    bool initialized = false;
+    uintptr_t window_id = 0;
+    uintptr_t godot_window_id = 0;
     mutable GodotDistrhoUIClient *client;
     mutable GodotDistrhoUIServer *server;
 
@@ -25,7 +27,7 @@ public:
 
     ~GodotDistrhoUI();
 
-    void visibilityChanged(const bool visible) override;
+    void visibilityChanged(const bool visible);
 
     uintptr_t get_window_id();
 
@@ -35,6 +37,10 @@ protected:
     void parameterChanged(const uint32_t index, const float value) override;
 
     void uiIdle() override;
+
+    void uiFocus(bool focus, DGL_NAMESPACE::CrossingMode mode);
+
+    uintptr_t getNativeWindowHandle() const noexcept;
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GodotDistrhoUI)
 };

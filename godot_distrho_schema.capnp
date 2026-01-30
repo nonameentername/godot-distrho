@@ -166,6 +166,13 @@ struct GetSomeTextResponse {
   text @0 :Text;
 }
 
+struct GetNativeWindowIdRequest {
+}
+
+struct GetNativeWindowIdResponse {
+  id @0 :UInt64;
+}
+
 struct ParameterChangedRequest {
   index @0 :UInt32;
   value @1 :Float32;

@@ -14,7 +14,7 @@ private:
 
 protected:
     template <typename T, typename R>
-    capnp::FlatArrayMessageReader rpc_call(std::function<void(typename T::Builder &)> build_request = nullptr) const;
+    capnp::FlatArrayMessageReader rpc_call(bool &result, std::function<void(typename T::Builder &)> build_request = nullptr) const;
 
 public:
     DistrhoUIClient(DistrhoSharedMemoryRPC *p_rpc_memory);

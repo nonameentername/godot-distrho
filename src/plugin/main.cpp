@@ -1,4 +1,6 @@
 #include "distrho_common.h"
+//#include "godot_cpp/classes/display_server.hpp"
+//#include "godot_cpp/variant/dictionary.hpp"
 #include "godot_distrho_utils.h"
 #include "libgodot_distrho.h"
 
@@ -6,11 +8,30 @@
 #include <string>
 #include <vector>
 
+#if defined(__WIN32__)
+#elif defined(__APPLE__)
+#else
+#include <sys/prctl.h>
+#endif
+
+
 extern LibGodot libgodot;
 
 USE_NAMESPACE_DISTRHO
 
 int main(int argc, char **argv) {
+
+#if defined(__WIN32__)
+#elif defined(__APPLE__)
+#else
+    //TODO: windows and macos equivalent
+	prctl(PR_SET_PDEATHSIG, SIGTERM);
+
+    if (getppid() == 1) {
+        exit(0); 
+    }
+#endif
+
     std::string program;
     std::string shared_memory_id;
     if (argc > 0) {
@@ -20,6 +41,8 @@ int main(int argc, char **argv) {
     if (argc != 1) {
         return EXIT_SUCCESS;
     }
+
+    const char *parent_window_id = std::getenv("GODOT_PARENT_WINDOW_ID");
 
     const char *module_type = std::getenv("DISTRHO_MODULE_TYPE");
     if (module_type == NULL) {
@@ -48,6 +71,11 @@ int main(int argc, char **argv) {
 #endif
                 "--audio-driver",
                 "Dummy"};
+
+        if (parent_window_id != NULL) {
+            args.push_back("--wid");
+            args.push_back(parent_window_id);
+        }
     }
 
     if (godot_package.size() > 0) {
@@ -71,6 +99,7 @@ int main(int argc, char **argv) {
     }
 
     instance->start();
+
     while (!instance->iteration()) {
     }
     libgodot.destroy_godot_instance(instance);
