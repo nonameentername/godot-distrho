@@ -8,7 +8,9 @@
 #include <string>
 #include <vector>
 
-#ifndef __WIN32__
+#if defined(__WIN32__)
+#elif defined(__APPLE__)
+#else
 #include <sys/prctl.h>
 #endif
 
@@ -19,7 +21,9 @@ USE_NAMESPACE_DISTRHO
 
 int main(int argc, char **argv) {
 
-#ifndef __WIN32__
+#if defined(__WIN32__)
+#elif defined(__APPLE__)
+#else
     //TODO: windows and macos equivalent
 	prctl(PR_SET_PDEATHSIG, SIGTERM);
 
