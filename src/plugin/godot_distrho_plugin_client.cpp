@@ -63,6 +63,7 @@ GodotDistrhoPluginClient::GodotDistrhoPluginClient(DistrhoCommon::DISTRHO_MODULE
 }
 
 GodotDistrhoPluginClient::~GodotDistrhoPluginClient() {
+#if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
     if (plugin != NULL) {
         if (plugin->running()) {
             plugin->terminate();
@@ -70,6 +71,7 @@ GodotDistrhoPluginClient::~GodotDistrhoPluginClient() {
         delete plugin;
         plugin = NULL;
     }
+#endif
 }
 
 template <typename T, typename R>
