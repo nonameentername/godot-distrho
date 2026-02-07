@@ -108,8 +108,18 @@ struct GetParameterResponse {
   designation @9 :UInt32;
   midiCC @10 :UInt32;
   groupId @11 :UInt32;
-  enumerationValues @12 :Text;
+  enumerationCount @12 :UInt32;
   result @13 :Bool;
+}
+
+struct GetParameterEnumRequest {
+  parameterIndex @0 :UInt32;
+  index @1 :UInt32;
+}
+
+struct GetParameterEnumResponse {
+  label @0 :Text;
+  value @1 :Float32;
 }
 
 struct GetParameterValueRequest {

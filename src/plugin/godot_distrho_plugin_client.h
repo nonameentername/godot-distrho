@@ -56,6 +56,9 @@ public:
 
     bool get_parameter(int p_index, Parameter &parameter);
     int get_parameter_count();
+
+    void get_parameter_enum(int p_parameter_index, int p_index, ParameterEnumerationValue *p_parameter_enum);
+
     float get_parameter_value(int p_index) const;
     void set_parameter_value(int p_index, float p_value);
 

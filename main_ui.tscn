@@ -1,14 +1,14 @@
-[gd_scene load_steps=4 format=3 uid="uid://3j0mgt1s3jy4"]
+[gd_scene format=3 uid="uid://3j0mgt1s3jy4"]
 
 [ext_resource type="Script" uid="uid://ba4aigdjlk6pn" path="res://main_ui.gd" id="1_w37m7"]
 [ext_resource type="AudioStream" uid="uid://uc44d5w21u0q" path="res://hello.mp3" id="2_ktt6o"]
 
 [sub_resource type="AudioStreamDistrho" id="AudioStreamDistrho_0xm2m"]
 
-[node name="main" type="Node2D"]
+[node name="main" type="Node2D" unique_id=603404442]
 script = ExtResource("1_w37m7")
 
-[node name="Control" type="Control" parent="."]
+[node name="Control" type="Control" parent="." unique_id=134606107]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -20,7 +20,7 @@ grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="Panel" type="Panel" parent="Control"]
+[node name="Panel" type="Panel" parent="Control" unique_id=1143452186]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -28,7 +28,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="NoteOnButton" type="Button" parent="Control/Panel"]
+[node name="NoteOnButton" type="Button" parent="Control/Panel" unique_id=808404101]
 layout_mode = 0
 offset_left = 54.0
 offset_top = 78.0
@@ -37,7 +37,7 @@ offset_bottom = 204.0
 text = "C4 - Note on
 "
 
-[node name="NoteOffButton" type="Button" parent="Control/Panel"]
+[node name="NoteOffButton" type="Button" parent="Control/Panel" unique_id=673495218]
 layout_mode = 0
 offset_left = 54.0
 offset_top = 244.0
@@ -46,7 +46,7 @@ offset_bottom = 370.0
 text = "C4 - Note off
 "
 
-[node name="Label" type="Label" parent="Control/Panel"]
+[node name="Label" type="Label" parent="Control/Panel" unique_id=1438518120]
 layout_mode = 1
 anchors_preset = -1
 anchor_right = 0.047
@@ -59,7 +59,7 @@ text = "volume
 
 "
 
-[node name="VSlider" type="VSlider" parent="Control/Panel"]
+[node name="VSlider" type="VSlider" parent="Control/Panel" unique_id=1598854096]
 layout_mode = 0
 offset_left = 294.0
 offset_top = 78.0
@@ -69,17 +69,17 @@ max_value = 1.0
 step = 0.01
 value = 1.0
 
-[node name="Label" type="Label" parent="."]
+[node name="Label" type="Label" parent="." unique_id=2080016944]
 offset_right = 40.0
 offset_bottom = 23.0
 text = "hello from ui"
 
-[node name="DistrhoPlayer" type="AudioStreamPlayer" parent="."]
+[node name="DistrhoPlayer" type="AudioStreamPlayer" parent="." unique_id=909333815]
 stream = SubResource("AudioStreamDistrho_0xm2m")
 autoplay = true
 playback_type = 1
 
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=5051188]
 stream = ExtResource("2_ktt6o")
 autoplay = true
 

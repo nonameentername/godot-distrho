@@ -382,8 +382,7 @@ void DistrhoPluginServer::rpc_thread_func() {
                         response.setMinValue(parameter->get_min_value());
                         response.setMaxValue(parameter->get_max_value());
 
-                        // TODO: enumeration_values
-                        response.setEnumerationValues("");
+                        response.setEnumerationCount(parameter->get_enumeration_values().size());
                         response.setDesignation(parameter->get_designation());
 
                         response.setMidiCC(parameter->get_midi_cc());
@@ -391,6 +390,22 @@ void DistrhoPluginServer::rpc_thread_func() {
                         response.setResult(true);
                     } else {
                         response.setResult(false);
+                    }
+                });
+                break;
+            }
+
+            case GetParameterEnumRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetParameterEnumRequest, GetParameterEnumResponse>([this](auto &request, auto &response) {
+                    Ref<DistrhoParameter> parameter =
+                        DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_parameters().get(
+                            request.getParameterIndex());
+                    if (parameter.is_valid()) {
+                        String key = parameter->get_enumeration_values().keys().get(request.getIndex());
+                        response.setLabel(std::string(key.ascii()));
+
+                        int value = parameter->get_enumeration_values().values().get(request.getIndex());
+                        response.setValue(value);
                     }
                 });
                 break;

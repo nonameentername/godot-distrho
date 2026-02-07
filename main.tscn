@@ -1,14 +1,14 @@
-[gd_scene load_steps=4 format=3 uid="uid://cro7qf53jfiff"]
+[gd_scene format=3 uid="uid://cro7qf53jfiff"]
 
 [ext_resource type="Script" uid="uid://b2rh8j1eddcra" path="res://main.gd" id="1_ig7tw"]
 [ext_resource type="AudioStream" uid="uid://uc44d5w21u0q" path="res://hello.mp3" id="2_0xm2m"]
 
 [sub_resource type="AudioStreamDistrho" id="AudioStreamDistrho_0xm2m"]
 
-[node name="main" type="Node2D"]
+[node name="main" type="Node2D" unique_id=1505192296]
 script = ExtResource("1_ig7tw")
 
-[node name="Control" type="Control" parent="."]
+[node name="Control" type="Control" parent="." unique_id=2011706874]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -20,7 +20,7 @@ grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="Panel" type="Panel" parent="Control"]
+[node name="Panel" type="Panel" parent="Control" unique_id=1577449925]
 self_modulate = Color(1, 1, 1, 0.533333)
 layout_mode = 1
 anchors_preset = 15
@@ -29,16 +29,16 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Label" type="Label" parent="."]
+[node name="Label" type="Label" parent="." unique_id=2128649078]
 offset_right = 40.0
 offset_bottom = 23.0
 text = "hello from plugin"
 
-[node name="DistrhoPlayer" type="AudioStreamPlayer" parent="."]
+[node name="DistrhoPlayer" type="AudioStreamPlayer" parent="." unique_id=1835068855]
 stream = SubResource("AudioStreamDistrho_0xm2m")
 autoplay = true
 playback_type = 1
 
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=973964730]
 stream = ExtResource("2_0xm2m")
 autoplay = true

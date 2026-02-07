@@ -78,12 +78,12 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (godot_package.size() > 0) {
-        args.push_back("--main-pack");
-        args.push_back(godot_package);
-    } else if (distrho_path != NULL) {
+    if (distrho_path != NULL) {
         args.push_back("--path");
         args.push_back(distrho_path);
+    } else if (godot_package.size() > 0) {
+        args.push_back("--main-pack");
+        args.push_back(godot_package);
     }
 
     std::vector<char *> argvs;

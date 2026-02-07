@@ -222,9 +222,13 @@ bool GodotDistrhoPluginClient::get_parameter(int p_index, Parameter &parameter) 
         parameter.ranges.min = response.getMinValue();
         parameter.ranges.max = response.getMaxValue();
 
-        // TODO: enumeration values
-        // String enumeration_values = response.getEnumerationValues().cStr();
-        // parameter.enumValues = new ParameterEnumerationValue[count];
+        int enumeration_count = response.getEnumerationCount();
+        parameter.enumValues.count = enumeration_count;
+        parameter.enumValues.values = new ParameterEnumerationValue[enumeration_count];
+
+        for (int i = 0; i < enumeration_count; i++) {
+            get_parameter_enum(p_index, i, &parameter.enumValues.values[i]);
+        }
 
         parameter.designation = (ParameterDesignation)response.getDesignation();
 
@@ -233,6 +237,19 @@ bool GodotDistrhoPluginClient::get_parameter(int p_index, Parameter &parameter) 
     }
 
     return response.getResult();
+}
+
+void GodotDistrhoPluginClient::get_parameter_enum(int p_parameter_index, int p_index, ParameterEnumerationValue *parameter_enum) {
+    bool result;
+    capnp::FlatArrayMessageReader reader =
+        rpc_call<GetParameterEnumRequest, GetParameterEnumResponse>(result, [p_parameter_index, p_index](auto &req) {
+                req.setParameterIndex(p_parameter_index);
+                req.setIndex(p_index);
+                });
+
+    GetParameterEnumResponse::Reader response = reader.getRoot<GetParameterEnumResponse>();
+    parameter_enum->label = response.getLabel().cStr();
+    parameter_enum->value = response.getValue();
 }
 
 int GodotDistrhoPluginClient::get_parameter_count() {
