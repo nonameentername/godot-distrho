@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://bvq2lqeawo1pi"]
+[gd_scene format=3 uid="uid://bvq2lqeawo1pi"]
 
 [ext_resource type="Script" uid="uid://d3jjfrkbvgdy" path="res://distrho_plugin_instance.gd" id="1_7ug2e"]
 
-[node name="DistrhoPluginInstance" type="DistrhoPluginInstance"]
+[node name="DistrhoPluginInstance" type="DistrhoPluginInstance" unique_id=792634084]
 script = ExtResource("1_7ug2e")
