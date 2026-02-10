@@ -103,7 +103,17 @@ void GodotDistrhoPlugin::setParameterValue(const uint32_t index, const float val
 
 void GodotDistrhoPlugin::activate() {
     client = new GodotDistrhoPluginClient(DistrhoCommon::PLUGIN_TYPE);
-    server = new GodotDistrhoPluginServer(client->get_godot_rpc_memory());
+    server = new GodotDistrhoPluginServer(this, client->get_godot_rpc_memory());
+}
+
+void GodotDistrhoPlugin::setState(const char* key, const char* value) {
+    if (client != NULL) {
+        client->set_state_value(key, value);
+    }
+}
+
+void GodotDistrhoPlugin::initState(uint32_t p_index, State& p_state) {
+    p_state = *state->state_values[p_index];
 }
 
 void GodotDistrhoPlugin::run(const float **inputs, float **outputs, uint32_t numSamples, const MidiEvent *midiEvents,
@@ -122,12 +132,12 @@ void GodotDistrhoPlugin::run(const float **inputs, float **outputs, uint32_t num
 
 Plugin *createPlugin() {
     GodotDistrhoPluginClient *client = new GodotDistrhoPluginClient(DistrhoCommon::PLUGIN_TYPE);
-    GodotDistrhoPluginServer *server = new GodotDistrhoPluginServer(client->get_godot_rpc_memory());
+    GodotDistrhoPluginServer *server = new GodotDistrhoPluginServer(NULL, client->get_godot_rpc_memory());
     GodotDistrhoPluginState *state = new GodotDistrhoPluginState();
 
     uint32_t parameter_count = client->get_parameter_count();
-    uint32_t programCount = client->get_program_count();
-    uint32_t stateCount = client->get_state_count();
+    uint32_t program_count = client->get_program_count();
+    uint32_t state_count = client->get_state_count();
 
     state->label = client->getLabel();
     state->description = client->getDescription();
@@ -158,7 +168,14 @@ Plugin *createPlugin() {
         client->get_output_port(i, *state->output_ports[i]);
     }
 
-    GodotDistrhoPlugin *const plugin = new GodotDistrhoPlugin(state, parameter_count, programCount, stateCount);
+    state->state_values.reserve(state_count);
+
+    for (int i = 0; i < state_count; i++) {
+        state->state_values.push_back(std::make_unique<State>());
+        client->get_initial_state_value(i, *state->state_values[i]);
+    }
+
+    GodotDistrhoPlugin *const plugin = new GodotDistrhoPlugin(state, parameter_count, program_count, state_count);
 
     delete client;
     client = NULL;

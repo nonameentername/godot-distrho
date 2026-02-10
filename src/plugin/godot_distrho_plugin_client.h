@@ -51,6 +51,8 @@ public:
 
     void activate();
 
+    void initState(uint32_t index, State& state);
+
     void run(const float **inputs, float **outputs, uint32_t numSamples, const MidiEvent *input_midi,
              int input_midi_size, MidiEvent *output_midi, int &output_midi_size);
 
@@ -61,6 +63,10 @@ public:
 
     float get_parameter_value(int p_index) const;
     void set_parameter_value(int p_index, float p_value);
+
+    bool get_initial_state_value(int p_index, State &p_state);
+
+    void set_state_value(const char* p_key, const char* p_value);
 
     int get_program_count();
 

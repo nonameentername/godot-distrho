@@ -38,6 +38,8 @@ protected:
 
     void uiIdle() override;
 
+    void stateChanged(const char* key, const char* value) override;
+
     void uiFocus(bool focus, DGL_NAMESPACE::CrossingMode mode);
 
     uintptr_t getNativeWindowHandle() const noexcept;

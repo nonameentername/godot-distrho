@@ -155,6 +155,10 @@ void GodotDistrhoPluginClient::setParameterValue(const uint32_t index, const flo
 void GodotDistrhoPluginClient::activate() {
 }
 
+void GodotDistrhoPluginClient::initState(uint32_t index, State& state) {
+    get_initial_state_value(index, state);
+}
+
 void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32_t numSamples,
                                    const MidiEvent *input_midi, int input_midi_size, MidiEvent *output_midi,
                                    int &output_midi_size) {
@@ -271,6 +275,25 @@ void GodotDistrhoPluginClient::set_parameter_value(int p_index, float p_value) {
     capnp::FlatArrayMessageReader reader =
         rpc_call<SetParameterValueRequest, SetParameterValueResponse>(result, [p_index, p_value](auto &req) {
             req.setIndex(p_index);
+            req.setValue(p_value);
+        });
+}
+
+bool GodotDistrhoPluginClient::get_initial_state_value(int p_index, State &p_state) {
+    bool result;
+    capnp::FlatArrayMessageReader reader = rpc_call<GetInitialStateValueRequest, GetInitialStateValueResponse>(result);
+    GetInitialStateValueResponse::Reader response = reader.getRoot<GetInitialStateValueResponse>();
+    p_state.key = response.getKey().cStr();
+    p_state.label = response.getValue().cStr();
+
+    return result;
+}
+
+void GodotDistrhoPluginClient::set_state_value(const char* p_key, const char* p_value) {
+    bool result;
+    capnp::FlatArrayMessageReader reader =
+        rpc_call<SetStateValueRequest, SetStateValueResponse>(result, [p_key, p_value](auto &req) {
+            req.setKey(p_key);
             req.setValue(p_value);
         });
 }

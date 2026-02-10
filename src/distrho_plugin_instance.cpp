@@ -1,6 +1,7 @@
 #include "distrho_plugin_instance.h"
 #include "distrho_audio_port.h"
 #include "godot_cpp/templates/vector.hpp"
+#include "godot_cpp/variant/dictionary.hpp"
 
 using namespace godot;
 
@@ -115,6 +116,28 @@ Vector<Ref<DistrhoAudioPort>> DistrhoPluginInstance::_get_output_ports() {
                 Ref<DistrhoAudioPort> port = array[i];
                 if (port.is_valid()) {
                     result.push_back(port);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+
+Dictionary DistrhoPluginInstance::_get_state_values() {
+    Dictionary result;
+
+    if (has_method("get_state_values")) {
+        Variant v = call("get_state_values");
+        if (v.get_type() == Variant::DICTIONARY) {
+            Dictionary dictionary = v;
+
+            for (int i = 0; i < dictionary.size(); i++) {
+                String key = dictionary.keys().get(i);
+                String value = dictionary.values().get(i);
+                if (!key.is_empty() && !value.is_empty()) {
+                    result[key] = value;
                 }
             }
         }

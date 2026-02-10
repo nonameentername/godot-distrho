@@ -11,6 +11,7 @@ func _ready() -> void:
 		DistrhoPluginServer.get_build()
 	)
 	DistrhoPluginServer.parameter_changed.connect(_on_parameter_changed)
+	DistrhoPluginServer.state_changed.connect(_on_state_changed)
 	DistrhoPluginServer.midi_event.connect(_on_midi_event)
 	DistrhoPluginServer.midi_note_on.connect(_on_midi_note_on)
 	DistrhoPluginServer.midi_note_off.connect(_on_midi_note_off)
@@ -21,6 +22,10 @@ func _ready() -> void:
 func _on_parameter_changed(index: int, value: float) -> void:
 	print("Plugin: Parameter Changed: index: ", index, " value: ", value)
 	distrho_player.volume_linear = value
+
+
+func _on_state_changed(key: String, value: String) -> void:
+	print("Plugin: State Changed: key: ", key, " value: ", value)
 
 
 func _on_midi_event(midi_event: DistrhoMidiEvent) -> void:

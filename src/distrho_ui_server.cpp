@@ -153,6 +153,14 @@ void DistrhoUIServer::rpc_thread_func() {
                 break;
             }
 
+            case StateChangedRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<StateChangedRequest, StateChangedResponse>(
+                    [this](auto &request, auto &response) {
+                        call_deferred("emit_signal", "state_changed", request.getKey().cStr(), request.getValue().cStr());
+                    });
+                break;
+            }
+
             case ShutdownRequest::_capnpPrivate::typeId: {
                 handle_rpc_call<ShutdownRequest, ShutdownResponse>([this](auto &request, auto &response) {
                     // exit_thread = true;
@@ -189,6 +197,10 @@ void DistrhoUIServer::send_note_off(int channel, int note) {
 
 void DistrhoUIServer::set_parameter_value(int p_index, float p_value) {
     client->set_parameter_value(p_index, p_value);
+}
+
+void DistrhoUIServer::set_state_value(String p_key, String p_value) {
+    client->set_state(p_key, p_value);
 }
 
 Error DistrhoUIServer::start() {
@@ -239,6 +251,7 @@ void DistrhoUIServer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("send_note_off", "channel", "note"), &DistrhoUIServer::send_note_off);
 
     ClassDB::bind_method(D_METHOD("set_parameter_value", "index", "value"), &DistrhoUIServer::set_parameter_value);
+    ClassDB::bind_method(D_METHOD("set_state_value", "key", "value"), &DistrhoUIServer::set_state_value);
 
     ClassDB::bind_method(D_METHOD("set_distrho_ui", "distrho_ui"), &DistrhoUIServer::set_distrho_ui);
 
@@ -247,4 +260,6 @@ void DistrhoUIServer::_bind_methods() {
 
     ADD_SIGNAL(
         MethodInfo("parameter_changed", PropertyInfo(Variant::INT, "index"), PropertyInfo(Variant::FLOAT, "value")));
+
+    ADD_SIGNAL(MethodInfo("state_changed", PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::STRING, "value")));
 }

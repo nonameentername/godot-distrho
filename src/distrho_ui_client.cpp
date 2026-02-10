@@ -45,5 +45,14 @@ void DistrhoUIClient::send_note(int p_channel, int p_note, int p_velocity) {
         });
 }
 
+void DistrhoUIClient::set_state(String p_key, String p_value) {
+    bool result;
+    capnp::FlatArrayMessageReader reader =
+        rpc_call<SetStateRequest, SetStateResponse>(result, [p_key, p_value](auto &request) {
+            request.setKey(std::string(p_key.ascii()));
+            request.setValue(std::string(p_value.ascii()));
+        });
+}
+
 void DistrhoUIClient::DistrhoUIClient::_bind_methods() {
 }

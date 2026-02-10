@@ -14,16 +14,18 @@ START_NAMESPACE_DISTRHO
 class GodotDistrhoPluginServer {
 private:
     bool exit_thread;
+    std::thread rpc_thread;
 
     boost::process::child *plugin;
-    godot::DistrhoSharedMemoryRPC *rpc_memory;
+    godot::DistrhoSharedMemoryRPC *godot_rpc_memory;
+    Plugin *godot_distrho_plugin;
 
 protected:
     template <typename T, typename R>
     void handle_rpc_call(std::function<void(typename T::Reader &, typename R::Builder &)> handle_request);
 
 public:
-    GodotDistrhoPluginServer(godot::DistrhoSharedMemoryRPC *p_rpc_memory);
+    GodotDistrhoPluginServer(Plugin *p_godot_distrho_plugin, godot::DistrhoSharedMemoryRPC *p_rpc_memory);
 
     ~GodotDistrhoPluginServer();
 

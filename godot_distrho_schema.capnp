@@ -160,6 +160,23 @@ struct GetStateCountResponse {
   count @0 :UInt32;
 }
 
+struct GetInitialStateValueRequest {
+  index @0 :UInt32;
+}
+
+struct GetInitialStateValueResponse {
+  key @0 :Text;
+  value @1 :Text;
+}
+
+struct SetStateValueRequest {
+  key @0 :Text;
+  value @1 :Text;
+}
+
+struct SetStateValueResponse {
+}
+
 struct ShutdownRequest {
 }
 
@@ -191,6 +208,14 @@ struct ParameterChangedRequest {
 struct ParameterChangedResponse {
 }
 
+struct StateChangedRequest {
+  key @0 :Text;
+  value @1 :Text;
+}
+
+struct StateChangedResponse {
+}
+
 # GodotDistrhoUIServer (distrho)
 
 struct EditParameterRequest {
@@ -216,4 +241,24 @@ struct SendNoteRequest {
 }
 
 struct SendNoteResponse {
+}
+
+struct SetStateRequest {
+  key @0 :Text;
+  value @1 :Text;
+}
+
+struct SetStateResponse {
+  result @0 :Bool;
+}
+
+# GodotDistrhoPluginServer (distrho)
+
+struct UpdateStateValueRequest {
+  key @0 :Text;
+  value @1 :Text;
+}
+
+struct UpdateStateValueResponse {
+  result @0 :Bool;
 }

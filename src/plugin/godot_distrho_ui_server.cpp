@@ -76,6 +76,13 @@ void GodotDistrhoUIServer::rpc_thread_func() {
                         });
                         break;
                     }
+                    case SetStateRequest::_capnpPrivate::typeId: {
+                        handle_rpc_call<SetStateRequest, SetStateResponse>(
+                            [this](auto &request, auto &response) {
+                                godot_distrho_ui->setState(request.getKey().cStr(), request.getValue().cStr());
+                            });
+                        break;
+                    }
                     default: {
                         printf("Unknown request_id: %ld\n", godot_rpc_memory->buffer->request_id);
                         break;
