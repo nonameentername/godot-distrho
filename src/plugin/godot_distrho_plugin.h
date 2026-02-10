@@ -8,6 +8,7 @@
 #include "godot_distrho_plugin_server.h"
 #include <boost/process.hpp>
 
+#include <memory>
 #include <string>
 
 START_NAMESPACE_DISTRHO
@@ -24,6 +25,7 @@ public:
     std::vector<std::unique_ptr<Parameter>> parameters;
     std::vector<std::unique_ptr<AudioPort>> input_ports;
     std::vector<std::unique_ptr<AudioPort>> output_ports;
+    std::vector<std::unique_ptr<State>> state_values;
 };
 
 class GodotDistrhoPlugin : public Plugin {
@@ -59,6 +61,10 @@ protected:
     float getParameterValue(const uint32_t index) const override;
 
     void setParameterValue(const uint32_t index, const float value) override;
+
+    void setState(const char* key, const char* value) override;
+
+    void initState(uint32_t p_index, State& p_state) override;
 
     void activate() override;
 

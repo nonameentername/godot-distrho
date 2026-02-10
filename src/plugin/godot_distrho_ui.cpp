@@ -48,6 +48,12 @@ void GodotDistrhoUI::uiIdle() {
 	}
 }
 
+void GodotDistrhoUI::stateChanged(const char* key, const char* value) {
+    if (client != NULL) {
+        client->state_changed(key, value);
+    }
+}
+
 void GodotDistrhoUI::uiFocus(bool, DGL_NAMESPACE::CrossingMode) {
 }
 

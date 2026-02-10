@@ -7,6 +7,7 @@
 #include "distrho_config.h"
 #include "distrho_launcher.h"
 #include "distrho_midi_event.h"
+#include "distrho_plugin_client.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
@@ -45,7 +46,7 @@ private:
     DistrhoSharedMemoryAudio *audio_memory;
     DistrhoSharedMemoryRPC *rpc_memory;
     DistrhoSharedMemoryRPC *godot_rpc_memory;
-    // DistrhoPluginClient *client;
+    DistrhoPluginClient *client;
 
     float temp_buffer[BUFFER_FRAME_SIZE];
 
@@ -73,6 +74,7 @@ private:
     std::mutex midi_output_mutex;
 
     Vector<float> parameters;
+    Dictionary state_values;
 
 protected:
     static DistrhoPluginServer *singleton;
@@ -103,6 +105,8 @@ public:
 
     float get_parameter_value(int p_index);
     void set_parameter_value(int p_index, float p_value);
+
+    void update_state_value(String p_key, String p_value);
 
     void start_buffer_processing();
     uint32_t get_frame_offset_for_event(uint64_t p_event_time_usec);

@@ -17,13 +17,18 @@
 <https://github.com/nonameentername/godot-distrho>
     a lv2:SimulatorPlugin, lv2:Plugin, doap:Project ;
 
-    lv2:extensionData opts:interface ;
+    lv2:extensionData opts:interface ,
+                      <http://lv2plug.in/ns/ext/state#interface> ,
+                      <http://lv2plug.in/ns/ext/worker#interface> ;
 
     lv2:optionalFeature <http://lv2plug.in/ns/lv2core#hardRTCapable> ,
-                        <http://lv2plug.in/ns/ext/buf-size#boundedBlockLength> ;
+                        <http://lv2plug.in/ns/ext/buf-size#boundedBlockLength> ,
+                        <http://lv2plug.in/ns/ext/state#mapPath> ,
+                        <http://lv2plug.in/ns/ext/state#freePath> ;
 
     lv2:requiredFeature opts:options ,
-                        <http://lv2plug.in/ns/ext/urid#map> ;
+                        <http://lv2plug.in/ns/ext/urid#map> ,
+                        <http://lv2plug.in/ns/ext/worker#schedule> ;
 
     opts:supportedOption <http://lv2plug.in/ns/ext/buf-size#nominalBlockLength> ,
                          <http://lv2plug.in/ns/ext/buf-size#maxBlockLength> ,
@@ -72,6 +77,7 @@
         lv2:symbol "lv2_events_in" ;
         rsz:minimumSize 2048 ;
         atom:bufferType atom:Sequence ;
+        atom:supports atom:String ;
         atom:supports midi:MidiEvent ;
     ] ;
 
@@ -82,6 +88,7 @@
         lv2:symbol "lv2_events_out" ;
         rsz:minimumSize 2048 ;
         atom:bufferType atom:Sequence ;
+        atom:supports atom:String ;
         atom:supports midi:MidiEvent ;
     ] ;
 

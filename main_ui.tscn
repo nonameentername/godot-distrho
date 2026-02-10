@@ -69,6 +69,16 @@ max_value = 1.0
 step = 0.01
 value = 1.0
 
+[node name="CheckButton" type="CheckButton" parent="Control/Panel" unique_id=484294436]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.057000004
+anchor_bottom = 0.094000004
+offset_left = 288.0
+offset_top = 252.0
+offset_right = 266.336
+offset_bottom = 215.088
+
 [node name="Label" type="Label" parent="." unique_id=2080016944]
 offset_right = 40.0
 offset_bottom = 23.0
@@ -86,3 +96,4 @@ autoplay = true
 [connection signal="pressed" from="Control/Panel/NoteOnButton" to="." method="_on_note_on_button_pressed"]
 [connection signal="pressed" from="Control/Panel/NoteOffButton" to="." method="_on_note_off_button_pressed"]
 [connection signal="value_changed" from="Control/Panel/VSlider" to="." method="_on_v_slider_value_changed"]
+[connection signal="toggled" from="Control/Panel/CheckButton" to="." method="_on_check_button_toggled"]

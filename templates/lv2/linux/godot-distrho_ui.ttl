@@ -7,7 +7,10 @@
                       ui:idleInterface ,
                       ui:showInterface ;
 
-    lv2:optionalFeature ui:requestValue ;
+    lv2:optionalFeature ui:noUserResize ,
+                        ui:parent ,
+                        ui:touch ,
+                        ui:requestValue ;
 
     lv2:requiredFeature opts:options ,
                         ui:idleInterface ,

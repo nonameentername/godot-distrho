@@ -91,3 +91,12 @@ func get_output_ports() -> Array:
 	]
 
 	return ports.map(DistrhoPluginServer.create_audio_port)
+
+
+func get_state_values() -> Dictionary:
+	var midi_keys = {}
+	
+	for i in range(0, 88):
+		midi_keys[str(i)] = "false"
+
+	return midi_keys

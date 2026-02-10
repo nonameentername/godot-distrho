@@ -60,6 +60,7 @@ public:
     void send_note_off(int channel, int note);
 
     void set_parameter_value(int p_index, float p_value);
+    void set_state_value(String p_key, String p_value);
 
     template <typename T, typename R>
     void handle_rpc_call(std::function<void(typename T::Reader &, typename R::Builder &)> handle_request);

@@ -98,6 +98,15 @@ void GodotDistrhoUIClient::parameter_changed(int p_index, float p_value) {
         });
 }
 
+void GodotDistrhoUIClient::state_changed(std::string p_key, std::string p_value) {
+    bool result;
+    capnp::FlatArrayMessageReader reader =
+        rpc_call<StateChangedRequest, StateChangedResponse>(result, [p_key, p_value](auto &req) {
+            req.setKey(p_key);
+            req.setValue(p_value);
+        });
+}
+
 bool GodotDistrhoUIClient::shutdown() {
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<ShutdownRequest, ShutdownResponse>(result);

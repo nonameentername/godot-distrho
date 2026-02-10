@@ -37,6 +37,8 @@ public:
 
     void parameter_changed(int p_index, float p_value);
 
+    void state_changed(std::string p_index, std::string p_value);
+
     bool shutdown();
 
     godot::DistrhoSharedMemoryRPC *get_godot_rpc_memory();

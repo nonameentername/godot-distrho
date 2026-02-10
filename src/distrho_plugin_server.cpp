@@ -6,6 +6,7 @@
 #include "distrho_launcher.h"
 #include "distrho_midi_event.h"
 #include "distrho_parameter.h"
+#include "distrho_plugin_client.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_plugin_server_node.h"
 #include "distrho_shared_memory_audio.h"
@@ -97,6 +98,8 @@ DistrhoPluginServer::DistrhoPluginServer() {
             output_channels.write[channel] = new DistrhoCircularBuffer();
         }
 
+        client = new DistrhoPluginClient(godot_rpc_memory);
+
         call_deferred("initialize");
     }
 }
@@ -111,6 +114,10 @@ DistrhoPluginServer::~DistrhoPluginServer() {
 
     for (int channel = 0; channel < output_channels.size(); channel++) {
         delete output_channels[channel];
+    }
+
+    if (is_plugin) {
+        delete client;
     }
 
     // delete client;
@@ -426,6 +433,27 @@ void DistrhoPluginServer::rpc_thread_func() {
                 break;
             }
 
+            case GetInitialStateValueRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetInitialStateValueRequest, GetInitialStateValueResponse>(
+                    [this](auto &request, auto &response) {
+                        String key = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_state_values().keys().get(request.getIndex());
+                        response.setKey(std::string(key.ascii()));
+
+                        String value = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_state_values().values().get(request.getIndex());
+                        response.setValue(std::string(value.ascii()));
+                    });
+                break;
+            }
+
+            case SetStateValueRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<SetStateValueRequest, SetStateValueResponse>(
+                    [this](auto &request, auto &response) {
+                        state_values.set(request.getKey().cStr(), request.getValue().cStr());
+                        call_deferred("emit_signal", "state_changed", request.getKey().cStr(), request.getValue().cStr());
+                    });
+                break;
+            }
+
             case GetParameterCountRequest::_capnpPrivate::typeId: {
                 handle_rpc_call<GetParameterCountRequest, GetParameterCountResponse>(
                     [this](auto &request, auto &response) {
@@ -443,7 +471,9 @@ void DistrhoPluginServer::rpc_thread_func() {
 
             case GetStateCountRequest::_capnpPrivate::typeId: {
                 handle_rpc_call<GetStateCountRequest, GetStateCountResponse>(
-                    [this](auto &request, auto &response) { response.setCount(0); });
+                    [this](auto &request, auto &response) { response.setCount(
+                        DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_state_values().size());
+                    });
                 break;
             }
 
@@ -645,6 +675,13 @@ float DistrhoPluginServer::get_parameter_value(int p_index) {
 
 void DistrhoPluginServer::set_parameter_value(int p_index, float p_value) {
     parameters.ptrw()[p_index] = p_value;
+}
+
+
+void DistrhoPluginServer::update_state_value(String p_key, String p_value) {
+    if (client != NULL) {
+        client->update_state_value(p_key, p_value);
+    }
 }
 
 void DistrhoPluginServer::start_buffer_processing() {
@@ -889,11 +926,15 @@ void DistrhoPluginServer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_config"), &DistrhoPluginServer::get_config);
     ClassDB::bind_method(D_METHOD("set_distrho_plugin", "distrho_plugin"), &DistrhoPluginServer::set_distrho_plugin);
 
+    ClassDB::bind_method(D_METHOD("update_state_value", "key", "value"), &DistrhoPluginServer::update_state_value);
+
     ClassDB::bind_method(D_METHOD("get_version"), &DistrhoPluginServer::get_version);
     ClassDB::bind_method(D_METHOD("get_build"), &DistrhoPluginServer::get_build);
 
     ADD_SIGNAL(
         MethodInfo("parameter_changed", PropertyInfo(Variant::INT, "index"), PropertyInfo(Variant::FLOAT, "value")));
+
+    ADD_SIGNAL(MethodInfo("state_changed", PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::STRING, "value")));
 
     ADD_SIGNAL(MethodInfo("midi_event",
                           PropertyInfo(Variant::OBJECT, "event", PROPERTY_HINT_RESOURCE_TYPE, "DistrhoMidiEvent")));
