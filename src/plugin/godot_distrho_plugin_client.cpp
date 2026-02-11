@@ -281,10 +281,13 @@ void GodotDistrhoPluginClient::set_parameter_value(int p_index, float p_value) {
 
 bool GodotDistrhoPluginClient::get_initial_state_value(int p_index, State &p_state) {
     bool result;
-    capnp::FlatArrayMessageReader reader = rpc_call<GetInitialStateValueRequest, GetInitialStateValueResponse>(result);
+    capnp::FlatArrayMessageReader reader = rpc_call<GetInitialStateValueRequest, GetInitialStateValueResponse>(result, [p_index](auto &req) {
+            req.setIndex(p_index);
+        });
+
     GetInitialStateValueResponse::Reader response = reader.getRoot<GetInitialStateValueResponse>();
     p_state.key = response.getKey().cStr();
-    p_state.label = response.getValue().cStr();
+    p_state.defaultValue = response.getValue().cStr();
 
     return result;
 }

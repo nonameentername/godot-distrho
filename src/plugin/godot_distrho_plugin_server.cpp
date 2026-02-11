@@ -48,7 +48,7 @@ void GodotDistrhoPluginServer::rpc_thread_func() {
             scoped_lock<interprocess_mutex> shared_memory_lock(godot_rpc_memory->buffer->mutex);
 
             if (godot_rpc_memory->buffer->ready) {
-                ptime timeout = microsec_clock::universal_time() + milliseconds(first_wait ? 1000 : 100);
+                ptime timeout = microsec_clock::universal_time() + milliseconds(first_wait ? 1000 : 10);
                 bool result = godot_rpc_memory->buffer->input_condition.timed_wait(shared_memory_lock, timeout);
                 first_wait = false;
 
