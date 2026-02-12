@@ -63,6 +63,7 @@ private:
     Ref<Mutex> audio_mutex;
 
     Ref<Thread> rpc_thread;
+    Ref<Thread> client_thread;
 
     Vector<DistrhoCircularBuffer *> input_channels;
     Vector<DistrhoCircularBuffer *> output_channels;
@@ -72,6 +73,9 @@ private:
 
     std::queue<MidiEvent> midi_output_queue;
     std::mutex midi_output_mutex;
+
+    std::queue<std::pair<String, String>> state_queue;
+    std::mutex state_mutex;
 
     Vector<float> parameters;
     Dictionary state_values;
@@ -90,6 +94,7 @@ public:
     void initialize();
     void audio_thread_func();
     void rpc_thread_func();
+    void client_thread_func();
 
     void process();
     void emit_midi_event(MidiEvent &p_midi_event);

@@ -113,7 +113,8 @@ void GodotDistrhoPlugin::setState(const char* key, const char* value) {
 }
 
 void GodotDistrhoPlugin::initState(uint32_t p_index, State& p_state) {
-    p_state = *state->state_values[p_index];
+    p_state.key = state->state_values[p_index]->key;
+    p_state.defaultValue = state->state_values[p_index]->label;
 }
 
 void GodotDistrhoPlugin::run(const float **inputs, float **outputs, uint32_t numSamples, const MidiEvent *midiEvents,

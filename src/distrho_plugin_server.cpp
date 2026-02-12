@@ -31,6 +31,7 @@
 #include <godot_cpp/core/mutex_lock.hpp>
 #include <kj/string.h>
 #include <unistd.h>
+#include <vector>
 
 using namespace godot;
 using namespace boost::interprocess;
@@ -498,6 +499,27 @@ void DistrhoPluginServer::rpc_thread_func() {
     delete rpc_memory;
 }
 
+void DistrhoPluginServer::client_thread_func() {
+    while (!exit_thread) {
+        if (client != NULL) {
+            std::vector<std::pair<String, String>> states;
+
+            {
+                std::lock_guard<std::mutex> lock(state_mutex);
+
+                while (!state_queue.empty()) {
+                    states.push_back(state_queue.front());
+                    state_queue.pop();
+                }
+            }
+
+            for (int i = 0; i < states.size(); i++) {
+                client->update_state_value(states[i].first, states[i].second);
+            }
+        }
+    }
+}
+
 void DistrhoPluginServer::process() {
     std::lock_guard<std::mutex> lock(midi_input_mutex);
 
@@ -677,11 +699,10 @@ void DistrhoPluginServer::set_parameter_value(int p_index, float p_value) {
     parameters.ptrw()[p_index] = p_value;
 }
 
-
 void DistrhoPluginServer::update_state_value(String p_key, String p_value) {
-    if (client != NULL) {
-        client->update_state_value(p_key, p_value);
-    }
+    std::lock_guard<std::mutex> lock(state_mutex);
+
+    state_queue.push({p_key, p_value}); 
 }
 
 void DistrhoPluginServer::start_buffer_processing() {
@@ -812,6 +833,9 @@ Error DistrhoPluginServer::start() {
 
         rpc_thread.instantiate();
         rpc_thread->start(callable_mp(this, &DistrhoPluginServer::rpc_thread_func), Thread::PRIORITY_NORMAL);
+
+        client_thread.instantiate();
+        client_thread->start(callable_mp(this, &DistrhoPluginServer::client_thread_func), Thread::PRIORITY_NORMAL);
     }
     return OK;
 }
@@ -837,6 +861,7 @@ void DistrhoPluginServer::finish() {
             audio_thread->wait_to_finish();
         }
         rpc_thread->wait_to_finish();
+        client_thread->wait_to_finish();
     }
 }
 
