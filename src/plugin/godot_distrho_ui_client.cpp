@@ -13,15 +13,17 @@ using namespace boost::posix_time;
 START_NAMESPACE_DISTRHO
 
 GodotDistrhoUIClient::GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type, int64_t parent_window_id) {
-    rpc_memory.initialize("DISTRHO_SHARED_MEMORY_RPC");
-    godot_rpc_memory.initialize("GODOT_SHARED_MEMORY_RPC");
+    int memory_size = rpc_memory.get_memory_size() + godot_rpc_memory.get_memory_size();
+
+    shared_memory.initialize("", memory_size);
+    rpc_memory.initialize(&shared_memory, godot::RPC_BUFFER_NAME);
+    godot_rpc_memory.initialize(&shared_memory, godot::GODOT_RPC_BUFFER_NAME);
 
 #if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
     boost::process::environment env = boost::this_process::environment();
 
     env["DISTRHO_MODULE_TYPE"] = std::to_string(p_type);
-    env["DISTRHO_SHARED_MEMORY_RPC"] = rpc_memory.shared_memory_name.c_str();
-    env["GODOT_SHARED_MEMORY_RPC"] = godot_rpc_memory.shared_memory_name.c_str();
+    env["DISTRHO_SHARED_MEMORY_UUID"] = shared_memory.shared_memory_name.c_str();
     if (parent_window_id > 0) {
         env["GODOT_PARENT_WINDOW_ID"] = std::to_string(parent_window_id);
     }

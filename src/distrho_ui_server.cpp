@@ -42,20 +42,20 @@ DistrhoUIServer::DistrhoUIServer() {
     distrho_ui = memnew(DistrhoUIInstance);
 
     if (is_ui) {
-        const char *rpc_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_RPC");
-        if (rpc_shared_memory == NULL) {
-            rpc_shared_memory = "";
+        const char *shared_memory_uuid = std::getenv("DISTRHO_SHARED_MEMORY_UUID");
+        if (shared_memory_uuid == NULL) {
+            shared_memory_uuid = "";
         }
-        rpc_memory = new DistrhoSharedMemoryRPC();
-        rpc_memory->initialize("DISTRHO_SHARED_MEMORY_RPC", rpc_shared_memory);
 
-        const char *godot_rpc_shared_memory = std::getenv("GODOT_SHARED_MEMORY_RPC");
-        if (godot_rpc_shared_memory == NULL) {
-            godot_rpc_shared_memory = "";
-        }
+        shared_memory = new DistrhoSharedMemory();
+        rpc_memory = new DistrhoSharedMemoryRPC();
         godot_rpc_memory = new DistrhoSharedMemoryRPC();
-        godot_rpc_memory->initialize("GODOT_SHARED_MEMORY_RPC", godot_rpc_shared_memory);
-        // godot_rpc_memory->buffer->is_alive = true;
+
+        int memory_size = rpc_memory->get_memory_size() + godot_rpc_memory->get_memory_size();
+
+        shared_memory->initialize(shared_memory_uuid, memory_size);
+        rpc_memory->initialize(shared_memory, RPC_BUFFER_NAME);
+        godot_rpc_memory->initialize(shared_memory, GODOT_RPC_BUFFER_NAME);
 
         client = new DistrhoUIClient(godot_rpc_memory);
 

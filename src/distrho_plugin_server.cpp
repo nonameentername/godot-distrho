@@ -70,24 +70,13 @@ DistrhoPluginServer::DistrhoPluginServer() {
         rpc_memory = new DistrhoSharedMemoryRPC();
         godot_rpc_memory = new DistrhoSharedMemoryRPC();
 
-        int memory_size = audio_memory->get_memory_size();
+        int memory_size = audio_memory->get_memory_size() + rpc_memory->get_memory_size() + godot_rpc_memory->get_memory_size();
 
         shared_memory->initialize(shared_memory_uuid, memory_size);
         audio_memory->initialize(shared_memory, 0, 0);
 
-        const char *rpc_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_RPC");
-        if (rpc_shared_memory == NULL) {
-            rpc_shared_memory = "";
-        }
-        rpc_memory->initialize("DISTRHO_SHARED_MEMORY_RPC", rpc_shared_memory);
-
-        const char *godot_rpc_shared_memory = std::getenv("GODOT_SHARED_MEMORY_RPC");
-        if (godot_rpc_shared_memory == NULL) {
-            godot_rpc_shared_memory = "";
-        }
-        godot_rpc_memory->initialize("GODOT_SHARED_MEMORY_RPC", godot_rpc_shared_memory);
-
-        // client = new DistrhoPluginClient(godot_rpc_memory);
+        rpc_memory->initialize(shared_memory, RPC_BUFFER_NAME);
+        godot_rpc_memory->initialize(shared_memory, GODOT_RPC_BUFFER_NAME);
 
         // TODO: use the correct number of channels instad of num_channels (16)
         for (int i = 0; i < num_channels; ++i) {

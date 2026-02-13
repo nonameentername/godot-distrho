@@ -15,6 +15,7 @@ class GodotDistrhoUIClient {
 private:
     int64_t native_window_id = 0;
     boost::process::child *plugin;
+    mutable godot::DistrhoSharedMemory shared_memory;
     mutable godot::DistrhoSharedMemoryRPC rpc_memory;
     mutable godot::DistrhoSharedMemoryRPC godot_rpc_memory;
 

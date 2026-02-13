@@ -1,5 +1,6 @@
 #include "godot_distrho_plugin_client.h"
 #include "distrho_common.h"
+#include "distrho_shared_memory_rpc.h"
 #include "godot_distrho_schema.capnp.h"
 #include "godot_distrho_utils.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -13,21 +14,18 @@ using namespace boost::posix_time;
 START_NAMESPACE_DISTRHO
 
 GodotDistrhoPluginClient::GodotDistrhoPluginClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type) {
-    int memory_size = audio_memory.get_memory_size();
-    shared_memory.initialize("", memory_size);
+    int memory_size = audio_memory.get_memory_size() + rpc_memory.get_memory_size() + godot_rpc_memory.get_memory_size();
 
+    shared_memory.initialize("", memory_size);
     audio_memory.initialize(&shared_memory, DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
-    rpc_memory.initialize("DISTRHO_SHARED_MEMORY_RPC");
-    godot_rpc_memory.initialize("GODOT_SHARED_MEMORY_RPC");
+    rpc_memory.initialize(&shared_memory, godot::RPC_BUFFER_NAME);
+    godot_rpc_memory.initialize(&shared_memory, godot::GODOT_RPC_BUFFER_NAME);
 
 #if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
     boost::process::environment env = boost::this_process::environment();
 
     env["DISTRHO_MODULE_TYPE"] = std::to_string(p_type);
     env["DISTRHO_SHARED_MEMORY_UUID"] = shared_memory.shared_memory_name.c_str();
-    env["DISTRHO_SHARED_MEMORY_RPC"] = rpc_memory.shared_memory_name.c_str();
-    env["GODOT_SHARED_MEMORY_RPC"] = godot_rpc_memory.shared_memory_name.c_str();
-
 #if defined(_WIN32)
     plugin = GodotDistrhoUtils::launch_process("godot-plugin.exe", env);
 #else

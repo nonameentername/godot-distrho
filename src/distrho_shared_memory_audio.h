@@ -12,9 +12,6 @@
 
 #include "distrho_shared_memory.h"
 
-#ifdef _WIN32
-#include <boost/interprocess/managed_windows_shared_memory.hpp>
-#endif
 
 namespace godot {
 
@@ -58,12 +55,6 @@ struct AudioBuffer {
 class DistrhoSharedMemoryAudio {
 
 private:
-#ifdef _WIN32
-    std::unique_ptr<boost::interprocess::managed_windows_shared_memory> shared_memory;
-#else
-    std::unique_ptr<boost::interprocess::managed_shared_memory> shared_memory;
-#endif
-
 public:
     AudioBuffer *buffer;
 

@@ -12,12 +12,13 @@
 
 #include <capnp/message.h>
 #include <capnp/serialize-packed.h>
+#include "distrho_shared_memory.h"
 
-#ifdef _WIN32
-#include <boost/interprocess/managed_windows_shared_memory.hpp>
-#endif
 
 namespace godot {
+
+const std::string RPC_BUFFER_NAME = "RPCBuffer";
+const std::string GODOT_RPC_BUFFER_NAME = "GodotRPCBuffer";
 
 const int RPC_BUFFER_SIZE = 4096;
 const int SHARED_MEMORY_SIZE = 65536;
@@ -40,25 +41,16 @@ class DistrhoSharedMemoryRPC {
 
 private:
     std::string name;
-#ifdef _WIN32
-    std::unique_ptr<boost::interprocess::managed_windows_shared_memory> shared_memory;
-#else
-    std::unique_ptr<boost::interprocess::managed_shared_memory> shared_memory;
-#endif
-
 
 public:
     RPCBuffer *buffer;
-
-    std::string shared_memory_name;
-    bool is_host;
 
 protected:
 public:
     DistrhoSharedMemoryRPC();
     ~DistrhoSharedMemoryRPC();
 
-    void initialize(std::string p_name, std::string p_shared_memory_name = "");
+    void initialize(DistrhoSharedMemory *p_distrho_shared_memory, std::string p_name);
 
     void write_request(capnp::MallocMessageBuilder *builder, uint64_t request_id);
     capnp::FlatArrayMessageReader read_request();
@@ -66,9 +58,7 @@ public:
     void write_reponse(capnp::MallocMessageBuilder *builder);
     capnp::FlatArrayMessageReader read_reponse();
 
-    std::string get_shared_memory_name();
-
-    bool get_is_host();
+    int get_memory_size();
 };
 
 } // namespace godot

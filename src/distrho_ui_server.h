@@ -31,6 +31,7 @@ private:
     DistrhoUIInstance *distrho_ui;
     DistrhoLauncher *distrho_launcher;
 
+    DistrhoSharedMemory *shared_memory;
     DistrhoSharedMemoryRPC *rpc_memory;
     DistrhoSharedMemoryRPC *godot_rpc_memory;
     DistrhoUIClient *client;
