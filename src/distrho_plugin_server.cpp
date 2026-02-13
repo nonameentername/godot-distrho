@@ -9,6 +9,7 @@
 #include "distrho_plugin_client.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_plugin_server_node.h"
+#include "distrho_shared_memory.h"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
 // #include "distrho_plugin_client.h"
@@ -59,25 +60,31 @@ DistrhoPluginServer::DistrhoPluginServer() {
     distrho_plugin = memnew(DistrhoPluginInstance);
 
     if (is_plugin) {
-        const char *audio_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_AUDIO");
-        if (audio_shared_memory == NULL) {
-            audio_shared_memory = "";
+        const char *shared_memory_uuid = std::getenv("DISTRHO_SHARED_MEMORY_UUID");
+        if (shared_memory_uuid == NULL) {
+            shared_memory_uuid = "";
         }
+
+        shared_memory = new DistrhoSharedMemory();
         audio_memory = new DistrhoSharedMemoryAudio();
-        audio_memory->initialize(0, 0, audio_shared_memory);
+        rpc_memory = new DistrhoSharedMemoryRPC();
+        godot_rpc_memory = new DistrhoSharedMemoryRPC();
+
+        int memory_size = audio_memory->get_memory_size();
+
+        shared_memory->initialize(shared_memory_uuid, memory_size);
+        audio_memory->initialize(shared_memory, 0, 0);
 
         const char *rpc_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_RPC");
         if (rpc_shared_memory == NULL) {
             rpc_shared_memory = "";
         }
-        rpc_memory = new DistrhoSharedMemoryRPC();
         rpc_memory->initialize("DISTRHO_SHARED_MEMORY_RPC", rpc_shared_memory);
 
         const char *godot_rpc_shared_memory = std::getenv("GODOT_SHARED_MEMORY_RPC");
         if (godot_rpc_shared_memory == NULL) {
             godot_rpc_shared_memory = "";
         }
-        godot_rpc_memory = new DistrhoSharedMemoryRPC();
         godot_rpc_memory->initialize("GODOT_SHARED_MEMORY_RPC", godot_rpc_shared_memory);
 
         // client = new DistrhoPluginClient(godot_rpc_memory);
@@ -119,6 +126,7 @@ DistrhoPluginServer::~DistrhoPluginServer() {
 
     if (is_plugin) {
         delete client;
+        delete shared_memory;
     }
 
     // delete client;

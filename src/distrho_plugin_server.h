@@ -43,6 +43,7 @@ private:
     DistrhoPluginInstance *distrho_plugin;
     DistrhoLauncher *distrho_launcher;
 
+    DistrhoSharedMemory *shared_memory;
     DistrhoSharedMemoryAudio *audio_memory;
     DistrhoSharedMemoryRPC *rpc_memory;
     DistrhoSharedMemoryRPC *godot_rpc_memory;
