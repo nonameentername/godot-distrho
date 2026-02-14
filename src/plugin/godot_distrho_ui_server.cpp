@@ -12,16 +12,19 @@ using namespace boost::posix_time;
 
 START_NAMESPACE_DISTRHO
 
-GodotDistrhoUIServer::GodotDistrhoUIServer(UI *p_godot_distrho_ui, godot::DistrhoSharedMemoryRPC *p_godot_rpc_memory) {
+GodotDistrhoUIServer::GodotDistrhoUIServer(UI *p_godot_distrho_ui, godot::DistrhoSharedMemoryRPC *p_godot_rpc_memory, godot::DistrhoSharedMemoryRegion *p_shared_memory_region) {
     exit_thread = false;
     godot_distrho_ui = p_godot_distrho_ui;
     godot_rpc_memory = p_godot_rpc_memory;
+    shared_memory_region = p_shared_memory_region;
 
+    process_thread = std::thread(&GodotDistrhoUIServer::process_thread_func, this);
     rpc_thread = std::thread(&GodotDistrhoUIServer::rpc_thread_func, this);
 }
 
 GodotDistrhoUIServer::~GodotDistrhoUIServer() {
     exit_thread = true;
+    process_thread.join();
     rpc_thread.join();
 }
 
@@ -29,6 +32,18 @@ template <typename T, typename R>
 void GodotDistrhoUIServer::handle_rpc_call(
     std::function<void(typename T::Reader &, typename R::Builder &)> handle_request) {
     return DistrhoCommon::handle_rpc_call<T, R>(*godot_rpc_memory, handle_request);
+}
+
+void GodotDistrhoUIServer::process_thread_func() {
+    while(!exit_thread) {
+        for (int i = 0; i < shared_memory_region->get_parameter_count(); i++) {
+            float value = shared_memory_region->read_parameter_value(i);
+            if (parameters[i] != value) {
+                parameters[i] = value;
+                godot_distrho_ui->setParameterValue(i, value);
+            }
+        }
+    }
 }
 
 void GodotDistrhoUIServer::rpc_thread_func() {
@@ -58,14 +73,6 @@ void GodotDistrhoUIServer::rpc_thread_func() {
                         handle_rpc_call<EditParameterRequest, EditParameterResponse>(
                             [this](auto &request, auto &response) {
                                 godot_distrho_ui->editParameter(request.getIndex(), request.getStarted());
-                            });
-                        break;
-                    }
-
-                    case SetParameterValueRequest::_capnpPrivate::typeId: {
-                        handle_rpc_call<SetParameterValueRequest, SetParameterValueResponse>(
-                            [this](auto &request, auto &response) {
-                                godot_distrho_ui->setParameterValue(request.getIndex(), request.getValue());
                             });
                         break;
                     }

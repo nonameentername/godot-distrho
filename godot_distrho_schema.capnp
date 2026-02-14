@@ -122,23 +122,6 @@ struct GetParameterEnumResponse {
   value @1 :Float32;
 }
 
-struct GetParameterValueRequest {
-  index @0 :UInt32;
-}
-
-struct GetParameterValueResponse {
-  value @0 :Float32;
-}
-
-#TODO: same as GodotDistrhoUIServer.  Maybe rename?
-#struct SetParameterValueRequest {
-#  index @0 :UInt32;
-#  value @1 :Float32;
-#}
-#
-#struct SetParameterValueResponse {
-#}
-
 struct GetParameterCountRequest {
 }
 
@@ -224,14 +207,6 @@ struct EditParameterRequest {
 }
 
 struct EditParameterResponse {
-}
-
-struct SetParameterValueRequest {
-  index @0 :UInt32;
-  value @1 :Float32;
-}
-
-struct SetParameterValueResponse {
 }
 
 struct SendNoteRequest {

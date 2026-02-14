@@ -7,6 +7,7 @@
 #include "distrho_shared_memory.h"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
+#include "distrho_shared_memory_region.h"
 #include "godot_distrho_schema.capnp.h"
 #include <boost/process.hpp>
 
@@ -19,6 +20,7 @@ private:
     mutable godot::DistrhoSharedMemoryAudio audio_memory;
     mutable godot::DistrhoSharedMemoryRPC rpc_memory;
     mutable godot::DistrhoSharedMemoryRPC godot_rpc_memory;
+    mutable godot::DistrhoSharedMemoryRegion shared_memory_region;
 
 protected:
     template <typename T, typename R>

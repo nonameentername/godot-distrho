@@ -5,6 +5,7 @@
 #include "distrho_shared_memory.h"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
+#include "distrho_shared_memory_region.h"
 
 using namespace godot;
 
@@ -72,3 +73,4 @@ template <class T> T *DistrhoSharedMemory::create_buffer(const std::string &p_na
 
 template AudioBuffer* DistrhoSharedMemory::create_buffer<AudioBuffer>(const std::string &p_name);
 template RPCBuffer* DistrhoSharedMemory::create_buffer<RPCBuffer>(const std::string &p_name);
+template SharedMemoryRegion* DistrhoSharedMemory::create_buffer<SharedMemoryRegion>(const std::string &p_name);
