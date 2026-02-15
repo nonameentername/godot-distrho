@@ -9,6 +9,7 @@
 #include "distrho_plugin_client.h"
 #include "distrho_plugin_instance.h"
 #include "distrho_plugin_server_node.h"
+#include "distrho_shared_memory.h"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
 // #include "distrho_plugin_client.h"
@@ -30,6 +31,7 @@
 #include <godot_cpp/classes/mutex.hpp>
 #include <godot_cpp/core/mutex_lock.hpp>
 #include <kj/string.h>
+#include <thread>
 #include <unistd.h>
 #include <vector>
 
@@ -59,28 +61,25 @@ DistrhoPluginServer::DistrhoPluginServer() {
     distrho_plugin = memnew(DistrhoPluginInstance);
 
     if (is_plugin) {
-        const char *audio_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_AUDIO");
-        if (audio_shared_memory == NULL) {
-            audio_shared_memory = "";
+        const char *shared_memory_uuid = std::getenv("DISTRHO_SHARED_MEMORY_UUID");
+        if (shared_memory_uuid == NULL) {
+            shared_memory_uuid = "";
         }
+
+        shared_memory = new DistrhoSharedMemory();
         audio_memory = new DistrhoSharedMemoryAudio();
-        audio_memory->initialize(0, 0, audio_shared_memory);
-
-        const char *rpc_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_RPC");
-        if (rpc_shared_memory == NULL) {
-            rpc_shared_memory = "";
-        }
         rpc_memory = new DistrhoSharedMemoryRPC();
-        rpc_memory->initialize("DISTRHO_SHARED_MEMORY_RPC", rpc_shared_memory);
-
-        const char *godot_rpc_shared_memory = std::getenv("GODOT_SHARED_MEMORY_RPC");
-        if (godot_rpc_shared_memory == NULL) {
-            godot_rpc_shared_memory = "";
-        }
         godot_rpc_memory = new DistrhoSharedMemoryRPC();
-        godot_rpc_memory->initialize("GODOT_SHARED_MEMORY_RPC", godot_rpc_shared_memory);
+        shared_memory_region = new DistrhoSharedMemoryRegion();
 
-        // client = new DistrhoPluginClient(godot_rpc_memory);
+        int memory_size = audio_memory->get_memory_size() + rpc_memory->get_memory_size() + godot_rpc_memory->get_memory_size() + shared_memory_region->get_memory_size();
+
+        shared_memory->initialize(shared_memory_uuid, memory_size);
+        audio_memory->initialize(shared_memory, 0, 0);
+
+        rpc_memory->initialize(shared_memory, RPC_BUFFER_NAME);
+        godot_rpc_memory->initialize(shared_memory, GODOT_RPC_BUFFER_NAME);
+        shared_memory_region->initialize(shared_memory);
 
         // TODO: use the correct number of channels instad of num_channels (16)
         for (int i = 0; i < num_channels; ++i) {
@@ -119,6 +118,9 @@ DistrhoPluginServer::~DistrhoPluginServer() {
 
     if (is_plugin) {
         delete client;
+        delete godot_rpc_memory;
+        delete shared_memory_region;
+        delete shared_memory;
     }
 
     // delete client;
@@ -137,9 +139,11 @@ void DistrhoPluginServer::initialize() {
         distrho_server_node->set_process(true);
 
         parameters.resize(distrho_plugin->_get_parameters().size());
+        shared_memory_region->initialize_parameters(distrho_plugin->_get_parameters().size());
 
         for (int i = 0; i < distrho_plugin->_get_parameters().size(); i++) {
             parameters.set(i, distrho_plugin->_get_parameters().get(i)->get_default_value());
+            shared_memory_region->write_parameter_value(i, distrho_plugin->_get_parameters().get(i)->get_default_value());
         }
     }
 
@@ -419,22 +423,7 @@ void DistrhoPluginServer::rpc_thread_func() {
                 break;
             }
 
-            case GetParameterValueRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetParameterValueRequest, GetParameterValueResponse>(
-                    [this](auto &request, auto &response) { response.setValue(parameters.get(request.getIndex())); });
-                break;
-            }
-
-            case SetParameterValueRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<SetParameterValueRequest, SetParameterValueResponse>(
-                    [this](auto &request, auto &response) {
-                        parameters.set(request.getIndex(), request.getValue());
-                        call_deferred("emit_signal", "parameter_changed", request.getIndex(), request.getValue());
-                    });
-                break;
-            }
-
-            case GetInitialStateValueRequest::_capnpPrivate::typeId: {
+           case GetInitialStateValueRequest::_capnpPrivate::typeId: {
                 handle_rpc_call<GetInitialStateValueRequest, GetInitialStateValueResponse>(
                     [this](auto &request, auto &response) {
                         String key = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_state_values().keys().get(request.getIndex());
@@ -500,6 +489,8 @@ void DistrhoPluginServer::rpc_thread_func() {
 }
 
 void DistrhoPluginServer::client_thread_func() {
+    auto sleep_ms = std::chrono::milliseconds(16);
+
     while (!exit_thread) {
         if (client != NULL) {
             std::vector<std::pair<String, String>> states;
@@ -517,17 +508,28 @@ void DistrhoPluginServer::client_thread_func() {
                 client->update_state_value(states[i].first, states[i].second);
             }
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
     }
 }
 
 void DistrhoPluginServer::process() {
-    std::lock_guard<std::mutex> lock(midi_input_mutex);
+    {
+        std::lock_guard<std::mutex> lock(midi_input_mutex);
 
-    while (!midi_input_queue.empty()) {
-        MidiEvent midi_event = midi_input_queue.front();
-        midi_input_queue.pop();
+        while (!midi_input_queue.empty()) {
+            MidiEvent midi_event = midi_input_queue.front();
+            midi_input_queue.pop();
 
-        emit_midi_event(midi_event);
+            emit_midi_event(midi_event);
+        }
+    }
+
+    for (int i = 0; i < parameters.size(); i++) {
+        float value = shared_memory_region->read_parameter_value(i);
+        if (parameters[i] != value) {
+            parameters.ptrw()[i] = value;
+            call_deferred("emit_signal", "parameter_changed", i, value);
+        }
     }
 }
 
@@ -697,6 +699,7 @@ float DistrhoPluginServer::get_parameter_value(int p_index) {
 
 void DistrhoPluginServer::set_parameter_value(int p_index, float p_value) {
     parameters.ptrw()[p_index] = p_value;
+    shared_memory_region->write_parameter_value(p_index, p_value);
 }
 
 void DistrhoPluginServer::update_state_value(String p_key, String p_value) {

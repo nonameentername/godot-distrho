@@ -18,44 +18,10 @@ DistrhoSharedMemoryRPC::DistrhoSharedMemoryRPC() {
 }
 
 DistrhoSharedMemoryRPC::~DistrhoSharedMemoryRPC() {
-    if (is_host && !shared_memory_name.empty()) {
-#ifndef _WIN32
-        bip::shared_memory_object::remove(shared_memory_name.c_str());
-#endif
-    }
 }
 
-void DistrhoSharedMemoryRPC::initialize(std::string p_name, std::string p_shared_memory_name) {
-    if (p_shared_memory_name.length() == 0) {
-        is_host = true;
-        boost::uuids::uuid uuid = uuid_gen()();
-        shared_memory_name = boost::uuids::to_string(uuid);
-
-#if !DISTRHO_PLUGIN_ENABLE_SUBPROCESS && DEBUG
-        printf("export %s=%s\n", p_name.c_str(), shared_memory_name.c_str());
-#endif
-
-#ifdef _WIN32
-        shared_memory = std::make_unique<boost::interprocess::managed_windows_shared_memory>(
-            bip::create_only, shared_memory_name.c_str(), SHARED_MEMORY_SIZE);
-#else
-        bip::shared_memory_object::remove(shared_memory_name.c_str());
-        shared_memory = std::make_unique<boost::interprocess::managed_shared_memory>(
-            bip::create_only, shared_memory_name.c_str(), SHARED_MEMORY_SIZE);
-#endif
-
-        buffer = shared_memory->construct<RPCBuffer>("RPCBuffer")();
-    } else {
-        is_host = false;
-        shared_memory_name = p_shared_memory_name;
-
-#ifdef _WIN32
-        shared_memory = std::make_unique<bip::managed_windows_shared_memory>(bip::open_only, shared_memory_name.c_str());
-#else
-        shared_memory = std::make_unique<bip::managed_shared_memory>(bip::open_only, shared_memory_name.c_str());
-#endif
-        buffer = shared_memory->find<RPCBuffer>("RPCBuffer").first;
-    }
+void DistrhoSharedMemoryRPC::initialize(DistrhoSharedMemory *p_distrho_shared_memory, std::string p_name) {
+    buffer = p_distrho_shared_memory->create_buffer<RPCBuffer>(p_name);
 }
 
 void DistrhoSharedMemoryRPC::write_request(capnp::MallocMessageBuilder *builder, uint64_t request_id) {
@@ -105,10 +71,6 @@ capnp::FlatArrayMessageReader DistrhoSharedMemoryRPC::read_reponse() {
     return reader;
 }
 
-std::string DistrhoSharedMemoryRPC::get_shared_memory_name() {
-    return shared_memory_name;
-}
-
-bool DistrhoSharedMemoryRPC::get_is_host() {
-    return is_host;
+int DistrhoSharedMemoryRPC::get_memory_size() {
+    return SHARED_MEMORY_SIZE;
 }

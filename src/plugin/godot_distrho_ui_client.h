@@ -5,6 +5,7 @@
 #include "DistrhoPlugin.hpp"
 #include "distrho_common.h"
 #include "distrho_shared_memory_rpc.h"
+#include "distrho_shared_memory_region.h"
 #include "godot_distrho_schema.capnp.h"
 #include <boost/process.hpp>
 #include <cstdint>
@@ -15,8 +16,10 @@ class GodotDistrhoUIClient {
 private:
     int64_t native_window_id = 0;
     boost::process::child *plugin;
+    mutable godot::DistrhoSharedMemory shared_memory;
     mutable godot::DistrhoSharedMemoryRPC rpc_memory;
     mutable godot::DistrhoSharedMemoryRPC godot_rpc_memory;
+    mutable godot::DistrhoSharedMemoryRegion shared_memory_region;
 
 protected:
     template <typename T, typename R>
@@ -42,6 +45,7 @@ public:
     bool shutdown();
 
     godot::DistrhoSharedMemoryRPC *get_godot_rpc_memory();
+    godot::DistrhoSharedMemoryRegion *get_shared_memory_region();
 };
 
 END_NAMESPACE_DISTRHO

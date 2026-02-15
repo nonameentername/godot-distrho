@@ -1,6 +1,8 @@
 #include "distrho_ui_server.h"
 #include "distrho_common.h"
 #include "distrho_launcher.h"
+#include "distrho_plugin_server.h"
+#include "distrho_shared_memory_region.h"
 #include "distrho_shared_memory_rpc.h"
 #include "distrho_ui_client.h"
 #include "distrho_ui_instance.h"
@@ -42,22 +44,24 @@ DistrhoUIServer::DistrhoUIServer() {
     distrho_ui = memnew(DistrhoUIInstance);
 
     if (is_ui) {
-        const char *rpc_shared_memory = std::getenv("DISTRHO_SHARED_MEMORY_RPC");
-        if (rpc_shared_memory == NULL) {
-            rpc_shared_memory = "";
+        const char *shared_memory_uuid = std::getenv("DISTRHO_SHARED_MEMORY_UUID");
+        if (shared_memory_uuid == NULL) {
+            shared_memory_uuid = "";
         }
+
+        shared_memory = new DistrhoSharedMemory();
         rpc_memory = new DistrhoSharedMemoryRPC();
-        rpc_memory->initialize("DISTRHO_SHARED_MEMORY_RPC", rpc_shared_memory);
-
-        const char *godot_rpc_shared_memory = std::getenv("GODOT_SHARED_MEMORY_RPC");
-        if (godot_rpc_shared_memory == NULL) {
-            godot_rpc_shared_memory = "";
-        }
         godot_rpc_memory = new DistrhoSharedMemoryRPC();
-        godot_rpc_memory->initialize("GODOT_SHARED_MEMORY_RPC", godot_rpc_shared_memory);
-        // godot_rpc_memory->buffer->is_alive = true;
+        shared_memory_region = new DistrhoSharedMemoryRegion();
 
-        client = new DistrhoUIClient(godot_rpc_memory);
+        int memory_size = rpc_memory->get_memory_size() + godot_rpc_memory->get_memory_size();
+
+        shared_memory->initialize(shared_memory_uuid, memory_size);
+        rpc_memory->initialize(shared_memory, RPC_BUFFER_NAME);
+        godot_rpc_memory->initialize(shared_memory, GODOT_RPC_BUFFER_NAME);
+        shared_memory_region->initialize(shared_memory);
+
+        client = new DistrhoUIClient(godot_rpc_memory, shared_memory_region);
 
         call_deferred("initialize");
     }
@@ -74,8 +78,10 @@ DistrhoUIServer::~DistrhoUIServer() {
         rpc_thread->wait_to_finish();
     }
 
+    //TODO: delete missing for these?
     rpc_memory = nullptr;
     godot_rpc_memory = nullptr;
+    shared_memory_region = nullptr;
 
     if (is_ui) {
         delete client;
@@ -95,6 +101,15 @@ void DistrhoUIServer::initialize() {
         SceneTree *tree = Object::cast_to<SceneTree>(Engine::get_singleton()->get_main_loop());
         tree->get_root()->add_child(distrho_server_node);
         distrho_server_node->set_process(true);
+
+        Vector<Ref<DistrhoParameter>> default_parameters = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_parameters();
+        parameters.resize(default_parameters.size());
+        shared_memory_region->initialize_parameters(default_parameters.size());
+
+        for (int i = 0; i < default_parameters.size(); i++) {
+            parameters.set(i, default_parameters.get(i)->get_default_value());
+            shared_memory_region->write_parameter_value(i, default_parameters.get(i)->get_default_value());
+        }
     }
 
     start();
@@ -185,6 +200,14 @@ void DistrhoUIServer::rpc_thread_func() {
 }
 
 void DistrhoUIServer::process() {
+    for (int i = 0; i < shared_memory_region->get_parameter_count(); i++) {
+        float value = shared_memory_region->read_parameter_value(i);
+        if (parameters[i] != value) {
+            parameters.ptrw()[i] = value;
+            call_deferred("emit_signal", "parameter_changed", i, value);
+            shared_memory_region->write_parameter_value(i, parameters[i]);
+        }
+    }
 }
 
 void DistrhoUIServer::send_note_on(int channel, int note, int velocity) {
@@ -196,7 +219,8 @@ void DistrhoUIServer::send_note_off(int channel, int note) {
 }
 
 void DistrhoUIServer::set_parameter_value(int p_index, float p_value) {
-    client->set_parameter_value(p_index, p_value);
+    parameters.ptrw()[p_index] = p_value;
+    shared_memory_region->write_parameter_value(p_index, p_value);
 }
 
 void DistrhoUIServer::set_state_value(String p_key, String p_value) {

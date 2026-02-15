@@ -3,6 +3,7 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 
 #include "distrho_shared_memory_audio.h"
+#include "distrho_shared_memory.h"
 
 using namespace godot;
 
@@ -17,34 +18,12 @@ DistrhoSharedMemoryAudio::DistrhoSharedMemoryAudio() {
 }
 
 DistrhoSharedMemoryAudio::~DistrhoSharedMemoryAudio() {
-    if (is_host && !shared_memory_name.empty()) {
-#ifndef _WIN32
-        bip::shared_memory_object::remove(shared_memory_name.c_str());
-#endif
-    }
 }
 
-void DistrhoSharedMemoryAudio::initialize(int p_number_of_input_channels, int p_number_of_output_channels,
-                                          std::string p_shared_memory_name) {
-    if (p_shared_memory_name.length() == 0) {
-        is_host = true;
-        boost::uuids::uuid uuid = uuid_gen()();
-        shared_memory_name = boost::uuids::to_string(uuid);
-
-#if !DISTRHO_PLUGIN_ENABLE_SUBPROCESS && DEBUG
-        printf("export DISTRHO_SHARED_MEMORY_AUDIO=%s\n", shared_memory_name.c_str());
-#endif
-
-#ifdef _WIN32
-        shared_memory = std::make_unique<boost::interprocess::managed_windows_shared_memory>(
-            bip::create_only, shared_memory_name.c_str(), SIZE_SHARED_MEMORY * 2);
-#else
-        bip::shared_memory_object::remove(shared_memory_name.c_str());
-        shared_memory = std::make_unique<boost::interprocess::managed_shared_memory>(
-            bip::create_only, shared_memory_name.c_str(), SIZE_SHARED_MEMORY * 2);
-#endif
-
-        buffer = shared_memory->construct<AudioBuffer>("AudioBuffer")();
+void DistrhoSharedMemoryAudio::initialize(DistrhoSharedMemory *p_distrho_shared_memory,
+        int p_number_of_input_channels, int p_number_of_output_channels) {
+    if (p_distrho_shared_memory->get_is_host()) {
+        buffer = p_distrho_shared_memory->create_buffer<AudioBuffer>("AudioBuffer");
         buffer->num_input_channels = p_number_of_input_channels;
         buffer->num_output_channels = p_number_of_output_channels;
 
@@ -53,15 +32,7 @@ void DistrhoSharedMemoryAudio::initialize(int p_number_of_input_channels, int p_
         num_output_channels = p_number_of_output_channels;
 
     } else {
-        is_host = false;
-        shared_memory_name = std::move(p_shared_memory_name);
-
-#ifdef _WIN32
-        shared_memory = std::make_unique<bip::managed_windows_shared_memory>(bip::open_only, shared_memory_name.c_str());
-#else
-        shared_memory = std::make_unique<bip::managed_shared_memory>(bip::open_only, shared_memory_name.c_str());
-#endif
-        buffer = shared_memory->find<AudioBuffer>("AudioBuffer").first;
+        buffer = p_distrho_shared_memory->create_buffer<AudioBuffer>("AudioBuffer");
 
         if (!buffer) {
             num_input_channels = p_number_of_input_channels;
@@ -133,10 +104,6 @@ int DistrhoSharedMemoryAudio::get_num_output_channels() {
     return buffer->num_output_channels;
 }
 
-std::string DistrhoSharedMemoryAudio::get_shared_memory_name() {
-    return shared_memory_name;
-}
-
 void DistrhoSharedMemoryAudio::write_input_midi(const MidiEvent *p_midi_events, int p_midi_event_count) {
     for (int i = 0; i < p_midi_event_count; i++) {
         buffer->midi_input[(i + buffer->midi_input_write_index) % MIDI_BUFFER_SIZE] = p_midi_events[i];
@@ -172,6 +139,6 @@ int DistrhoSharedMemoryAudio::read_output_midi(MidiEvent *p_midi_events) {
     return buffer->midi_output_event_count;
 }
 
-bool DistrhoSharedMemoryAudio::get_is_host() {
-    return is_host;
+int DistrhoSharedMemoryAudio::get_memory_size() {
+    return SIZE_SHARED_MEMORY * 2;
 }

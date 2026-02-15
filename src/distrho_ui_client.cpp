@@ -1,11 +1,13 @@
 #include "distrho_ui_client.h"
 #include "distrho_common.h"
 #include "godot_distrho_schema.capnp.h"
+#include <cstdio>
 
 using namespace godot;
 
-DistrhoUIClient::DistrhoUIClient(DistrhoSharedMemoryRPC *p_rpc_memory) {
+DistrhoUIClient::DistrhoUIClient(DistrhoSharedMemoryRPC *p_rpc_memory, DistrhoSharedMemoryRegion *p_shared_memory_region) {
     rpc_memory = p_rpc_memory;
+    shared_memory_region = p_shared_memory_region;
 }
 
 DistrhoUIClient::~DistrhoUIClient() {
@@ -27,12 +29,7 @@ void DistrhoUIClient::edit_parameter(int p_index, bool p_started) {
 }
 
 void DistrhoUIClient::set_parameter_value(int p_index, float p_value) {
-    bool result;
-    capnp::FlatArrayMessageReader reader =
-        rpc_call<SetParameterValueRequest, SetParameterValueResponse>(result, [p_index, p_value](auto &request) {
-            request.setIndex(p_index);
-            request.setValue(p_value);
-        });
+    shared_memory_region->write_parameter_value(p_index, p_value);
 }
 
 void DistrhoUIClient::send_note(int p_channel, int p_note, int p_velocity) {

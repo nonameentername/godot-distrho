@@ -10,7 +10,6 @@
 #include <functional>
 #include <kj/string.h>
 
-using namespace boost::interprocess;
 using namespace boost::posix_time;
 
 class DistrhoCommon {
@@ -32,7 +31,7 @@ public:
                                                   std::function<void(typename T::Builder &)> build_request,
                                                   bool &result) {
         if (rpc_memory.buffer->ready) {
-            scoped_lock<interprocess_mutex> lock(rpc_memory.buffer->mutex);
+            boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(rpc_memory.buffer->mutex);
 
             capnp::MallocMessageBuilder builder;
             typename T::Builder request = builder.initRoot<T>();

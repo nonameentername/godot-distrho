@@ -346,8 +346,10 @@ dpf_add_plugin(godot-distrho
     src/plugin/godot_distrho_utils.cpp
     src/plugin/godot_distrho_plugin_server.cpp
     src/plugin/godot_distrho_plugin_client.cpp
+    src/distrho_shared_memory.cpp
     src/distrho_shared_memory_audio.cpp
     src/distrho_shared_memory_rpc.cpp
+    src/distrho_shared_memory_region.cpp
     src/distrho_common.cpp
     #src/plugin/libgodot_distrho.cpp
   FILES_UI
@@ -357,8 +359,10 @@ dpf_add_plugin(godot-distrho
     src/plugin/godot_distrho_utils.cpp
     src/plugin/godot_distrho_ui_server.cpp
     src/plugin/godot_distrho_ui_client.cpp
+    src/distrho_shared_memory.cpp
     src/distrho_shared_memory_audio.cpp
     src/distrho_shared_memory_rpc.cpp
+    src/distrho_shared_memory_region.cpp
     src/distrho_common.cpp
     #src/plugin/libgodot_distrho.cpp
 )

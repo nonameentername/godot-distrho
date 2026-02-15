@@ -10,9 +10,8 @@
 #include <memory>
 #include <random>
 
-#ifdef _WIN32
-#include <boost/interprocess/managed_windows_shared_memory.hpp>
-#endif
+#include "distrho_shared_memory.h"
+
 
 namespace godot {
 
@@ -56,27 +55,18 @@ struct AudioBuffer {
 class DistrhoSharedMemoryAudio {
 
 private:
-#ifdef _WIN32
-    std::unique_ptr<boost::interprocess::managed_windows_shared_memory> shared_memory;
-#else
-    std::unique_ptr<boost::interprocess::managed_shared_memory> shared_memory;
-#endif
-
 public:
     AudioBuffer *buffer;
 
-    std::string shared_memory_name;
     int num_input_channels;
     int num_output_channels;
-    bool is_host;
 
 protected:
 public:
     DistrhoSharedMemoryAudio();
     ~DistrhoSharedMemoryAudio();
 
-    void initialize(int p_number_of_input_channels = 0, int p_number_of_output_channels = 0,
-                    std::string p_shared_memory_name = "");
+    void initialize(DistrhoSharedMemory *p_distrho_shared_memory, int p_number_of_input_channels = 0, int p_number_of_output_channels = 0);
 
     void write_input_channel(const float **p_buffer, int p_frames, int offset = 0);
     void read_input_channel(float **p_buffer, int p_frames, int offset = 0);
@@ -99,9 +89,7 @@ public:
     void write_output_midi(const MidiEvent *p_midi_events, int p_midi_event_count);
     int read_output_midi(MidiEvent *p_midi_events);
 
-    bool get_is_host();
-
-    std::string get_shared_memory_name();
+    int get_memory_size();
 };
 
 } // namespace godot

@@ -8,6 +8,7 @@
 #include "distrho_midi_event.h"
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
+#include "distrho_shared_memory_region.h"
 #include "distrho_ui_client.h"
 #include "distrho_ui_instance.h"
 #include "godot_cpp/classes/mutex.hpp"
@@ -31,14 +32,18 @@ private:
     DistrhoUIInstance *distrho_ui;
     DistrhoLauncher *distrho_launcher;
 
+    DistrhoSharedMemory *shared_memory;
     DistrhoSharedMemoryRPC *rpc_memory;
     DistrhoSharedMemoryRPC *godot_rpc_memory;
+    DistrhoSharedMemoryRegion *shared_memory_region;
     DistrhoUIClient *client;
 
     bool active;
 
     mutable bool exit_thread;
     Ref<Thread> rpc_thread;
+
+    Vector<float> parameters;
 
 protected:
     static DistrhoUIServer *singleton;

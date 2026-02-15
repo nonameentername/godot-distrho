@@ -1,5 +1,6 @@
 #include "godot_distrho_plugin_client.h"
 #include "distrho_common.h"
+#include "distrho_shared_memory_rpc.h"
 #include "godot_distrho_schema.capnp.h"
 #include "godot_distrho_utils.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -13,18 +14,19 @@ using namespace boost::posix_time;
 START_NAMESPACE_DISTRHO
 
 GodotDistrhoPluginClient::GodotDistrhoPluginClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type) {
-    audio_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
-    rpc_memory.initialize("DISTRHO_SHARED_MEMORY_RPC");
-    godot_rpc_memory.initialize("GODOT_SHARED_MEMORY_RPC");
+    int memory_size = audio_memory.get_memory_size() + rpc_memory.get_memory_size() + godot_rpc_memory.get_memory_size();
+
+    shared_memory.initialize("", memory_size);
+    audio_memory.initialize(&shared_memory, DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
+    rpc_memory.initialize(&shared_memory, godot::RPC_BUFFER_NAME);
+    godot_rpc_memory.initialize(&shared_memory, godot::GODOT_RPC_BUFFER_NAME);
+    shared_memory_region.initialize(&shared_memory);
 
 #if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
     boost::process::environment env = boost::this_process::environment();
 
     env["DISTRHO_MODULE_TYPE"] = std::to_string(p_type);
-    env["DISTRHO_SHARED_MEMORY_AUDIO"] = audio_memory.shared_memory_name.c_str();
-    env["DISTRHO_SHARED_MEMORY_RPC"] = rpc_memory.shared_memory_name.c_str();
-    env["GODOT_SHARED_MEMORY_RPC"] = godot_rpc_memory.shared_memory_name.c_str();
-
+    env["DISTRHO_SHARED_MEMORY_UUID"] = shared_memory.shared_memory_name.c_str();
 #if defined(_WIN32)
     plugin = GodotDistrhoUtils::launch_process("godot-plugin.exe", env);
 #else
@@ -264,19 +266,11 @@ int GodotDistrhoPluginClient::get_parameter_count() {
 }
 
 float GodotDistrhoPluginClient::get_parameter_value(int p_index) const {
-    bool result;
-    capnp::FlatArrayMessageReader reader = rpc_call<GetParameterValueRequest, GetParameterValueResponse>(result);
-    GetParameterValueResponse::Reader response = reader.getRoot<GetParameterValueResponse>();
-    return response.getValue();
+    return shared_memory_region.read_parameter_value(p_index);
 }
 
 void GodotDistrhoPluginClient::set_parameter_value(int p_index, float p_value) {
-    bool result;
-    capnp::FlatArrayMessageReader reader =
-        rpc_call<SetParameterValueRequest, SetParameterValueResponse>(result, [p_index, p_value](auto &req) {
-            req.setIndex(p_index);
-            req.setValue(p_value);
-        });
+    shared_memory_region.write_parameter_value(p_index, p_value);
 }
 
 bool GodotDistrhoPluginClient::get_initial_state_value(int p_index, State &p_state) {
