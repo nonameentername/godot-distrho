@@ -31,6 +31,7 @@
 #include <godot_cpp/classes/mutex.hpp>
 #include <godot_cpp/core/mutex_lock.hpp>
 #include <kj/string.h>
+#include <thread>
 #include <unistd.h>
 #include <vector>
 
@@ -488,6 +489,8 @@ void DistrhoPluginServer::rpc_thread_func() {
 }
 
 void DistrhoPluginServer::client_thread_func() {
+    auto sleep_ms = std::chrono::milliseconds(16);
+
     while (!exit_thread) {
         if (client != NULL) {
             std::vector<std::pair<String, String>> states;
@@ -505,6 +508,7 @@ void DistrhoPluginServer::client_thread_func() {
                 client->update_state_value(states[i].first, states[i].second);
             }
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
     }
 }
 

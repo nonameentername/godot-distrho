@@ -35,6 +35,8 @@ void GodotDistrhoUIServer::handle_rpc_call(
 }
 
 void GodotDistrhoUIServer::process_thread_func() {
+    auto sleep_ms = std::chrono::milliseconds(16);
+
     while(!exit_thread) {
         for (int i = 0; i < shared_memory_region->get_parameter_count(); i++) {
             float value = shared_memory_region->read_parameter_value(i);
@@ -43,6 +45,7 @@ void GodotDistrhoUIServer::process_thread_func() {
                 godot_distrho_ui->setParameterValue(i, value);
             }
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
     }
 }
 
