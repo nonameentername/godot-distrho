@@ -10,12 +10,22 @@
 #include "distrho_shared_memory_region.h"
 #include "godot_distrho_schema.capnp.h"
 #include <boost/process.hpp>
+#include <boost/process/v1/child.hpp>
 
 START_NAMESPACE_DISTRHO
 
 class GodotDistrhoPluginClient {
 private:
-    boost::process::child *plugin;
+    mutable std::string label;
+    mutable std::string description;
+    mutable std::string maker;
+    mutable std::string homepage;
+    mutable std::string license;
+    mutable int version;
+    mutable int unique_id;
+
+
+    boost::process::v1::child *plugin;
     mutable godot::DistrhoSharedMemory shared_memory;
     mutable godot::DistrhoSharedMemoryAudio audio_memory;
     mutable godot::DistrhoSharedMemoryRPC rpc_memory;
@@ -30,6 +40,9 @@ public:
     GodotDistrhoPluginClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type);
 
     ~GodotDistrhoPluginClient();
+
+    GodotDistrhoPluginClient(const GodotDistrhoPluginClient&) = delete;
+    GodotDistrhoPluginClient& operator=(const GodotDistrhoPluginClient&) = delete;
 
     const char *getLabel() const;
 

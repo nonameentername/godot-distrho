@@ -8,6 +8,8 @@
 #include "distrho_shared_memory_rpc.h"
 #include "godot_distrho_schema.capnp.h"
 #include <boost/process.hpp>
+#include <boost/process/v1/child.hpp>
+#include <thread>
 
 START_NAMESPACE_DISTRHO
 
@@ -16,7 +18,7 @@ private:
     bool exit_thread;
     std::thread rpc_thread;
 
-    boost::process::child *plugin;
+    boost::process::v1::child *plugin;
     godot::DistrhoSharedMemoryRPC *godot_rpc_memory;
     Plugin *godot_distrho_plugin;
 

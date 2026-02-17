@@ -20,11 +20,12 @@ cd $build_dir
 cmake -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_VERBOSE_MAKEFILE=1 \
     $dir
+    #-DENABLE_ASAN=ON \
 
 # build godot-distrho (gdextension)
 
 cd $dir
-scons platform=linux target=template_debug dev_build=yes debug_symbols=yes
+scons platform=linux target=template_debug dev_build=yes debug_symbols=yes #asan=true
 
 #$dir/modules/godot/bin/godot.linuxbsd.editor.dev.x86_64 --headless --import || true
 #$dir/modules/godot/bin/godot.linuxbsd.editor.dev.x86_64 --headless --import || true

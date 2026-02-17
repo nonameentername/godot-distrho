@@ -12,7 +12,7 @@ using namespace boost::posix_time;
 
 START_NAMESPACE_DISTRHO
 
-GodotDistrhoUIClient::GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type, int64_t parent_window_id) {
+GodotDistrhoUIClient::GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type, int64_t p_parent_window_id) {
     int memory_size = rpc_memory.get_memory_size() + godot_rpc_memory.get_memory_size() + shared_memory_region.get_memory_size();
 
     shared_memory.initialize("", memory_size);
@@ -21,12 +21,12 @@ GodotDistrhoUIClient::GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_
     shared_memory_region.initialize(&shared_memory);
 
 #if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
-    boost::process::environment env = boost::this_process::environment();
+    boost::process::v1::environment env = boost::this_process::environment();
 
     env["DISTRHO_MODULE_TYPE"] = std::to_string(p_type);
     env["DISTRHO_SHARED_MEMORY_UUID"] = shared_memory.shared_memory_name.c_str();
-    if (parent_window_id > 0) {
-        env["GODOT_PARENT_WINDOW_ID"] = std::to_string(parent_window_id);
+    if (p_parent_window_id > 0) {
+        env["GODOT_PARENT_WINDOW_ID"] = std::to_string(p_parent_window_id);
     }
 
 #if defined(_WIN32)

@@ -19,7 +19,7 @@
 #include <boost/process/windows.hpp>
 #endif
 
-using namespace boost::process;
+using namespace boost::process::v1;
 
 START_NAMESPACE_DISTRHO
 
@@ -86,9 +86,9 @@ child *GodotDistrhoUtils::launch_process(const std::string &p_name, environment 
     //TODO: set config option to show/hide the logs
 
 #ifdef _WIN32
-    return new child(executable, args(p_args), env = p_env, windows::create_no_window);
+    return new child(executable, p_args, env = p_env, windows::create_no_window);
 #else
-    return new child(executable, args(p_args), env = p_env);
+    return new child(executable, p_args, env = p_env);
 #endif
 
     //return new child(executable, boost::process::std_out > boost::process::null,

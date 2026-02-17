@@ -10,6 +10,7 @@
 #include "distrho_shared_memory_region.h"
 #include "godot_distrho_schema.capnp.h"
 #include <boost/process.hpp>
+#include <boost/process/v1/child.hpp>
 #include <thread>
 
 START_NAMESPACE_DISTRHO
@@ -22,7 +23,7 @@ private:
 
     float parameters[godot::MAX_PARAMS];
 
-    boost::process::child *plugin;
+    boost::process::v1::child *plugin;
     godot::DistrhoSharedMemoryRPC *godot_rpc_memory;
     godot::DistrhoSharedMemoryRegion *shared_memory_region;
     UI *godot_distrho_ui;

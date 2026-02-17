@@ -263,6 +263,19 @@ jobs:
           godot --headless --import || true
           godot --headless -s distrho_run_scene.gd 2> /dev/null | grep 'output result is 2'
 
+      - name: Install pluginval
+        run: |
+          curl -sSL https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_Linux.zip -o pluginval.zip
+          unzip -o pluginval.zip
+          rm -f pluginval.zip
+
+      - name: Verify LV2
+        run: |
+          cp addons/distrho/bin/linux/debug/bin/godot-plugin addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
+          cp addons/distrho/bin/linux/libdistrhogodot.linux.template_debug.dev.x86_64.so addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
+          cp templates/lv2/linux/*.ttl addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
+          pluginval --strictness-level 5 --skip-gui-tests addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
+
   publish_artifacts:
     #if: ${{ github.ref == 'refs/heads/main' }}
     if: false

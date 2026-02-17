@@ -23,7 +23,7 @@ GodotDistrhoPluginClient::GodotDistrhoPluginClient(DistrhoCommon::DISTRHO_MODULE
     shared_memory_region.initialize(&shared_memory);
 
 #if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
-    boost::process::environment env = boost::this_process::environment();
+    boost::process::v1::environment env = boost::this_process::environment();
 
     env["DISTRHO_MODULE_TYPE"] = std::to_string(p_type);
     env["DISTRHO_SHARED_MEMORY_UUID"] = shared_memory.shared_memory_name.c_str();
@@ -83,50 +83,78 @@ capnp::FlatArrayMessageReader GodotDistrhoPluginClient::rpc_call(
 }
 
 const char *GodotDistrhoPluginClient::getLabel() const {
+    if (label.size() > 0) {
+        return label.c_str();
+    }
+
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetLabelRequest, GetLabelResponse>(result, [](auto &req) { req; });
-
     GetLabelResponse::Reader response = reader.getRoot<GetLabelResponse>();
-    return response.getLabel().cStr();
+    label = response.getLabel();
+    return label.c_str();
 }
 
 const char *GodotDistrhoPluginClient::getDescription() const {
+    if (description.size() > 0) {
+        return description.c_str();
+    }
+
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetDescriptionRequest, GetDescriptionResponse>(result);
     GetDescriptionResponse::Reader response = reader.getRoot<GetDescriptionResponse>();
-    return response.getDescription().cStr();
+    description = response.getDescription();
+    return description.c_str();
 }
 
 const char *GodotDistrhoPluginClient::getMaker() const {
+    if (maker.size() > 0) {
+        return maker.c_str();
+    }
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetMakerRequest, GetMakerResponse>(result);
     GetMakerResponse::Reader response = reader.getRoot<GetMakerResponse>();
-    return response.getMaker().cStr();
+    maker = response.getMaker();
+    return maker.c_str();
 }
 
 const char *GodotDistrhoPluginClient::getHomePage() const {
+    if (homepage.size() > 0) {
+        return homepage.c_str();
+    }
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetHomePageRequest, GetHomePageResponse>(result);
     GetHomePageResponse::Reader response = reader.getRoot<GetHomePageResponse>();
-    return response.getHomePage().cStr();
+    homepage = response.getHomePage();
+    return homepage.c_str();
 }
 
 const char *GodotDistrhoPluginClient::getLicense() const {
+    if (license.size() > 0) {
+        return license.c_str();
+    }
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetLicenseRequest, GetLicenseResponse>(result);
     GetLicenseResponse::Reader response = reader.getRoot<GetLicenseResponse>();
-    return response.getLicense().cStr();
+    license = response.getLicense();
+    return license.c_str();
 }
 
 uint32_t GodotDistrhoPluginClient::getVersion() const {
+    if (version > 0) {
+        return version;
+    }
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetVersionRequest, GetVersionResponse>(result);
     GetVersionResponse::Reader response = reader.getRoot<GetVersionResponse>();
 
-    return d_version(response.getMajor(), response.getMinor(), response.getPatch());
+    version = d_version(response.getMajor(), response.getMinor(), response.getPatch());
+    return version;
 }
 
 int64_t GodotDistrhoPluginClient::getUniqueId() const {
+    if (unique_id > 0) {
+        return unique_id;
+    }
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetUniqueIdRequest, GetUniqueIdResponse>(result);
     GetUniqueIdResponse::Reader response = reader.getRoot<GetUniqueIdResponse>();
@@ -161,7 +189,7 @@ void GodotDistrhoPluginClient::initState(uint32_t index, State& state) {
     get_initial_state_value(index, state);
 }
 
-void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32_t numSamples,
+void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32_t num_samples,
                                    const MidiEvent *input_midi, int input_midi_size, MidiEvent *output_midi,
                                    int &output_midi_size) {
     //bool reinitialize = false;
@@ -169,8 +197,9 @@ void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32
     if (audio_memory.buffer->ready) {
         scoped_lock<interprocess_mutex> lock(audio_memory.buffer->mutex);
 
-        audio_memory.write_input_channel(inputs, godot::BUFFER_FRAME_SIZE);
-        audio_memory.advance_input_write_index(godot::BUFFER_FRAME_SIZE);
+        audio_memory.buffer->num_samples = num_samples;
+        audio_memory.write_input_channel(inputs, num_samples);
+        audio_memory.advance_input_write_index(num_samples);
         audio_memory.write_input_midi(input_midi, input_midi_size);
 
         audio_memory.buffer->input_condition.notify_one();
@@ -180,15 +209,15 @@ void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32
         bool result = audio_memory.buffer->output_condition.timed_wait(lock, timeout);
 
         if (result) {
-            audio_memory.read_output_channel(outputs, godot::BUFFER_FRAME_SIZE);
-            audio_memory.advance_output_read_index(godot::BUFFER_FRAME_SIZE);
+            audio_memory.read_output_channel(outputs, num_samples);
+            audio_memory.advance_output_read_index(num_samples);
             output_midi_size = audio_memory.read_output_midi(output_midi);
         } else {
             //reinitialize = true;
         }
     } else {
         for (int channel = 0; channel < DISTRHO_PLUGIN_NUM_OUTPUTS; channel++) {
-            for (int frame = 0; frame < godot::BUFFER_FRAME_SIZE; frame++) {
+            for (int frame = 0; frame < num_samples; frame++) {
                 outputs[channel][frame] = 0;
             }
         }
@@ -354,8 +383,12 @@ bool GodotDistrhoPluginClient::get_output_port(int p_index, AudioPort &port) {
 bool GodotDistrhoPluginClient::shutdown() {
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<ShutdownRequest, ShutdownResponse>(result);
-    ShutdownResponse::Reader response = reader.getRoot<ShutdownResponse>();
-    return response.getResult();
+    if (result) {
+        ShutdownResponse::Reader response = reader.getRoot<ShutdownResponse>();
+        return response.getResult();
+    } else {
+        return result;
+    }
 }
 
 godot::DistrhoSharedMemoryRPC *GodotDistrhoPluginClient::get_godot_rpc_memory() {
