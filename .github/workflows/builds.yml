@@ -274,7 +274,7 @@ jobs:
           cp addons/distrho/bin/linux/debug/bin/godot-plugin addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
           cp addons/distrho/bin/linux/libdistrhogodot.linux.template_debug.dev.x86_64.so addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
           cp templates/lv2/linux/*.ttl addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
-          pluginval --strictness-level 5 --skip-gui-tests addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
+          ./pluginval --strictness-level 5 --skip-gui-tests addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
 
   publish_artifacts:
     #if: ${{ github.ref == 'refs/heads/main' }}
