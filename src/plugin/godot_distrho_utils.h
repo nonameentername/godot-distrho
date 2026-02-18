@@ -1,7 +1,14 @@
 #ifndef GODOT_DISTRHO_UTILS_H
 #define GODOT_DISTRHO_UTILS_H
 
+#include <boost/process/v1/child.hpp>
+#include <boost/process/v1/env.hpp>
 #include "src/DistrhoDefines.h"
+
+#if defined(_WIN32)
+#include <winsock2.h>
+#endif
+
 #include <boost/process.hpp>
 #include <string>
 #include <vector>
@@ -19,7 +26,7 @@ class GodotDistrhoUtils {
 public:
     static std::string get_executable_path();
 
-    static boost::process::child *launch_process(const std::string &p_name, boost::process::environment p_env,
+    static boost::process::v1::child *launch_process(const std::string &p_name, boost::process::v1::environment p_env,
                                                  const std::vector<std::string> &p_args = {});
 
     static std::string find_godot_package();

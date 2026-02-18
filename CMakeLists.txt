@@ -77,6 +77,8 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
 endif()
 
+option(ENABLE_ASAN "Enable AddressSanitizer (address,undefined)" OFF)
+
 add_subdirectory(modules/dpf)
 
 find_package(Threads REQUIRED)
@@ -218,8 +220,8 @@ target_link_libraries(godot-plugin PRIVATE
   ${GODOT_LIBRARIES}
 )
 
-find_package(Boost REQUIRED COMPONENTS filesystem)
-target_link_libraries(godot-plugin PRIVATE Boost::filesystem)
+find_package(Boost REQUIRED COMPONENTS filesystem process)
+target_link_libraries(godot-plugin PRIVATE Boost::filesystem Boost::process)
 
 if(OSXCROSS_TARGET)
   target_link_libraries(godot-plugin PRIVATE
@@ -399,7 +401,7 @@ target_link_libraries(godot-distrho PUBLIC
   #${GODOT_LIBRARIES}
 )
 
-target_link_libraries(godot-distrho PRIVATE Boost::filesystem)
+target_link_libraries(godot-distrho PRIVATE Boost::filesystem Boost::process)
 
 #set(GODOT_PLUGIN_LV2_COPY_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-distrho.lv2")
 #set(GODOT_PLUGIN_LV2_COPY_DEST "${GODOT_PLUGIN_LV2_COPY_DEST_DIR}/godot-plugin")
@@ -419,3 +421,12 @@ target_link_libraries(godot-distrho PRIVATE Boost::filesystem)
 #else()
 #  message(WARNING "Target 'godot-plugin' not found; copy_godot_plugin not created")
 #endif()
+
+if(ENABLE_ASAN AND UNIX)
+    message(STATUS "Building with AddressSanitizer instrumentation")
+    target_compile_options(godot-distrho PRIVATE -fsanitize=address -fno-omit-frame-pointer -g)
+    target_link_options(godot-distrho PRIVATE -fsanitize=address)
+
+    target_compile_options(godot-plugin PRIVATE -fsanitize=address -fno-omit-frame-pointer -g)
+    target_link_options(godot-plugin PRIVATE -fsanitize=address)
+endif()

@@ -9,13 +9,30 @@
 #include "distrho_shared_memory_rpc.h"
 #include "distrho_shared_memory_region.h"
 #include "godot_distrho_schema.capnp.h"
+
+#if defined(_WIN32)
+#include <winsock2.h>
+#endif
+
 #include <boost/process.hpp>
+#include <boost/process/v1/child.hpp>
 
 START_NAMESPACE_DISTRHO
 
 class GodotDistrhoPluginClient {
 private:
-    boost::process::child *plugin;
+    std::atomic<bool> is_shutting_down{false};
+
+    mutable std::string label;
+    mutable std::string description;
+    mutable std::string maker;
+    mutable std::string homepage;
+    mutable std::string license;
+    mutable int version;
+    mutable int unique_id;
+
+
+    boost::process::v1::child *plugin;
     mutable godot::DistrhoSharedMemory shared_memory;
     mutable godot::DistrhoSharedMemoryAudio audio_memory;
     mutable godot::DistrhoSharedMemoryRPC rpc_memory;
@@ -25,6 +42,8 @@ private:
 protected:
     template <typename T, typename R>
     capnp::FlatArrayMessageReader rpc_call(bool &result, std::function<void(typename T::Builder &)> build_request = nullptr) const;
+
+    DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GodotDistrhoPluginClient)
 
 public:
     GodotDistrhoPluginClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type);

@@ -12,7 +12,7 @@ using namespace boost::posix_time;
 
 START_NAMESPACE_DISTRHO
 
-GodotDistrhoUIClient::GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type, int64_t parent_window_id) {
+GodotDistrhoUIClient::GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type, int64_t p_parent_window_id) {
     int memory_size = rpc_memory.get_memory_size() + godot_rpc_memory.get_memory_size() + shared_memory_region.get_memory_size();
 
     shared_memory.initialize("", memory_size);
@@ -21,12 +21,12 @@ GodotDistrhoUIClient::GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_
     shared_memory_region.initialize(&shared_memory);
 
 #if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
-    boost::process::environment env = boost::this_process::environment();
+    boost::process::v1::environment env = boost::this_process::environment();
 
     env["DISTRHO_MODULE_TYPE"] = std::to_string(p_type);
     env["DISTRHO_SHARED_MEMORY_UUID"] = shared_memory.shared_memory_name.c_str();
-    if (parent_window_id > 0) {
-        env["GODOT_PARENT_WINDOW_ID"] = std::to_string(parent_window_id);
+    if (p_parent_window_id > 0) {
+        env["GODOT_PARENT_WINDOW_ID"] = std::to_string(p_parent_window_id);
     }
 
 #if defined(_WIN32)
@@ -71,8 +71,12 @@ void GodotDistrhoUIClient::run() {
 std::string GodotDistrhoUIClient::get_some_text() {
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetSomeTextRequest, GetSomeTextResponse>(result);
-    GetSomeTextResponse::Reader response = reader.getRoot<GetSomeTextResponse>();
-    return response.getText();
+    if (result) {
+        GetSomeTextResponse::Reader response = reader.getRoot<GetSomeTextResponse>();
+        return response.getText();
+    } else {
+        return "";
+    }
 }
 
 bool GodotDistrhoUIClient::is_ready() {
@@ -86,8 +90,10 @@ int64_t GodotDistrhoUIClient::get_native_window_id() {
 
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetNativeWindowIdRequest, GetNativeWindowIdResponse>(result);
-    GetNativeWindowIdResponse::Reader response = reader.getRoot<GetNativeWindowIdResponse>();
-    native_window_id = response.getId();
+    if (result) {
+        GetNativeWindowIdResponse::Reader response = reader.getRoot<GetNativeWindowIdResponse>();
+        native_window_id = response.getId();
+    }
 
     return native_window_id;
 }
@@ -116,8 +122,9 @@ bool GodotDistrhoUIClient::shutdown() {
     if (result) {
         ShutdownResponse::Reader response = reader.getRoot<ShutdownResponse>();
         return response.getResult();
+    } else {
+        return result;
     }
-    return false;
 }
 
 godot::DistrhoSharedMemoryRPC *GodotDistrhoUIClient::get_godot_rpc_memory() {

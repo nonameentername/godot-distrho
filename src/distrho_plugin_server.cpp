@@ -169,7 +169,7 @@ void DistrhoPluginServer::audio_thread_func() {
         if (initialized) {
             start_buffer_processing();
             if (AudioServer::get_singleton()->has_method("process_external")) {
-                AudioServer::get_singleton()->call("process_external", BUFFER_FRAME_SIZE);
+                AudioServer::get_singleton()->call("process_external", audio_memory->buffer->num_samples);
             }
         }
 
@@ -178,8 +178,8 @@ void DistrhoPluginServer::audio_thread_func() {
         first_wait = false;
 
         if (result) {
-            audio_memory->read_input_channel(input_buffer, BUFFER_FRAME_SIZE);
-            audio_memory->advance_input_read_index(BUFFER_FRAME_SIZE);
+            audio_memory->read_input_channel(input_buffer, audio_memory->buffer->num_samples);
+            audio_memory->advance_input_read_index(audio_memory->buffer->num_samples);
             int midi_input_size = audio_memory->read_input_midi(midi_input);
 
             if (midi_input_size > 0) {
@@ -206,15 +206,15 @@ void DistrhoPluginServer::audio_thread_func() {
             }
 
             for (int channel = 0; channel < audio_memory->get_num_input_channels(); channel++) {
-                input_channels.write[channel]->write_channel(input_buffer[channel], BUFFER_FRAME_SIZE);
+                input_channels.write[channel]->write_channel(input_buffer[channel], audio_memory->buffer->num_samples);
             }
 
             for (int channel = 0; channel < audio_memory->get_num_output_channels(); channel++) {
-                output_channels[channel]->read_channel(output_buffer[channel], BUFFER_FRAME_SIZE);
+                output_channels[channel]->read_channel(output_buffer[channel], audio_memory->buffer->num_samples);
             }
 
-            audio_memory->write_output_channel(output_buffer, BUFFER_FRAME_SIZE);
-            audio_memory->advance_output_write_index(BUFFER_FRAME_SIZE);
+            audio_memory->write_output_channel(output_buffer, audio_memory->buffer->num_samples);
+            audio_memory->advance_output_write_index(audio_memory->buffer->num_samples);
             audio_memory->write_output_midi(midi_output, midi_output_size);
 
             audio_memory->buffer->output_condition.notify_one();

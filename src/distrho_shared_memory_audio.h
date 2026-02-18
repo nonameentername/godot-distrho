@@ -22,6 +22,7 @@ const int SIZE_SHARED_MEMORY = 524288; // pow(2, 19);
 const int MIDI_BUFFER_SIZE = 2048;
 
 struct AudioBuffer {
+    int num_samples = 0;
     int num_input_channels = 0;
     int num_output_channels = 0;
 

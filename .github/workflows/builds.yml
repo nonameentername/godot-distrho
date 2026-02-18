@@ -112,6 +112,7 @@ jobs:
           key: linux-artifacts-${{ matrix.environment }}-${{github.run_id}}
 
   macos-build:
+    #if: false
     name: MacOS build
     runs-on: ubuntu-latest
     needs: common-build
@@ -175,6 +176,7 @@ jobs:
           key: macos-artifacts-${{ matrix.environment }}-${{github.run_id}}
 
   windows-build:
+    #if: false
     name: Windows build
     runs-on: ubuntu-latest
     needs: common-build
@@ -233,7 +235,6 @@ jobs:
           key: windows-artifacts-${{ matrix.environment }}-${{github.run_id}}
 
   verify-linux-build:
-    if: false
     name: Verify Linux/Ubuntu build
     runs-on: ubuntu-latest
     needs: linux-build
@@ -253,18 +254,39 @@ jobs:
       - name: Setup Godot
         uses: chickensoft-games/setup-godot@v2
         with:
-          version: 4.4.1
+          version: 4.6.0
           use-dotnet: false
           include-templates: false
 
       - name: Verify godot-distrho
         run: |
           godot --headless --import || true
-          godot --headless --import || true
           godot --headless -s distrho_run_scene.gd 2> /dev/null | grep 'output result is 2'
 
+      - name: Install pluginval
+        run: |
+          curl -sSL https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_Linux.zip -o pluginval.zip
+          unzip -o pluginval.zip
+          rm -f pluginval.zip
+
+      - name: Verify LV2
+        run: |
+          cp addons/distrho/bin/linux/debug/bin/godot-plugin addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
+          cp addons/distrho/bin/linux/libdistrhogodot.linux.template_debug.dev.x86_64.so addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
+          cp templates/lv2/linux/*.ttl addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
+          godot --headless --export-pack Linux addons/distrho/bin/linux/debug/bin/godot-distrho.lv2/godot-distrho.pck
+          ./pluginval --strictness-level 5 --skip-gui-tests addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
+
+      - name: Verify VST3
+        run: |
+          cp addons/distrho/bin/linux/debug/bin/godot-plugin addons/distrho/bin/linux/debug/bin/godot-distrho.vst3/Contents/x86_64-linux
+          cp addons/distrho/bin/linux/libdistrhogodot.linux.template_debug.dev.x86_64.so addons/distrho/bin/linux/debug/bin/godot-distrho.vst3/Contents/x86_64-linux
+          godot --headless --export-pack Linux addons/distrho/bin/linux/debug/bin/godot-distrho.vst3/Contents/x86_64-linux/godot-distrho.pck
+          ./pluginval --strictness-level 5 --skip-gui-tests addons/distrho/bin/linux/debug/bin/godot-distrho.vst3
+
   publish_artifacts:
-    if: ${{ github.ref == 'refs/heads/main' }}
+    #if: ${{ github.ref == 'refs/heads/main' }}
+    if: false
     name: Publish Artifacts
     runs-on: ubuntu-latest
     needs: [verify-linux-build]

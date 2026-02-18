@@ -66,6 +66,13 @@ opts.Add(
         validator=validate_parent_dir,
     )
 )
+opts.Add(
+    BoolVariable(
+        key="asan",
+        help="Enable AddressSanitizer for builds",
+        default=localEnv.get("asan", False),
+    )
+)
 opts.Update(localEnv)
 
 Help(opts.GenerateHelpText(localEnv))
@@ -134,6 +141,11 @@ env.Append(CPPFLAGS=["-fexceptions", "-DKJ_USE_FIBERS=0", "-DDISTRHO_NAMESPACE=G
 
 env.Append(CPPPATH=["src/"])
 sources = Glob("src/*.cpp")
+
+if env.get("asan", False):
+    print("SCons: Building with AddressSanitizer instrumentation")
+    env.Append(CPPFLAGS=["-fsanitize=address", "-fno-omit-frame-pointer", "-g"])
+    env.Append(LINKFLAGS=["-fsanitize=address"])
 
 if env["target"] in ["editor", "template_debug"]:
 	try:

@@ -21,13 +21,16 @@ GodotDistrhoUI::GodotDistrhoUI() : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAU
 }
 
 GodotDistrhoUI::~GodotDistrhoUI() {
+    if (client != NULL) {
+        client->shutdown();
+    }
+
     if (server != NULL) {
         delete server;
         server = NULL;
     }
 
     if (client != NULL) {
-        client->shutdown();
         delete client;
         client = NULL;
     }
@@ -71,13 +74,16 @@ void GodotDistrhoUI::visibilityChanged(const bool p_visible) {
             server = new GodotDistrhoUIServer(this, client->get_godot_rpc_memory(), client->get_shared_memory_region());
         }
     } else {
+        if (client != NULL) {
+            client->shutdown();
+        }
+
         if (server != NULL) {
             delete server;
             server = NULL;
         }
 
         if (client != NULL) {
-            client->shutdown();
             delete client;
             client = NULL;
         }

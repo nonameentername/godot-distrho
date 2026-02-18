@@ -17,17 +17,22 @@ START_NAMESPACE_DISTRHO
 GodotDistrhoPlugin::GodotDistrhoPlugin(GodotDistrhoPluginState *p_state,
                                        uint32_t parameterCount, uint32_t programCount, uint32_t stateCount)
     : Plugin(parameterCount, programCount, stateCount) {
+    client = NULL;
+    server = NULL;
     state = p_state;
 }
 
 GodotDistrhoPlugin::~GodotDistrhoPlugin() {
+    if (client != NULL) {
+        client->shutdown();
+    }
+
     if (server != NULL) {
         delete server;
         server = NULL;
     }
 
     if (client != NULL) {
-        client->shutdown();
         delete client;
         client = NULL;
     }
@@ -102,8 +107,13 @@ void GodotDistrhoPlugin::setParameterValue(const uint32_t index, const float val
 }
 
 void GodotDistrhoPlugin::activate() {
-    client = new GodotDistrhoPluginClient(DistrhoCommon::PLUGIN_TYPE);
-    server = new GodotDistrhoPluginServer(this, client->get_godot_rpc_memory());
+    if (client == NULL) {
+        client = new GodotDistrhoPluginClient(DistrhoCommon::PLUGIN_TYPE);
+    }
+
+    if (server == NULL) {
+        server = new GodotDistrhoPluginServer(this, client->get_godot_rpc_memory());
+    }
 }
 
 void GodotDistrhoPlugin::setState(const char* key, const char* value) {
@@ -178,11 +188,13 @@ Plugin *createPlugin() {
 
     GodotDistrhoPlugin *const plugin = new GodotDistrhoPlugin(state, parameter_count, program_count, state_count);
 
-    delete client;
-    client = NULL;
+    client->shutdown();
 
     delete server;
     server = NULL;
+
+    delete client;
+    client = NULL;
 
     return plugin;
 }
