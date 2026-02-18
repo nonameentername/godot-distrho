@@ -7,6 +7,11 @@
 #include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory_rpc.h"
 #include "godot_distrho_schema.capnp.h"
+
+#if defined(_WIN32)
+#include <winsock2.h>
+#endif
+
 #include <boost/process.hpp>
 #include <boost/process/v1/child.hpp>
 #include <thread>

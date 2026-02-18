@@ -4,6 +4,11 @@
 #include <boost/process/v1/child.hpp>
 #include <boost/process/v1/env.hpp>
 #include "src/DistrhoDefines.h"
+
+#if defined(_WIN32)
+#include <winsock2.h>
+#endif
+
 #include <boost/process.hpp>
 #include <string>
 #include <vector>
