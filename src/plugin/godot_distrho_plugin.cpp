@@ -23,13 +23,16 @@ GodotDistrhoPlugin::GodotDistrhoPlugin(GodotDistrhoPluginState *p_state,
 }
 
 GodotDistrhoPlugin::~GodotDistrhoPlugin() {
+    if (client != NULL) {
+        client->shutdown();
+    }
+
     if (server != NULL) {
         delete server;
         server = NULL;
     }
 
     if (client != NULL) {
-        client->shutdown();
         delete client;
         client = NULL;
     }
@@ -185,10 +188,11 @@ Plugin *createPlugin() {
 
     GodotDistrhoPlugin *const plugin = new GodotDistrhoPlugin(state, parameter_count, program_count, state_count);
 
+    client->shutdown();
+
     delete server;
     server = NULL;
 
-    client->shutdown();
     delete client;
     client = NULL;
 
