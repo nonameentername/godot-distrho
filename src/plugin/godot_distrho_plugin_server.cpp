@@ -17,7 +17,7 @@ GodotDistrhoPluginServer::GodotDistrhoPluginServer(Plugin *p_godot_distrho_plugi
     godot_distrho_plugin = p_godot_distrho_plugin;
     godot_rpc_memory = p_godot_rpc_memory;
 
-    if (p_godot_distrho_plugin != NULL) {
+    if (godot_distrho_plugin != NULL) {
         rpc_thread = std::thread(&GodotDistrhoPluginServer::rpc_thread_func, this);
     }
 }
@@ -25,7 +25,15 @@ GodotDistrhoPluginServer::GodotDistrhoPluginServer(Plugin *p_godot_distrho_plugi
 GodotDistrhoPluginServer::~GodotDistrhoPluginServer() {
     if (godot_distrho_plugin != NULL) {
         exit_thread = true;
-        rpc_thread.join();
+        is_shutting_down.store(true);
+
+        godot_rpc_memory->buffer->input_condition.notify_all();
+
+        if (rpc_thread.joinable()) {
+            rpc_thread.join();
+        }
+
+        godot_distrho_plugin = NULL;
     }
 }
 
@@ -52,6 +60,11 @@ void GodotDistrhoPluginServer::rpc_thread_func() {
                 bool result = godot_rpc_memory->buffer->input_condition.timed_wait(shared_memory_lock, timeout);
                 first_wait = false;
 
+                if (is_shutting_down.load()) {
+                    exit_thread = true;
+                    return;
+                }
+
                 if (!result) {
                     // TODO: log in debug mode
                     //printf("Processing request_id: %ld\n", godot_rpc_memory->buffer->request_id);
@@ -60,7 +73,9 @@ void GodotDistrhoPluginServer::rpc_thread_func() {
                     case UpdateStateValueRequest::_capnpPrivate::typeId: {
                         handle_rpc_call<UpdateStateValueRequest, UpdateStateValueResponse>(
                             [this](auto &request, auto &response) {
-                                godot_distrho_plugin->updateStateValue(request.getKey().cStr(), request.getValue().cStr());
+                                if (godot_distrho_plugin != NULL) {
+                                    godot_distrho_plugin->updateStateValue(request.getKey().cStr(), request.getValue().cStr());
+                                }
                             });
                         break;
                     }
@@ -79,11 +94,9 @@ void GodotDistrhoPluginServer::rpc_thread_func() {
 }
 
 bool GodotDistrhoPluginServer::shutdown() {
-    {
-        scoped_lock<interprocess_mutex> lock(godot_rpc_memory->buffer->mutex);
-        exit_thread = true;
-        godot_rpc_memory->buffer->input_condition.notify_all();
-    }
+    exit_thread = true;
+    is_shutting_down.store(true);
+    godot_rpc_memory->buffer->input_condition.notify_all();
 }
 
 END_NAMESPACE_DISTRHO

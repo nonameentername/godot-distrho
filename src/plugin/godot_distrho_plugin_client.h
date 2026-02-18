@@ -16,6 +16,8 @@ START_NAMESPACE_DISTRHO
 
 class GodotDistrhoPluginClient {
 private:
+    std::atomic<bool> is_shutting_down{false};
+
     mutable std::string label;
     mutable std::string description;
     mutable std::string maker;
@@ -36,13 +38,12 @@ protected:
     template <typename T, typename R>
     capnp::FlatArrayMessageReader rpc_call(bool &result, std::function<void(typename T::Builder &)> build_request = nullptr) const;
 
+    DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GodotDistrhoPluginClient)
+
 public:
     GodotDistrhoPluginClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type);
 
     ~GodotDistrhoPluginClient();
-
-    GodotDistrhoPluginClient(const GodotDistrhoPluginClient&) = delete;
-    GodotDistrhoPluginClient& operator=(const GodotDistrhoPluginClient&) = delete;
 
     const char *getLabel() const;
 

@@ -35,36 +35,21 @@ GodotDistrhoPluginClient::GodotDistrhoPluginClient(DistrhoCommon::DISTRHO_MODULE
 #endif
 
     while (!audio_memory.buffer->ready) {
-        sleep(1);
+        usleep(10 * 1000);
     }
 
     while (!rpc_memory.buffer->ready) {
-        sleep(1);
+        usleep(10 * 1000);
     }
-
-    std::string label = getLabel();
-    printf("%s\n", label.c_str());
-
-    std::string description = getDescription();
-    printf("%s\n", description.c_str());
-
-    std::string maker = getMaker();
-    printf("%s\n", maker.c_str());
-
-    std::string homepage = getHomePage();
-    printf("%s\n", homepage.c_str());
-
-    std::string license = getLicense();
-    printf("%s\n", license.c_str());
-
-    int version = getVersion();
-    printf("%d\n", version);
-
-    int unique_id = getUniqueId();
-    printf("%d\n", unique_id);
 }
 
 GodotDistrhoPluginClient::~GodotDistrhoPluginClient() {
+    is_shutting_down.store(true);
+
+    if (audio_memory.buffer) {
+        audio_memory.buffer->output_condition.notify_all(); 
+    }
+
 #if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
     if (plugin != NULL) {
         if (plugin->running()) {
@@ -89,8 +74,10 @@ const char *GodotDistrhoPluginClient::getLabel() const {
 
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetLabelRequest, GetLabelResponse>(result, [](auto &req) { req; });
-    GetLabelResponse::Reader response = reader.getRoot<GetLabelResponse>();
-    label = response.getLabel();
+    if (result) {
+        GetLabelResponse::Reader response = reader.getRoot<GetLabelResponse>();
+        label = response.getLabel();
+    }
     return label.c_str();
 }
 
@@ -101,8 +88,10 @@ const char *GodotDistrhoPluginClient::getDescription() const {
 
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetDescriptionRequest, GetDescriptionResponse>(result);
-    GetDescriptionResponse::Reader response = reader.getRoot<GetDescriptionResponse>();
-    description = response.getDescription();
+    if (result) {
+        GetDescriptionResponse::Reader response = reader.getRoot<GetDescriptionResponse>();
+        description = response.getDescription();
+    }
     return description.c_str();
 }
 
@@ -112,8 +101,10 @@ const char *GodotDistrhoPluginClient::getMaker() const {
     }
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetMakerRequest, GetMakerResponse>(result);
-    GetMakerResponse::Reader response = reader.getRoot<GetMakerResponse>();
-    maker = response.getMaker();
+    if (result) {
+        GetMakerResponse::Reader response = reader.getRoot<GetMakerResponse>();
+        maker = response.getMaker();
+    }
     return maker.c_str();
 }
 
@@ -123,8 +114,10 @@ const char *GodotDistrhoPluginClient::getHomePage() const {
     }
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetHomePageRequest, GetHomePageResponse>(result);
-    GetHomePageResponse::Reader response = reader.getRoot<GetHomePageResponse>();
-    homepage = response.getHomePage();
+    if (result) {
+        GetHomePageResponse::Reader response = reader.getRoot<GetHomePageResponse>();
+        homepage = response.getHomePage();
+    }
     return homepage.c_str();
 }
 
@@ -134,8 +127,10 @@ const char *GodotDistrhoPluginClient::getLicense() const {
     }
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetLicenseRequest, GetLicenseResponse>(result);
-    GetLicenseResponse::Reader response = reader.getRoot<GetLicenseResponse>();
-    license = response.getLicense();
+    if (result) {
+        GetLicenseResponse::Reader response = reader.getRoot<GetLicenseResponse>();
+        license = response.getLicense();
+    }
     return license.c_str();
 }
 
@@ -145,9 +140,10 @@ uint32_t GodotDistrhoPluginClient::getVersion() const {
     }
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetVersionRequest, GetVersionResponse>(result);
-    GetVersionResponse::Reader response = reader.getRoot<GetVersionResponse>();
-
-    version = d_version(response.getMajor(), response.getMinor(), response.getPatch());
+    if (result) {
+        GetVersionResponse::Reader response = reader.getRoot<GetVersionResponse>();
+        version = d_version(response.getMajor(), response.getMinor(), response.getPatch());
+    }
     return version;
 }
 
@@ -157,14 +153,16 @@ int64_t GodotDistrhoPluginClient::getUniqueId() const {
     }
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetUniqueIdRequest, GetUniqueIdResponse>(result);
-    GetUniqueIdResponse::Reader response = reader.getRoot<GetUniqueIdResponse>();
-    std::string unique_id = response.getUniqueId();
-
-    if (unique_id.length() < 4) {
-        return d_cconst('n', 'o', 'n', 'e');
-    } else {
-        return d_cconst(unique_id[0], unique_id[1], unique_id[2], unique_id[4]);
+    if (result) {
+        GetUniqueIdResponse::Reader response = reader.getRoot<GetUniqueIdResponse>();
+        std::string string_id = response.getUniqueId();
+        if (string_id.length() < 4) {
+            unique_id = d_cconst('n', 'o', 'n', 'e');
+        } else {
+            unique_id = d_cconst(string_id[0], string_id[1], string_id[2], string_id[4]);
+        }
     }
+    return unique_id;
 }
 
 // void GodotDistrhoPluginClient::initAudioPort(const bool input, const uint32_t index, AudioPort &port) {
@@ -204,9 +202,13 @@ void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32
 
         audio_memory.buffer->input_condition.notify_one();
 
-        ptime timeout = microsec_clock::universal_time() + milliseconds(1000);
+        ptime timeout = microsec_clock::universal_time() + milliseconds(100);
 
         bool result = audio_memory.buffer->output_condition.timed_wait(lock, timeout);
+
+        if (is_shutting_down.load()) {
+            return;
+        }
 
         if (result) {
             audio_memory.read_output_channel(outputs, num_samples);
@@ -222,21 +224,6 @@ void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32
             }
         }
     }
-
-    /*
-    if (reinitialize) {
-#if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
-        if (plugin->running()) {
-            plugin->terminate();
-        }
-        delete plugin;
-        plugin = NULL;
-#endif
-        audio_memory.initialize(DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
-        rpc_memory.initialize("DISTRHO_SHARED_MEMORY_RPC");
-        godot_rpc_memory.initialize("GODOT_SHARED_MEMORY_RPC");
-    }
-    */
 }
 
 bool GodotDistrhoPluginClient::get_parameter(int p_index, Parameter &parameter) {
@@ -244,34 +231,38 @@ bool GodotDistrhoPluginClient::get_parameter(int p_index, Parameter &parameter) 
     capnp::FlatArrayMessageReader reader =
         rpc_call<GetParameterRequest, GetParameterResponse>(result, [p_index](auto &req) { req.setIndex(p_index); });
 
-    GetParameterResponse::Reader response = reader.getRoot<GetParameterResponse>();
+    if (result) {
+        GetParameterResponse::Reader response = reader.getRoot<GetParameterResponse>();
 
-    if (response.getResult()) {
-        parameter.hints = response.getHints();
-        parameter.name = response.getName().cStr();
-        parameter.symbol = response.getSymbol().cStr();
-        parameter.unit = response.getUnit().cStr();
-        parameter.description = response.getDescription().cStr();
+        if (response.getResult()) {
+            parameter.hints = response.getHints();
+            parameter.name = response.getName().cStr();
+            parameter.symbol = response.getSymbol().cStr();
+            parameter.unit = response.getUnit().cStr();
+            parameter.description = response.getDescription().cStr();
 
-        parameter.ranges.def = response.getDefaultValue();
-        parameter.ranges.min = response.getMinValue();
-        parameter.ranges.max = response.getMaxValue();
+            parameter.ranges.def = response.getDefaultValue();
+            parameter.ranges.min = response.getMinValue();
+            parameter.ranges.max = response.getMaxValue();
 
-        int enumeration_count = response.getEnumerationCount();
-        parameter.enumValues.count = enumeration_count;
-        parameter.enumValues.values = new ParameterEnumerationValue[enumeration_count];
+            int enumeration_count = response.getEnumerationCount();
+            parameter.enumValues.count = enumeration_count;
+            parameter.enumValues.values = new ParameterEnumerationValue[enumeration_count];
 
-        for (int i = 0; i < enumeration_count; i++) {
-            get_parameter_enum(p_index, i, &parameter.enumValues.values[i]);
+            for (int i = 0; i < enumeration_count; i++) {
+                get_parameter_enum(p_index, i, &parameter.enumValues.values[i]);
+            }
+
+            parameter.designation = (ParameterDesignation)response.getDesignation();
+
+            parameter.midiCC = response.getMidiCC();
+            parameter.groupId = response.getGroupId();
         }
 
-        parameter.designation = (ParameterDesignation)response.getDesignation();
-
-        parameter.midiCC = response.getMidiCC();
-        parameter.groupId = response.getGroupId();
+        return response.getResult();
+    } else {
+        return result;
     }
-
-    return response.getResult();
 }
 
 void GodotDistrhoPluginClient::get_parameter_enum(int p_parameter_index, int p_index, ParameterEnumerationValue *parameter_enum) {
@@ -282,16 +273,22 @@ void GodotDistrhoPluginClient::get_parameter_enum(int p_parameter_index, int p_i
                 req.setIndex(p_index);
                 });
 
-    GetParameterEnumResponse::Reader response = reader.getRoot<GetParameterEnumResponse>();
-    parameter_enum->label = response.getLabel().cStr();
-    parameter_enum->value = response.getValue();
+    if (result) {
+        GetParameterEnumResponse::Reader response = reader.getRoot<GetParameterEnumResponse>();
+        parameter_enum->label = response.getLabel().cStr();
+        parameter_enum->value = response.getValue();
+    }
 }
 
 int GodotDistrhoPluginClient::get_parameter_count() {
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetParameterCountRequest, GetParameterCountResponse>(result);
-    GetParameterCountResponse::Reader response = reader.getRoot<GetParameterCountResponse>();
-    return response.getCount();
+    if (result) {
+        GetParameterCountResponse::Reader response = reader.getRoot<GetParameterCountResponse>();
+        return response.getCount();
+    } else {
+        return 0;
+    }
 }
 
 float GodotDistrhoPluginClient::get_parameter_value(int p_index) const {
@@ -308,9 +305,11 @@ bool GodotDistrhoPluginClient::get_initial_state_value(int p_index, State &p_sta
             req.setIndex(p_index);
         });
 
-    GetInitialStateValueResponse::Reader response = reader.getRoot<GetInitialStateValueResponse>();
-    p_state.key = response.getKey().cStr();
-    p_state.defaultValue = response.getValue().cStr();
+    if (result) {
+        GetInitialStateValueResponse::Reader response = reader.getRoot<GetInitialStateValueResponse>();
+        p_state.key = response.getKey().cStr();
+        p_state.defaultValue = response.getValue().cStr();
+    }
 
     return result;
 }
@@ -327,29 +326,45 @@ void GodotDistrhoPluginClient::set_state_value(const char* p_key, const char* p_
 int GodotDistrhoPluginClient::get_program_count() {
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetProgramCountRequest, GetProgramCountResponse>(result);
-    GetProgramCountResponse::Reader response = reader.getRoot<GetProgramCountResponse>();
-    return response.getCount();
+    if (result) {
+        GetProgramCountResponse::Reader response = reader.getRoot<GetProgramCountResponse>();
+        return response.getCount();
+    } else {
+        return 0;
+    }
 }
 
 int GodotDistrhoPluginClient::get_state_count() {
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetStateCountRequest, GetStateCountResponse>(result);
-    GetStateCountResponse::Reader response = reader.getRoot<GetStateCountResponse>();
-    return response.getCount();
+    if (result) {
+        GetStateCountResponse::Reader response = reader.getRoot<GetStateCountResponse>();
+        return response.getCount();
+    } else {
+        return 0;
+    }
 }
 
 int GodotDistrhoPluginClient::get_number_of_input_ports() {
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetNumberOfInputPortsRequest, GetNumberOfInputPortsResponse>(result);
-    GetNumberOfInputPortsResponse::Reader response = reader.getRoot<GetNumberOfInputPortsResponse>();
-    return response.getNumberOfInputPorts();
+    if (result) {
+        GetNumberOfInputPortsResponse::Reader response = reader.getRoot<GetNumberOfInputPortsResponse>();
+        return response.getNumberOfInputPorts();
+    } else {
+        return 0;
+    }
 }
 
 int GodotDistrhoPluginClient::get_number_of_output_ports() {
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetNumberOfOutputPortsRequest, GetNumberOfOutputPortsResponse>(result);
-    GetNumberOfOutputPortsResponse::Reader response = reader.getRoot<GetNumberOfOutputPortsResponse>();
-    return response.getNumberOfOutputPorts();
+    if (result) {
+        GetNumberOfOutputPortsResponse::Reader response = reader.getRoot<GetNumberOfOutputPortsResponse>();
+        return response.getNumberOfOutputPorts();
+    } else {
+        return 0;
+    }
 }
 
 bool GodotDistrhoPluginClient::get_input_port(int p_index, AudioPort &port) {
@@ -357,13 +372,17 @@ bool GodotDistrhoPluginClient::get_input_port(int p_index, AudioPort &port) {
     capnp::FlatArrayMessageReader reader =
         rpc_call<GetInputPortRequest, GetInputPortResponse>(result, [p_index](auto &req) { req.setIndex(p_index); });
 
-    GetInputPortResponse::Reader response = reader.getRoot<GetInputPortResponse>();
-    port.hints = response.getHints();
-    port.name = response.getName().cStr();
-    port.symbol = response.getSymbol().cStr();
-    port.groupId = response.getGroupId();
+    if (result) {
+        GetInputPortResponse::Reader response = reader.getRoot<GetInputPortResponse>();
+        port.hints = response.getHints();
+        port.name = response.getName().cStr();
+        port.symbol = response.getSymbol().cStr();
+        port.groupId = response.getGroupId();
 
-    return response.getResult();
+        return response.getResult();
+    } else {
+        return result;
+    }
 }
 
 bool GodotDistrhoPluginClient::get_output_port(int p_index, AudioPort &port) {
@@ -371,13 +390,17 @@ bool GodotDistrhoPluginClient::get_output_port(int p_index, AudioPort &port) {
     capnp::FlatArrayMessageReader reader =
         rpc_call<GetOutputPortRequest, GetOutputPortResponse>(result, [p_index](auto &req) { req.setIndex(p_index); });
 
-    GetOutputPortResponse::Reader response = reader.getRoot<GetOutputPortResponse>();
-    port.hints = response.getHints();
-    port.name = response.getName().cStr();
-    port.symbol = response.getSymbol().cStr();
-    port.groupId = response.getGroupId();
+    if (result) {
+        GetOutputPortResponse::Reader response = reader.getRoot<GetOutputPortResponse>();
+        port.hints = response.getHints();
+        port.name = response.getName().cStr();
+        port.symbol = response.getSymbol().cStr();
+        port.groupId = response.getGroupId();
 
-    return response.getResult();
+        return response.getResult();
+    } else {
+        return result;
+    }
 }
 
 bool GodotDistrhoPluginClient::shutdown() {

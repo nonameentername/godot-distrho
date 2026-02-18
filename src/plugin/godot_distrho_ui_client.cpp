@@ -71,8 +71,12 @@ void GodotDistrhoUIClient::run() {
 std::string GodotDistrhoUIClient::get_some_text() {
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetSomeTextRequest, GetSomeTextResponse>(result);
-    GetSomeTextResponse::Reader response = reader.getRoot<GetSomeTextResponse>();
-    return response.getText();
+    if (result) {
+        GetSomeTextResponse::Reader response = reader.getRoot<GetSomeTextResponse>();
+        return response.getText();
+    } else {
+        return "";
+    }
 }
 
 bool GodotDistrhoUIClient::is_ready() {
@@ -86,8 +90,10 @@ int64_t GodotDistrhoUIClient::get_native_window_id() {
 
     bool result;
     capnp::FlatArrayMessageReader reader = rpc_call<GetNativeWindowIdRequest, GetNativeWindowIdResponse>(result);
-    GetNativeWindowIdResponse::Reader response = reader.getRoot<GetNativeWindowIdResponse>();
-    native_window_id = response.getId();
+    if (result) {
+        GetNativeWindowIdResponse::Reader response = reader.getRoot<GetNativeWindowIdResponse>();
+        native_window_id = response.getId();
+    }
 
     return native_window_id;
 }
@@ -116,8 +122,9 @@ bool GodotDistrhoUIClient::shutdown() {
     if (result) {
         ShutdownResponse::Reader response = reader.getRoot<ShutdownResponse>();
         return response.getResult();
+    } else {
+        return result;
     }
-    return false;
 }
 
 godot::DistrhoSharedMemoryRPC *GodotDistrhoUIClient::get_godot_rpc_memory() {

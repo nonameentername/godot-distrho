@@ -15,6 +15,8 @@ START_NAMESPACE_DISTRHO
 
 class GodotDistrhoPluginServer {
 private:
+    std::atomic<bool> is_shutting_down{false};
+
     bool exit_thread;
     std::thread rpc_thread;
 
@@ -25,6 +27,8 @@ private:
 protected:
     template <typename T, typename R>
     void handle_rpc_call(std::function<void(typename T::Reader &, typename R::Builder &)> handle_request);
+
+    DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GodotDistrhoPluginServer)
 
 public:
     GodotDistrhoPluginServer(Plugin *p_godot_distrho_plugin, godot::DistrhoSharedMemoryRPC *p_rpc_memory);
