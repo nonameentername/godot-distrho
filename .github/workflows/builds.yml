@@ -284,12 +284,67 @@ jobs:
           godot --headless --export-pack Linux addons/distrho/bin/linux/debug/bin/godot-distrho.vst3/Contents/x86_64-linux/godot-distrho.pck
           ./pluginval --strictness-level 5 --skip-gui-tests addons/distrho/bin/linux/debug/bin/godot-distrho.vst3
 
+  verify-windows-build:
+    name: Verify Windows build
+    runs-on: windows-latest
+    needs: windows-build
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Restore cached Windows artifacts
+        uses: actions/cache/restore@v4
+        with:
+          path: addons/distrho/bin
+          key: windows-artifacts-debug-${{github.run_id}}
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.0
+          use-dotnet: false
+          include-templates: false
+
+      - name: Verify godot-distrho
+        run: |
+          godot --headless --import || true
+          godot --headless -s distrho_run_scene.gd --quit-after 300 2> NUL | grep 'output result is 2'
+
+      - name: Install pluginval
+        run: |
+          curl -sSL https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_Windows.zip -o pluginval.zip
+          unzip -o pluginval.zip
+          rm -f pluginval.zip
+
+      - name: Verify LV2
+        run: |
+          cp addons/distrho/bin/windows/debug/bin/godot-plugin.exe addons/distrho/bin/windows/debug/bin/godot-distrho.lv2
+          cp addons/distrho/bin/windows/libdistrhogodot.windows.template_debug.dev.x86_64.dll addons/distrho/bin/windows/debug/bin/godot-distrho.lv2
+          cp addons/distrho/bin/windows/debug/bin/lib*.dll addons/distrho/bin/windows/debug/bin/godot-distrho.lv2
+          cp templates/lv2/windows/*.ttl addons/distrho/bin/windows/debug/bin/godot-distrho.lv2
+          godot --headless --export-pack Windows addons/distrho/bin/windows/debug/bin/godot-distrho.lv2/godot-distrho.pck
+          ./pluginval.exe --strictness-level 5 --skip-gui-tests addons/distrho/bin/windows/debug/bin/godot-distrho.lv2
+
+      - name: Verify VST3
+        run: |
+          cp addons/distrho/bin/windows/debug/bin/godot-plugin.exe addons/distrho/bin/windows/debug/bin/godot-distrho.vst3/Contents/x86_64-win
+          cp addons/distrho/bin/windows/libdistrhogodot.windows.template_debug.dev.x86_64.dll addons/distrho/bin/windows/debug/bin/godot-distrho.vst3/Contents/x86_64-win
+          cp addons/distrho/bin/windows/debug/bin/lib*.dll addons/distrho/bin/windows/debug/bin/godot-distrho.vst3/Contents/x86_64-win
+          godot --headless --export-pack Windows addons/distrho/bin/windows/debug/bin/godot-distrho.vst3/Contents/x86_64-win/godot-distrho.pck
+          ./pluginval.exe --strictness-level 5 --skip-gui-tests addons/distrho/bin/windows/debug/bin/godot-distrho.vst3
+
   publish_artifacts:
     #if: ${{ github.ref == 'refs/heads/main' }}
     if: false
     name: Publish Artifacts
     runs-on: ubuntu-latest
-    needs: [verify-linux-build]
+    needs: [verify-linux-build, verify-windows-build]
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
