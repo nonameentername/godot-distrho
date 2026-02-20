@@ -233,6 +233,7 @@ jobs:
         with:
           path: addons/distrho/bin
           key: windows-artifacts-${{ matrix.environment }}-${{github.run_id}}
+          enableCrossOsArchive: true
 
   verify-linux-build:
     name: Verify Linux/Ubuntu build
@@ -307,6 +308,7 @@ jobs:
         with:
           path: addons/distrho/bin
           key: windows-artifacts-debug-${{github.run_id}}
+          enableCrossOsArchive: true
 
       - name: Setup Godot
         uses: chickensoft-games/setup-godot@v2
