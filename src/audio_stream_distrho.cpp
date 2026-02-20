@@ -29,7 +29,17 @@ float AudioStreamDistrho::get_length() const {
 }
 
 int AudioStreamDistrho::process_sample(AudioFrame *p_buffer, float p_rate, int p_frames) {
-    return DistrhoPluginServer::get_singleton()->process_sample(p_buffer, p_rate, p_frames);
+    DistrhoPluginServer *distrho_server = DistrhoPluginServer::get_singleton();
+    if (distrho_server != NULL) {
+        return distrho_server->process_sample(p_buffer, p_rate, p_frames);
+    }
+
+    for (int frame = 0; frame < p_frames; frame += 1) {
+        p_buffer[frame].left = 0;
+        p_buffer[frame].right = 0;
+    }
+
+    return p_frames;
 }
 
 void AudioStreamDistrho::_bind_methods() {

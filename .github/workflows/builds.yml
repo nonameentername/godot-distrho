@@ -324,7 +324,7 @@ jobs:
 
       - name: Verify godot-distrho
         run: |
-          godot --headless -s distrho_run_scene.gd --quit-after 300 2> NUL | grep 'output result is 2'
+          godot --headless -s distrho_run_scene.gd 2> NUL | grep 'output result is 2'
 
       - name: Install pluginval
         run: |

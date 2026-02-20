@@ -196,7 +196,9 @@ void DistrhoUIServer::rpc_thread_func() {
     }
 
     SceneTree *tree = Object::cast_to<SceneTree>(Engine::get_singleton()->get_main_loop());
-    tree->quit();
+    if (tree != NULL) {
+        tree->quit();
+    }
 }
 
 void DistrhoUIServer::process() {
