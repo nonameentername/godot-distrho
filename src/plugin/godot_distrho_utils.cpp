@@ -13,7 +13,6 @@
 #endif
 
 #include <boost/process.hpp>
-#include <boost/process/v1/group.hpp>
 #include <filesystem>
 
 #ifdef _WIN32
@@ -67,15 +66,10 @@ std::string GodotDistrhoUtils::get_shared_library_path() {
 #endif
 }
 
+child *GodotDistrhoUtils::launch_process(const std::string &p_name, process_env_t p_env,
 #ifdef _WIN32
-static boost::process::v1::group& pdeath_group()
-{
-    static boost::process::v1::group g;
-    return g;
-}
+                                         boost::process::v1::group &p_group,
 #endif
-
-child *GodotDistrhoUtils::launch_process(const std::string &p_name, environment p_env,
                                          const std::vector<std::string> &p_args) {
     using std::filesystem::path;
 
@@ -95,7 +89,7 @@ child *GodotDistrhoUtils::launch_process(const std::string &p_name, environment 
     //TODO: set config option to show/hide the logs
 
 #ifdef _WIN32
-    return new child(executable, p_args, env = p_env, pdeath_group(), windows::create_no_window);
+    return new child(executable, p_args, env = p_env, p_group, windows::create_no_window);
 #else
     return new child(executable, p_args, env = p_env);
 #endif

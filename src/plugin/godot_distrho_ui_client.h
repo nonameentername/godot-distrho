@@ -14,6 +14,7 @@
 
 #include <boost/process.hpp>
 #include <cstdint>
+#include <boost/process/v1/group.hpp>
 #include <boost/process/v1/child.hpp>
 
 START_NAMESPACE_DISTRHO
@@ -21,6 +22,7 @@ START_NAMESPACE_DISTRHO
 class GodotDistrhoUIClient {
 private:
     int64_t native_window_id = 0;
+    boost::process::v1::group windows_group;
     boost::process::v1::child *plugin;
     mutable godot::DistrhoSharedMemory shared_memory;
     mutable godot::DistrhoSharedMemoryRPC rpc_memory;

@@ -23,13 +23,19 @@ GodotDistrhoPluginClient::GodotDistrhoPluginClient(DistrhoCommon::DISTRHO_MODULE
     shared_memory_region.initialize(&shared_memory);
 
 #if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
+#if defined(_WIN32)
+    boost::process::v1::wenvironment env = boost::this_process::wenvironment();
+
+    env[L"DISTRHO_MODULE_TYPE"] = std::to_wstring(p_type);
+    env[L"DISTRHO_SHARED_MEMORY_UUID"] = std::wstring(shared_memory.shared_memory_name.begin(), shared_memory.shared_memory_name.end());
+
+    plugin = GodotDistrhoUtils::launch_process("godot-plugin.exe", env, windows_group);
+#else
     boost::process::v1::environment env = boost::this_process::environment();
 
     env["DISTRHO_MODULE_TYPE"] = std::to_string(p_type);
     env["DISTRHO_SHARED_MEMORY_UUID"] = shared_memory.shared_memory_name.c_str();
-#if defined(_WIN32)
-    plugin = GodotDistrhoUtils::launch_process("godot-plugin.exe", env);
-#else
+
     plugin = GodotDistrhoUtils::launch_process("godot-plugin", env);
 #endif
 #endif
