@@ -60,6 +60,7 @@ GodotDistrhoPluginClient::~GodotDistrhoPluginClient() {
     if (plugin != NULL) {
         if (plugin->running()) {
             plugin->terminate();
+            plugin->wait();
         }
         delete plugin;
         plugin = NULL;
