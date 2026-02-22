@@ -10,6 +10,7 @@
 #endif
 
 #include <boost/process.hpp>
+#include <boost/process/v1/group.hpp>
 #include <string>
 #include <vector>
 
@@ -19,6 +20,12 @@ typedef unsigned long XID;
 
 typedef XID Window;
 
+#ifdef _WIN32
+    typedef boost::process::v1::wenvironment process_env_t;
+#else
+    typedef boost::process::v1::environment process_env_t;
+#endif
+
 START_NAMESPACE_DISTRHO
 
 class GodotDistrhoUtils {
@@ -26,8 +33,11 @@ class GodotDistrhoUtils {
 public:
     static std::string get_executable_path();
 
-    static boost::process::v1::child *launch_process(const std::string &p_name, boost::process::v1::environment p_env,
-                                                 const std::vector<std::string> &p_args = {});
+    static boost::process::v1::child *launch_process(const std::string &p_name, process_env_t p_env,
+#ifdef _WIN32
+                                                     boost::process::v1::group &p_group,
+#endif
+                                                     const std::vector<std::string> &p_args = {});
 
     static std::string find_godot_package();
 

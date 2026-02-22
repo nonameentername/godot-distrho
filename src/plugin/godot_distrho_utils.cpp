@@ -66,7 +66,10 @@ std::string GodotDistrhoUtils::get_shared_library_path() {
 #endif
 }
 
-child *GodotDistrhoUtils::launch_process(const std::string &p_name, environment p_env,
+child *GodotDistrhoUtils::launch_process(const std::string &p_name, process_env_t p_env,
+#ifdef _WIN32
+                                         boost::process::v1::group &p_group,
+#endif
                                          const std::vector<std::string> &p_args) {
     using std::filesystem::path;
 
@@ -86,7 +89,7 @@ child *GodotDistrhoUtils::launch_process(const std::string &p_name, environment 
     //TODO: set config option to show/hide the logs
 
 #ifdef _WIN32
-    return new child(executable, p_args, env = p_env, windows::create_no_window);
+    return new child(executable, p_args, env = p_env, p_group, windows::create_no_window);
 #else
     return new child(executable, p_args, env = p_env);
 #endif

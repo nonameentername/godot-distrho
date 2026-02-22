@@ -15,6 +15,7 @@
 #endif
 
 #include <boost/process.hpp>
+#include <boost/process/v1/group.hpp>
 #include <boost/process/v1/child.hpp>
 
 START_NAMESPACE_DISTRHO
@@ -31,7 +32,7 @@ private:
     mutable int version;
     mutable int unique_id;
 
-
+    boost::process::v1::group windows_group;
     boost::process::v1::child *plugin;
     mutable godot::DistrhoSharedMemory shared_memory;
     mutable godot::DistrhoSharedMemoryAudio audio_memory;

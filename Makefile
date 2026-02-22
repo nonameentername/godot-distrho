@@ -51,7 +51,7 @@ vst3:
 #godot library
 
 dev-build:
-	scons platform=$(PLATFORM) target=template_debug dev_build=yes debug_symbols=yes compiledb=true
+	$(MAKE) shell-ubuntu SHELL_COMMAND='scons platform=$(PLATFORM) target=template_debug dev_build=yes debug_symbols=yes compiledb=true'
 
 UNAME := $(shell uname)
 ifeq ($(UNAME), Windows)
@@ -70,8 +70,12 @@ docker-ubuntu:
 shell-ubuntu: docker-ubuntu
 	docker run -it --rm -v ${CURDIR}:${CURDIR} -w ${CURDIR} godot-distrho-ubuntu ${SHELL_COMMAND}
 
-ubuntu:
+ubuntu: ubuntu-debug ubuntu-release
+
+ubuntu-debug:
 	$(MAKE) shell-ubuntu SHELL_COMMAND='./platform/ubuntu/build_debug.sh'
+
+ubuntu-release:
 	$(MAKE) shell-ubuntu SHELL_COMMAND='./platform/ubuntu/build_release.sh'
 
 docker-osxcross:
@@ -80,8 +84,12 @@ docker-osxcross:
 shell-osxcross: docker-osxcross
 	docker run -it --rm -v ${CURDIR}:${CURDIR} -w ${CURDIR} godot-distrho-osxcross ${SHELL_COMMAND}
 
-osxcross:
+osxcross: osxcross-debug osxcross-release
+
+osxcross-debug:
 	$(MAKE) shell-osxcross SHELL_COMMAND='./platform/osxcross/build_debug.sh'
+
+osxcross-release:
 	$(MAKE) shell-osxcross SHELL_COMMAND='./platform/osxcross/build_release.sh'
 
 docker-mingw:
@@ -90,8 +98,12 @@ docker-mingw:
 shell-mingw: docker-mingw
 	docker run -it --rm -v ${CURDIR}:${CURDIR} -w ${CURDIR} godot-distrho-mingw ${SHELL_COMMAND}
 
-mingw:
+mingw: mingw-debug mingw-release
+
+mingw-debug:
 	$(MAKE) shell-mingw SHELL_COMMAND='./platform/mingw/build_debug.sh'
+
+mingw-release:
 	$(MAKE) shell-mingw SHELL_COMMAND='./platform/mingw/build_release.sh'
 
 clean:
