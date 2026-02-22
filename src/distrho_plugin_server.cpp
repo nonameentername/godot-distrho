@@ -18,6 +18,8 @@
 #include "godot_cpp/classes/os.hpp"
 #include "godot_cpp/classes/scene_tree.hpp"
 #include "godot_cpp/classes/time.hpp"
+#include <godot_cpp/classes/json.hpp>
+#include <godot_cpp/classes/file_access.hpp>
 #include "godot_cpp/core/class_db.hpp"
 #include "godot_cpp/core/memory.hpp"
 #include "godot_cpp/variant/dictionary.hpp"
@@ -890,6 +892,14 @@ DistrhoLauncher *DistrhoPluginServer::get_distrho_launcher() {
 
 void DistrhoPluginServer::set_distrho_plugin(DistrhoPluginInstance *p_distrho_plugin) {
     distrho_plugin = p_distrho_plugin;
+
+    if (godot::Engine::get_singleton()->is_editor_hint()) {
+         Ref<FileAccess> file = godot::FileAccess::open("res://distrho_plugin_info.json", godot::FileAccess::WRITE);
+         if (file.is_valid()) {
+             String json = godot::JSON::stringify(distrho_plugin->get_json());
+             file->store_string(json);
+         }
+    }
 }
 
 DistrhoPluginInstance *DistrhoPluginServer::get_distrho_plugin() {
@@ -916,7 +926,7 @@ Ref<DistrhoParameter> DistrhoPluginServer::create_parameter(const Dictionary &p_
     parameter->set_designation(p_data.get("designation", 0));
 
     parameter->set_midi_cc(p_data.get("midi_cc", 0));
-    parameter->set_group_id(p_data.get("midi_cc", DistrhoAudioPort::PORT_GROUP_NONE));
+    parameter->set_group_id(p_data.get("group_id", DistrhoAudioPort::PORT_GROUP_NONE));
 
     return parameter;
 }

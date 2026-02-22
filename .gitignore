@@ -15,6 +15,7 @@ vcpkg_installed
 build
 build-log.txt
 compile_commands.json
+distrho_plugin_info.json
 src/version_generated.gen.h
 src/gen
 src/godot_distrho_schema.capnp.cpp

@@ -42,6 +42,8 @@ public:
     static std::string find_godot_package();
 
     static std::string get_shared_library_path();
+
+    static std::string get_full_path(const std::string &p_name);
 };
 
 END_NAMESPACE_DISTRHO

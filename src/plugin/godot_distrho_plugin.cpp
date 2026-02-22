@@ -1,6 +1,7 @@
 #include "godot_distrho_plugin.h"
 #include "DistrhoDetails.hpp"
 #include "distrho_shared_memory_audio.h"
+#include "godot_distrho_plugin_info.h"
 #include "godot_distrho_plugin_client.h"
 #include "godot_distrho_plugin_server.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -124,7 +125,7 @@ void GodotDistrhoPlugin::setState(const char* key, const char* value) {
 
 void GodotDistrhoPlugin::initState(uint32_t p_index, State& p_state) {
     p_state.key = state->state_values[p_index]->key;
-    p_state.defaultValue = state->state_values[p_index]->label;
+    p_state.defaultValue = state->state_values[p_index]->defaultValue;
 }
 
 void GodotDistrhoPlugin::run(const float **inputs, float **outputs, uint32_t numSamples, const MidiEvent *midiEvents,
@@ -142,59 +143,59 @@ void GodotDistrhoPlugin::run(const float **inputs, float **outputs, uint32_t num
 }
 
 Plugin *createPlugin() {
-    GodotDistrhoPluginClient *client = new GodotDistrhoPluginClient(DistrhoCommon::PLUGIN_TYPE);
-    GodotDistrhoPluginServer *server = new GodotDistrhoPluginServer(NULL, client->get_godot_rpc_memory());
+    DistrhoPluginInfo *plugin_info = new DistrhoPluginInfo();
     GodotDistrhoPluginState *state = new GodotDistrhoPluginState();
 
-    uint32_t parameter_count = client->get_parameter_count();
-    uint32_t program_count = client->get_program_count();
-    uint32_t state_count = client->get_state_count();
+    plugin_info->load();
 
-    state->label = client->getLabel();
-    state->description = client->getDescription();
-    state->maker = client->getMaker();
-    state->home_page = client->getHomePage();
-    state->license = client->getLicense();
-    state->version = client->getVersion();
-    state->unique_id = client->getUniqueId();
+    uint32_t parameter_count = plugin_info->parameters.size();;
+    //TODO: add to plugin_info
+    uint32_t program_count = 0;
+    uint32_t state_count = plugin_info->state_values.size();
+
+    state->label = plugin_info->label;
+    state->description = plugin_info->description;
+    state->maker = plugin_info->maker;
+    state->home_page = plugin_info->homepage;
+    state->license = plugin_info->license;
+    state->version = plugin_info->get_version();
+    state->unique_id = plugin_info->get_unique_id();
 
     state->parameters.reserve(parameter_count);
 
     for (size_t i = 0; i < parameter_count; ++i) {
         state->parameters.push_back(std::make_unique<Parameter>());
-        client->initParameter(i, *state->parameters[i]);
+        plugin_info->get_parameter(i, *state->parameters[i]);
     }
 
     state->input_ports.reserve(DISTRHO_PLUGIN_NUM_INPUTS);
 
     for (int i = 0; i < DISTRHO_PLUGIN_NUM_INPUTS; i++) {
         state->input_ports.push_back(std::make_unique<AudioPort>());
-        client->get_input_port(i, *state->input_ports[i]);
+        plugin_info->get_input_port(i, *state->input_ports[i]);
     }
 
     state->output_ports.reserve(DISTRHO_PLUGIN_NUM_OUTPUTS);
 
     for (int i = 0; i < DISTRHO_PLUGIN_NUM_OUTPUTS; i++) {
         state->output_ports.push_back(std::make_unique<AudioPort>());
-        client->get_output_port(i, *state->output_ports[i]);
+        plugin_info->get_output_port(i, *state->output_ports[i]);
     }
 
     state->state_values.reserve(state_count);
 
-    for (int i = 0; i < state_count; i++) {
+    int state_index = 0;
+
+	for (const auto& state_value : plugin_info->state_values) {
         state->state_values.push_back(std::make_unique<State>());
-        client->get_initial_state_value(i, *state->state_values[i]);
+        state->state_values[state_index]->key = state_value.first.c_str();
+        state->state_values[state_index]->defaultValue = state_value.second.c_str();
+        state_index++;
     }
 
     GodotDistrhoPlugin *const plugin = new GodotDistrhoPlugin(state, parameter_count, program_count, state_count);
 
-    client->shutdown();
-
-    delete server;
-    server = NULL;
-
-    delete client;
-    client = NULL;
+    delete plugin_info;
 
     return plugin;
 }

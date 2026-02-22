@@ -71,20 +71,8 @@ child *GodotDistrhoUtils::launch_process(const std::string &p_name, process_env_
                                          boost::process::v1::group &p_group,
 #endif
                                          const std::vector<std::string> &p_args) {
-    using std::filesystem::path;
 
-    path lib_dir = path{get_shared_library_path()}.parent_path();
-    path exe_dir = path{get_executable_path()}.parent_path();
-
-    path primary_tool_path = lib_dir / path(p_name);
-    path fallback_tool_path = exe_dir / path(p_name);
-
-    std::string executable;
-    if (std::filesystem::exists(primary_tool_path)) {
-        executable = primary_tool_path.string();
-    } else {
-        executable = fallback_tool_path.string();
-    }
+    std::string executable = get_full_path(p_name);
 
     //TODO: set config option to show/hide the logs
 
@@ -116,6 +104,22 @@ std::string GodotDistrhoUtils::find_godot_package() {
     }
 
     return "";
+}
+
+std::string GodotDistrhoUtils::get_full_path(const std::string &p_name) {
+    using std::filesystem::path;
+
+    path lib_dir = path{get_shared_library_path()}.parent_path();
+    path exe_dir = path{get_executable_path()}.parent_path();
+
+    path primary_tool_path = lib_dir / path(p_name);
+    path fallback_tool_path = exe_dir / path(p_name);
+
+    if (std::filesystem::exists(primary_tool_path)) {
+        return primary_tool_path.string();
+    } else {
+        return fallback_tool_path.string();
+    }
 }
 
 END_NAMESPACE_DISTRHO
