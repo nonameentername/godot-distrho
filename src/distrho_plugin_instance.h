@@ -31,6 +31,8 @@ public:
 
     Dictionary _get_state_values();
 
+    Dictionary get_json();
+
     static void _bind_methods();
 };
 } // namespace godot

@@ -1,7 +1,9 @@
 #include "distrho_plugin_instance.h"
 #include "distrho_audio_port.h"
+#include "distrho_parameter.h"
 #include "godot_cpp/templates/vector.hpp"
 #include "godot_cpp/variant/dictionary.hpp"
+#include "godot_cpp/variant/variant.hpp"
 
 using namespace godot;
 
@@ -142,6 +144,67 @@ Dictionary DistrhoPluginInstance::_get_state_values() {
             }
         }
     }
+
+    return result;
+}
+
+
+Dictionary DistrhoPluginInstance::get_json() {
+    Dictionary result;
+    Array parameters;
+    Array input_ports;
+    Array output_ports;
+
+    for (const Ref<DistrhoParameter>& p : _get_parameters()) {
+        Dictionary parameter;
+        parameter["hints"] = p->get_hints();
+        parameter["name"] = p->get_name();
+        parameter["short_name"] = p->get_short_name();
+        parameter["symbol"] = p->get_symbol();
+        parameter["unit"] = p->get_unit();
+        parameter["description"] = p->get_description();
+        parameter["default_value"] = p->get_default_value();
+        parameter["min_value"] = p->get_min_value();
+        parameter["max_value"] = p->get_max_value();
+        parameter["enumeration_values"] = p->get_enumeration_values();
+        parameter["designation"] = p->get_designation();
+        parameter["midi_cc"] = p->get_midi_cc();
+        parameter["group_id"] = p->get_group_id();
+
+        parameters.append(parameter);
+    }
+
+    for (const Ref<DistrhoAudioPort>& p : _get_input_ports()) {
+        Dictionary input_port;
+        input_port["hints"] = p->get_hints();
+        input_port["name"] = p->get_name();
+        input_port["symbol"] = p->get_symbol();
+        input_port["group_id"] = p->get_group_id();
+
+        input_ports.append(input_port);
+    }
+
+    for (const Ref<DistrhoAudioPort>& p : _get_output_ports()) {
+        Dictionary output_port;
+        output_port["hints"] = p->get_hints();
+        output_port["name"] = p->get_name();
+        output_port["symbol"] = p->get_symbol();
+        output_port["group_id"] = p->get_group_id();
+
+        output_ports.append(output_port);
+    }
+
+    result["label"] = _get_label();
+    result["description"] = _get_description();
+    result["maker"] = _get_maker();
+    result["homepage"] = _get_homepage();
+    result["license"] = _get_license();
+    result["version"] = _get_version();
+    result["unique_id"] = _get_unique_id();
+    result["parameters"] = parameters;
+    result["input_ports"] = input_ports;
+    result["output_ports"] = output_ports;
+    result["state_values"] = _get_state_values();;
 
     return result;
 }

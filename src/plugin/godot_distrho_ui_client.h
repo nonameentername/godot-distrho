@@ -40,8 +40,6 @@ public:
 
     void run();
 
-    std::string get_some_text();
-
     bool is_ready();
 
     int64_t get_native_window_id();

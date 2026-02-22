@@ -18,6 +18,8 @@
 #include "godot_cpp/classes/os.hpp"
 #include "godot_cpp/classes/scene_tree.hpp"
 #include "godot_cpp/classes/time.hpp"
+#include <godot_cpp/classes/json.hpp>
+#include <godot_cpp/classes/file_access.hpp>
 #include "godot_cpp/core/class_db.hpp"
 #include "godot_cpp/core/memory.hpp"
 #include "godot_cpp/variant/dictionary.hpp"
@@ -258,211 +260,11 @@ void DistrhoPluginServer::rpc_thread_func() {
         if (result) {
             switch (rpc_memory->buffer->request_id) {
 
-            case GetLabelRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetLabelRequest, GetLabelResponse>([](auto &request, auto &response) {
-                    String label = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_label();
-                    response.setLabel(std::string(label.ascii()));
-                });
-                break;
-            }
-
-            case GetDescriptionRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetDescriptionRequest, GetDescriptionResponse>([](auto &request, auto &response) {
-                    String description = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_description();
-                    response.setDescription(std::string(description.ascii()));
-                });
-                break;
-            }
-
-            case GetMakerRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetMakerRequest, GetMakerResponse>([](auto &request, auto &response) {
-                    String maker = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_maker();
-                    response.setMaker(std::string(maker.ascii()));
-                });
-                break;
-            }
-
-            case GetHomePageRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetHomePageRequest, GetHomePageResponse>([](auto &request, auto &response) {
-                    String homepage = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_homepage();
-                    response.setHomePage(std::string(homepage.ascii()));
-                });
-                break;
-            }
-
-            case GetLicenseRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetLicenseRequest, GetLicenseResponse>([](auto &request, auto &response) {
-                    String license = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_license();
-                    response.setLicense(std::string(license.ascii()));
-                });
-                break;
-            }
-
-            case GetVersionRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetVersionRequest, GetVersionResponse>([](auto &request, auto &response) {
-                    String value = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_version();
-                    PackedStringArray version = value.split(".");
-                    if (version.size() == 3) {
-                        response.setMajor(version.get(0).to_int());
-                        response.setMinor(version.get(1).to_int());
-                        response.setPatch(version.get(2).to_int());
-                    }
-                });
-                break;
-            }
-
-            case GetUniqueIdRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetUniqueIdRequest, GetUniqueIdResponse>([](auto &request, auto &response) {
-                    String unique_id = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_unique_id();
-                    if (unique_id.length() >= 4) {
-                        response.setUniqueId(std::string(unique_id.ascii()));
-                    }
-                });
-                break;
-            }
-
-            case GetNumberOfInputPortsRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetNumberOfInputPortsRequest, GetNumberOfInputPortsResponse>(
-                    [](auto &request, auto &response) {
-                        int number_of_input_ports =
-                            DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_input_ports().size();
-                        response.setNumberOfInputPorts(number_of_input_ports);
-                    });
-                break;
-            }
-
-            case GetNumberOfOutputPortsRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetNumberOfOutputPortsRequest, GetNumberOfOutputPortsResponse>(
-                    [](auto &request, auto &response) {
-                        int number_of_input_ports =
-                            DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_output_ports().size();
-                        response.setNumberOfOutputPorts(number_of_input_ports);
-                    });
-                break;
-            }
-
-            case GetInputPortRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetInputPortRequest, GetInputPortResponse>([](auto &request, auto &response) {
-                    Vector<Ref<DistrhoAudioPort>> input_ports =
-                        DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_input_ports();
-                    if (request.getIndex() < input_ports.size()) {
-                        Ref<DistrhoAudioPort> port = input_ports[request.getIndex()];
-                        response.setHints(port->get_hints());
-                        response.setName(std::string(port->get_name().ascii()));
-                        response.setSymbol(std::string(port->get_symbol().ascii()));
-                        response.setGroupId(port->get_group_id());
-                        response.setResult(true);
-                    } else {
-                        response.setResult(false);
-                    }
-                });
-                break;
-            }
-
-            case GetOutputPortRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetOutputPortRequest, GetOutputPortResponse>([](auto &request, auto &response) {
-                    Vector<Ref<DistrhoAudioPort>> output_ports =
-                        DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_output_ports();
-                    if (request.getIndex() < output_ports.size()) {
-                        Ref<DistrhoAudioPort> port = output_ports[request.getIndex()];
-                        response.setHints(port->get_hints());
-                        response.setName(std::string(port->get_name().ascii()));
-                        response.setSymbol(std::string(port->get_symbol().ascii()));
-                        response.setGroupId(port->get_group_id());
-                        response.setResult(true);
-                    } else {
-                        response.setResult(false);
-                    }
-                });
-                break;
-            }
-
-            case GetParameterRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetParameterRequest, GetParameterResponse>([this](auto &request, auto &response) {
-                    Ref<DistrhoParameter> parameter =
-                        DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_parameters().get(
-                            request.getIndex());
-                    if (parameter.is_valid()) {
-                        response.setHints(parameter->get_hints());
-                        response.setName(std::string(parameter->get_name().ascii()));
-                        response.setShortName(std::string(parameter->get_short_name().ascii()));
-                        response.setSymbol(std::string(parameter->get_symbol().ascii()));
-                        response.setUnit(std::string(parameter->get_unit().ascii()));
-                        response.setDescription(std::string(parameter->get_description().ascii()));
-
-                        response.setDefaultValue(parameter->get_default_value());
-                        response.setMinValue(parameter->get_min_value());
-                        response.setMaxValue(parameter->get_max_value());
-
-                        response.setEnumerationCount(parameter->get_enumeration_values().size());
-                        response.setDesignation(parameter->get_designation());
-
-                        response.setMidiCC(parameter->get_midi_cc());
-                        response.setGroupId(parameter->get_group_id());
-                        response.setResult(true);
-                    } else {
-                        response.setResult(false);
-                    }
-                });
-                break;
-            }
-
-            case GetParameterEnumRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetParameterEnumRequest, GetParameterEnumResponse>([this](auto &request, auto &response) {
-                    Ref<DistrhoParameter> parameter =
-                        DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_parameters().get(
-                            request.getParameterIndex());
-                    if (parameter.is_valid()) {
-                        String key = parameter->get_enumeration_values().keys().get(request.getIndex());
-                        response.setLabel(std::string(key.ascii()));
-
-                        int value = parameter->get_enumeration_values().values().get(request.getIndex());
-                        response.setValue(value);
-                    }
-                });
-                break;
-            }
-
-           case GetInitialStateValueRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetInitialStateValueRequest, GetInitialStateValueResponse>(
-                    [this](auto &request, auto &response) {
-                        String key = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_state_values().keys().get(request.getIndex());
-                        response.setKey(std::string(key.ascii()));
-
-                        String value = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_state_values().values().get(request.getIndex());
-                        response.setValue(std::string(value.ascii()));
-                    });
-                break;
-            }
-
             case SetStateValueRequest::_capnpPrivate::typeId: {
                 handle_rpc_call<SetStateValueRequest, SetStateValueResponse>(
                     [this](auto &request, auto &response) {
                         state_values.set(request.getKey().cStr(), request.getValue().cStr());
                         call_deferred("emit_signal", "state_changed", request.getKey().cStr(), request.getValue().cStr());
-                    });
-                break;
-            }
-
-            case GetParameterCountRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetParameterCountRequest, GetParameterCountResponse>(
-                    [this](auto &request, auto &response) {
-                        response.setCount(
-                            DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_parameters().size());
-                    });
-                break;
-            }
-
-            case GetProgramCountRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetProgramCountRequest, GetProgramCountResponse>(
-                    [this](auto &request, auto &response) { response.setCount(0); });
-                break;
-            }
-
-            case GetStateCountRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetStateCountRequest, GetStateCountResponse>(
-                    [this](auto &request, auto &response) { response.setCount(
-                        DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_state_values().size());
                     });
                 break;
             }
@@ -890,6 +692,14 @@ DistrhoLauncher *DistrhoPluginServer::get_distrho_launcher() {
 
 void DistrhoPluginServer::set_distrho_plugin(DistrhoPluginInstance *p_distrho_plugin) {
     distrho_plugin = p_distrho_plugin;
+
+    if (godot::Engine::get_singleton()->is_editor_hint()) {
+         Ref<FileAccess> file = godot::FileAccess::open("res://distrho_plugin_info.json", godot::FileAccess::WRITE);
+         if (file.is_valid()) {
+             String json = godot::JSON::stringify(distrho_plugin->get_json());
+             file->store_string(json);
+         }
+    }
 }
 
 DistrhoPluginInstance *DistrhoPluginServer::get_distrho_plugin() {
@@ -916,7 +726,7 @@ Ref<DistrhoParameter> DistrhoPluginServer::create_parameter(const Dictionary &p_
     parameter->set_designation(p_data.get("designation", 0));
 
     parameter->set_midi_cc(p_data.get("midi_cc", 0));
-    parameter->set_group_id(p_data.get("midi_cc", DistrhoAudioPort::PORT_GROUP_NONE));
+    parameter->set_group_id(p_data.get("group_id", DistrhoAudioPort::PORT_GROUP_NONE));
 
     return parameter;
 }

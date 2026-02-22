@@ -144,14 +144,6 @@ void DistrhoUIServer::rpc_thread_func() {
 
             switch (rpc_memory->buffer->request_id) {
 
-            case GetSomeTextRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetSomeTextRequest, GetSomeTextResponse>([this](auto &request, auto &response) {
-                    String value = DistrhoUIServer::get_singleton()->get_distrho_ui()->_get_some_text();
-                    response.setText(std::string(value.ascii()));
-                });
-                break;
-            }
-
             case GetNativeWindowIdRequest::_capnpPrivate::typeId: {
                 handle_rpc_call<GetNativeWindowIdRequest, GetNativeWindowIdResponse>([this](auto &request, auto &response) {
                     int64_t value = DisplayServer::get_singleton()->window_get_native_handle(DisplayServer::WINDOW_HANDLE, 0);

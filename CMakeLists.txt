@@ -220,8 +220,8 @@ target_link_libraries(godot-plugin PRIVATE
   ${GODOT_LIBRARIES}
 )
 
-find_package(Boost REQUIRED COMPONENTS filesystem process)
-target_link_libraries(godot-plugin PRIVATE Boost::filesystem Boost::process)
+find_package(Boost REQUIRED COMPONENTS filesystem process json)
+target_link_libraries(godot-plugin PRIVATE Boost::filesystem Boost::process Boost::json)
 
 if(OSXCROSS_TARGET)
   target_link_libraries(godot-plugin PRIVATE
@@ -346,6 +346,7 @@ dpf_add_plugin(godot-distrho
     src/godot_distrho_schema.capnp.cpp
     src/plugin/godot_distrho_plugin.cpp
     src/plugin/godot_distrho_utils.cpp
+    src/plugin/godot_distrho_plugin_info.cpp
     src/plugin/godot_distrho_plugin_server.cpp
     src/plugin/godot_distrho_plugin_client.cpp
     src/distrho_shared_memory.cpp
@@ -359,6 +360,7 @@ dpf_add_plugin(godot-distrho
     src/plugin/godot_distrho_images.cpp
     src/plugin/godot_distrho_ui.cpp
     src/plugin/godot_distrho_utils.cpp
+    src/plugin/godot_distrho_plugin_info.cpp
     src/plugin/godot_distrho_ui_server.cpp
     src/plugin/godot_distrho_ui_client.cpp
     src/distrho_shared_memory.cpp
@@ -401,7 +403,7 @@ target_link_libraries(godot-distrho PUBLIC
   #${GODOT_LIBRARIES}
 )
 
-target_link_libraries(godot-distrho PRIVATE Boost::filesystem Boost::process)
+target_link_libraries(godot-distrho PRIVATE Boost::filesystem Boost::process Boost::json)
 
 #set(GODOT_PLUGIN_LV2_COPY_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin/godot-distrho.lv2")
 #set(GODOT_PLUGIN_LV2_COPY_DEST "${GODOT_PLUGIN_LV2_COPY_DEST_DIR}/godot-plugin")
