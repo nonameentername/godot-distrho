@@ -93,7 +93,7 @@ void GodotDistrhoPlugin::initParameter(const uint32_t index, Parameter &paramete
 
 float GodotDistrhoPlugin::getParameterValue(const uint32_t index) const {
     if (client != NULL) {
-        return client->getParameterValue(index);
+        return client->get_parameter_value(index);
     } else if (index < state->parameters.size() && state->parameters[index] != NULL) {
         return state->parameters[index]->ranges.def;
     } else {
@@ -103,7 +103,7 @@ float GodotDistrhoPlugin::getParameterValue(const uint32_t index) const {
 
 void GodotDistrhoPlugin::setParameterValue(const uint32_t index, const float value) {
     if (client != NULL) {
-        client->setParameterValue(index, value);
+        client->set_parameter_value(index, value);
     }
 }
 

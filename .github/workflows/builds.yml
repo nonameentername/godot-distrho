@@ -276,6 +276,7 @@ jobs:
 
       - name: Verify LV2
         run: |
+          cp distrho_plugin_info.json addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
           cp addons/distrho/bin/linux/debug/bin/godot-plugin addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
           cp addons/distrho/bin/linux/libdistrhogodot.linux.template_debug.dev.x86_64.so addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
           cp templates/lv2/linux/*.ttl addons/distrho/bin/linux/debug/bin/godot-distrho.lv2
@@ -284,6 +285,7 @@ jobs:
 
       - name: Verify VST3
         run: |
+          cp distrho_plugin_info.json addons/distrho/bin/linux/debug/bin/godot-distrho.vst3
           cp addons/distrho/bin/linux/debug/bin/godot-plugin addons/distrho/bin/linux/debug/bin/godot-distrho.vst3/Contents/x86_64-linux
           cp addons/distrho/bin/linux/libdistrhogodot.linux.template_debug.dev.x86_64.so addons/distrho/bin/linux/debug/bin/godot-distrho.vst3/Contents/x86_64-linux
           godot --headless --export-pack Linux addons/distrho/bin/linux/debug/bin/godot-distrho.vst3/Contents/x86_64-linux/godot-distrho.pck
@@ -334,6 +336,7 @@ jobs:
 
       - name: Verify LV2
         run: |
+          cp distrho_plugin_info.json addons/distrho/bin/windows/debug/bin/godot-distrho.lv2
           cp addons/distrho/bin/windows/debug/bin/godot-plugin.exe addons/distrho/bin/windows/debug/bin/godot-distrho.lv2
           cp addons/distrho/bin/windows/libdistrhogodot.windows.template_debug.dev.x86_64.dll addons/distrho/bin/windows/debug/bin/godot-distrho.lv2
           cp addons/distrho/bin/windows/debug/bin/lib*.dll addons/distrho/bin/windows/debug/bin/godot-distrho.lv2
@@ -342,8 +345,9 @@ jobs:
           ./pluginval.exe --strictness-level 5 --skip-gui-tests addons/distrho/bin/windows/debug/bin/godot-distrho.lv2
 
       - name: Verify VST3
-        continue-on-error: true
+        #continue-on-error: true
         run: |
+          cp distrho_plugin_info.json addons/distrho/bin/windows/debug/bin/godot-distrho.vst3
           cp addons/distrho/bin/windows/debug/bin/godot-plugin.exe addons/distrho/bin/windows/debug/bin/godot-distrho.vst3/Contents/x86_64-win
           cp addons/distrho/bin/windows/libdistrhogodot.windows.template_debug.dev.x86_64.dll addons/distrho/bin/windows/debug/bin/godot-distrho.vst3/Contents/x86_64-win
           cp addons/distrho/bin/windows/debug/bin/lib*.dll addons/distrho/bin/windows/debug/bin/godot-distrho.vst3/Contents/x86_64-win

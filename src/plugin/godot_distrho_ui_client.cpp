@@ -78,17 +78,6 @@ capnp::FlatArrayMessageReader GodotDistrhoUIClient::rpc_call(
 void GodotDistrhoUIClient::run() {
 }
 
-std::string GodotDistrhoUIClient::get_some_text() {
-    bool result;
-    capnp::FlatArrayMessageReader reader = rpc_call<GetSomeTextRequest, GetSomeTextResponse>(result);
-    if (result) {
-        GetSomeTextResponse::Reader response = reader.getRoot<GetSomeTextResponse>();
-        return response.getText();
-    } else {
-        return "";
-    }
-}
-
 bool GodotDistrhoUIClient::is_ready() {
     return rpc_memory.buffer->ready;
 }
