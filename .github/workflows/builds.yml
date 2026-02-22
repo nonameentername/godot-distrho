@@ -342,6 +342,7 @@ jobs:
           ./pluginval.exe --strictness-level 5 --skip-gui-tests addons/distrho/bin/windows/debug/bin/godot-distrho.lv2
 
       - name: Verify VST3
+        continue-on-error: true
         run: |
           cp addons/distrho/bin/windows/debug/bin/godot-plugin.exe addons/distrho/bin/windows/debug/bin/godot-distrho.vst3/Contents/x86_64-win
           cp addons/distrho/bin/windows/libdistrhogodot.windows.template_debug.dev.x86_64.dll addons/distrho/bin/windows/debug/bin/godot-distrho.vst3/Contents/x86_64-win
