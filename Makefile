@@ -32,7 +32,8 @@ format:
 
 .PHONY: lv2
 lv2:
-	cd addons/distrho/bin/linux/debug && \
+	cp distrho_plugin_info.json addons/distrho/bin/linux/debug/bin/godot-distrho.lv2 && \
+		cd addons/distrho/bin/linux/debug && \
 		make && \
 		cp bin/godot-plugin bin/godot-distrho.lv2 && \
 		cp ../libdistrhogodot.linux.template_debug.dev.x86_64.so bin/godot-distrho.lv2 && \
@@ -41,7 +42,8 @@ lv2:
 		jalv.gtk3 -s https://github.com/nonameentername/godot-distrho
 
 vst3:
-	cd addons/distrho/bin/linux/debug && \
+	cp distrho_plugin_info.json addons/distrho/bin/linux/debug/bin/godot-distrho.vst3 && \
+		cd addons/distrho/bin/linux/debug && \
 		make && \
 		cp bin/godot-plugin bin/godot-distrho.vst3/Contents/x86_64-linux && \
 		cp ../libdistrhogodot.linux.template_debug.dev.x86_64.so bin/godot-distrho.vst3/Contents/x86_64-linux && \
