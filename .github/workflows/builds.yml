@@ -399,7 +399,7 @@ jobs:
           cp templates/lv2/macos/*.ttl addons/distrho/bin/macos/debug/bin/godot-distrho.lv2
           godot --headless --export-pack macOS addons/distrho/bin/macos/debug/bin/godot-distrho.lv2/godot-distrho.pck
           cp distrho_plugin_info.json addons/distrho/bin/macos/debug/bin/godot-distrho.lv2
-          ./pluginval --strictness-level 5 --skip-gui-tests addons/distrho/bin/macos/debug/bin/godot-distrho.lv2
+          ./pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --skip-gui-tests addons/distrho/bin/macos/debug/bin/godot-distrho.lv2
 
       - name: Verify VST3
         run: |
@@ -407,7 +407,7 @@ jobs:
           cp addons/distrho/bin/macos/macos.framework/libdistrhogodot.macos.template_debug addons/distrho/bin/macos/debug/bin/godot-distrho.vst3/Contents/MacOS
           godot --headless --export-pack macOS addons/distrho/bin/macos/debug/bin/godot-distrho.vst3/Contents/MacOS/godot-distrho.pck
           cp distrho_plugin_info.json addons/distrho/bin/macos/debug/bin/godot-distrho.vst3/Contents/MacOS
-          ./pluginval --strictness-level 5 --skip-gui-tests addons/distrho/bin/macos/debug/bin/godot-distrho.vst3
+          ./pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --skip-gui-tests addons/distrho/bin/macos/debug/bin/godot-distrho.vst3
 
   publish_artifacts:
     #if: ${{ github.ref == 'refs/heads/main' }}
