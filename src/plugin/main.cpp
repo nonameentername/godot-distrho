@@ -8,8 +8,14 @@
 #include <string>
 #include <vector>
 
-#if defined(__WIN32__)
+#if defined(_WIN32)
 #elif defined(__APPLE__)
+#include <sys/event.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <signal.h>
+#include <errno.h>
+#include <thread>
 #else
 #include <sys/prctl.h>
 #endif
@@ -19,12 +25,68 @@ extern LibGodot libgodot;
 
 USE_NAMESPACE_DISTRHO
 
+#if defined(__APPLE__)
+
+static int watch_parent_with_kqueue(pid_t parent_pid) {
+    int kq = kqueue();
+
+	if (kq == -1) {
+		return -1;
+	}
+
+    struct kevent ev;
+
+    EV_SET(&ev,
+           parent_pid,
+           EVFILT_PROC,
+           EV_ADD | EV_ENABLE | EV_ONESHOT,
+           NOTE_EXIT,
+           0,
+           nullptr);
+
+    if (kevent(kq, &ev, 1, nullptr, 0, nullptr) == -1) {
+        close(kq);
+        return -1;
+    }
+
+    if (getppid() != parent_pid) {
+        close(kq);
+        raise(SIGTERM);
+        return -1;
+    }
+
+    return kq;
+}
+
+static void start_parent_death_watcher() {
+	pid_t parent_pid = getppid();
+
+    std::thread([parent_pid]() {
+        int kq = watch_parent_with_kqueue(parent_pid);
+
+        if (kq == -1) {
+            raise(SIGTERM);
+            return;
+        }
+
+        struct kevent out;
+        int n = kevent(kq, nullptr, 0, &out, 1, nullptr);
+        close(kq);
+
+        if (n > 0 && out.filter == EVFILT_PROC && (out.fflags & NOTE_EXIT)) {
+            raise(SIGTERM);
+        }
+    }).detach();
+}
+
+#endif
+
 int main(int argc, char **argv) {
 
-#if defined(__WIN32__)
+#if defined(_WIN32)
 #elif defined(__APPLE__)
+	start_parent_death_watcher();
 #else
-    //TODO: windows and macos equivalent
 	prctl(PR_SET_PDEATHSIG, SIGTERM);
 
     if (getppid() == 1) {
@@ -64,8 +126,10 @@ int main(int argc, char **argv) {
                 "--rendering-driver",
                 "opengl3",
                 "--display-driver",
-#ifdef _WIN32
+#if defined (_WIN32)
                 "windows",
+#elif defined (__APPLE__)
+                "macos",
 #else
                 "x11",
 #endif
