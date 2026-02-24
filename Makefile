@@ -8,7 +8,7 @@ else
 PLATFORM=windows
 endif
 
-all: common ubuntu
+all: common ubuntu mingw osxcross
 
 #common
 

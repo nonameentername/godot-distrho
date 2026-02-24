@@ -1,0 +1,9 @@
+addons/distrho/bin/osxcross-arm64/*
+addons/distrho/bin/osxcross-x86_64/*
+addons/distrho/bin/linux/debug/*
+addons/distrho/bin/linux/release/*
+addons/distrho/bin/windows/debug/*
+addons/distrho/bin/windows/release/*
+addons/distrho/bin/macos/debug/*
+addons/distrho/bin/macos/release/*
+addons/distrho/templates/*

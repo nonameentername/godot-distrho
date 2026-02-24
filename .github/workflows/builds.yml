@@ -410,8 +410,7 @@ jobs:
           ./pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --skip-gui-tests addons/distrho/bin/macos/debug/bin/godot-distrho.vst3
 
   publish_artifacts:
-    #if: ${{ github.ref == 'refs/heads/main' }}
-    if: false
+    if: ${{ github.ref == 'refs/heads/main' }}
     name: Publish Artifacts
     runs-on: ubuntu-latest
     needs: [verify-linux-build, verify-windows-build, verify-macos-build]
@@ -467,8 +466,17 @@ jobs:
           DRY_RUN: true
           RELEASE_BRANCHES: none
 
+      - name: Copy LV2 templates
+        run: |
+          cp -r templates addons/distrho
+
       - name: Zip godot-distrho artifact
-        run: zip -r godot-distrho_${{ env.TAG_VERSION }}.zip ./addons/distrho
+        run: ./scripts/create_zip.sh godot-distrho_${{ env.TAG_VERSION }}.zip
+        env:
+          TAG_VERSION: ${{ steps.tag.outputs.new_tag }}
+
+      - name: Zip godot-distrho templates
+        run: ./scripts/create_zip.sh godot-distrho_templates_${{ env.TAG_VERSION }}.zip packaging/templates/zip-include.txt packaging/templates/zip-ignore.txt
         env:
           TAG_VERSION: ${{ steps.tag.outputs.new_tag }}
 
@@ -479,7 +487,9 @@ jobs:
           tag_name: ${{ env.TAG_VERSION }}
           generate_release_notes: true
           make_latest: true
+          preserve_order: true
           files: |
             godot-distrho_${{ env.TAG_VERSION }}.zip
+            godot-distrho_templates_${{ env.TAG_VERSION }}.zip
         env:
           TAG_VERSION: ${{ steps.tag.outputs.new_tag }}

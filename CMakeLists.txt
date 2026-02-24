@@ -331,7 +331,7 @@ endif()
 
 #godot-distrho
 
-set(PLUGIN_FORMATS clap lv2 vst2 vst3)
+set(PLUGIN_FORMATS lv2 vst3)
 
 if(NOT APPLE)
   list(APPEND PLUGIN_FORMATS jack)

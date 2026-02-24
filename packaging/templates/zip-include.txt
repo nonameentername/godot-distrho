@@ -1,0 +1,13 @@
+addons/distrho/templates/*
+addons/distrho/bin/linux/debug/bin/*
+addons/distrho/bin/linux/debug/lv2_ttl_generator
+addons/distrho/bin/linux/release/bin/*
+addons/distrho/bin/linux/release/lv2_ttl_generator
+addons/distrho/bin/windows/debug/bin/*
+addons/distrho/bin/windows/debug/lv2_ttl_generator
+addons/distrho/bin/windows/release/bin/*
+addons/distrho/bin/windows/release/lv2_ttl_generator
+addons/distrho/bin/macos/debug/bin/*
+addons/distrho/bin/macos/debug/lv2_ttl_generator
+addons/distrho/bin/macos/release/bin/*
+addons/distrho/bin/macos/release/lv2_ttl_generator
