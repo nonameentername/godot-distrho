@@ -1,0 +1,2 @@
+addons/distrho/bin/osxcross-arm64/*
+addons/distrho/bin/osxcross-x86_64/*
