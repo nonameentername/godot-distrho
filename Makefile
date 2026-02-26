@@ -42,7 +42,7 @@ lv2:
 		jalv.gtk3 -s https://github.com/nonameentername/godot-distrho
 
 vst3:
-	cp distrho_plugin_info.json addons/distrho/bin/linux/debug/bin/godot-distrho.vst3 && \
+	cp distrho_plugin_info.json addons/distrho/bin/linux/debug/bin/godot-distrho.vst3/Contents/x86_64-linux && \
 		cd addons/distrho/bin/linux/debug && \
 		make && \
 		cp bin/godot-plugin bin/godot-distrho.vst3/Contents/x86_64-linux && \

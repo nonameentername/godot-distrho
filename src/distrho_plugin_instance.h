@@ -17,6 +17,7 @@ public:
     DistrhoPluginInstance();
     ~DistrhoPluginInstance();
 
+    String _get_uri();
     String _get_label();
     String _get_description();
     String _get_maker();
