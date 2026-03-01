@@ -5,6 +5,8 @@ extends DistrhoPluginInstance
 func _init() -> void:
 	DistrhoPluginServer.set_distrho_plugin(self)
 
+func get_uri() -> String:
+	return "https://github.com/nonameentername/godot-distrho"
 
 func get_label() -> String:
 	return "godot-distrho"

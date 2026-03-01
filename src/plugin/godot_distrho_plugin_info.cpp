@@ -57,7 +57,7 @@ void DistrhoPluginInfo::get_parameter(int p_index, Parameter &p_parameter) {
 	p_parameter.description = parameters[p_index].description.c_str();
 
 	p_parameter.ranges.def = parameters[p_index].default_value;
-	p_parameter.ranges.min = parameters[p_index].max_value;
+	p_parameter.ranges.min = parameters[p_index].min_value;
 	p_parameter.ranges.max = parameters[p_index].max_value;
 
 	int enumeration_count = parameters[p_index].enumeration_values.size();
@@ -106,6 +106,10 @@ void DistrhoPluginInfo::load() {
     }
 
     boost::json::object& obj = json_value.as_object();
+
+	if (obj.contains("uri")) {
+		uri = boost::json::value_to<std::string>(obj.at("uri"));
+	}
 
 	if (obj.contains("label")) {
 		label = boost::json::value_to<std::string>(obj.at("label"));

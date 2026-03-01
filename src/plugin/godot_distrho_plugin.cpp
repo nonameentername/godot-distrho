@@ -168,16 +168,16 @@ Plugin *createPlugin() {
         plugin_info->get_parameter(i, *state->parameters[i]);
     }
 
-    state->input_ports.reserve(DISTRHO_PLUGIN_NUM_INPUTS);
+    state->input_ports.reserve(plugin_info->input_ports.size());
 
-    for (int i = 0; i < DISTRHO_PLUGIN_NUM_INPUTS; i++) {
+    for (int i = 0; i < plugin_info->input_ports.size(); i++) {
         state->input_ports.push_back(std::make_unique<AudioPort>());
         plugin_info->get_input_port(i, *state->input_ports[i]);
     }
 
-    state->output_ports.reserve(DISTRHO_PLUGIN_NUM_OUTPUTS);
+    state->output_ports.reserve(plugin_info->output_ports.size());
 
-    for (int i = 0; i < DISTRHO_PLUGIN_NUM_OUTPUTS; i++) {
+    for (int i = 0; i < plugin_info->output_ports.size(); i++) {
         state->output_ports.push_back(std::make_unique<AudioPort>());
         plugin_info->get_output_port(i, *state->output_ports[i]);
     }

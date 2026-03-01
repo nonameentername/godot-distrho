@@ -40,6 +40,7 @@ private:
     std::string filename = "distrho_plugin_info.json";
 
 public:
+    std::string uri = "https://github.com/nonameentername/godot-distrho";
     std::string label = "godot-distrho";
     std::string description = "Godot DISTRHO plugin";
     std::string maker = "godot-distrho";

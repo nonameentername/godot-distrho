@@ -13,6 +13,14 @@ DistrhoPluginInstance::DistrhoPluginInstance() {
 DistrhoPluginInstance::~DistrhoPluginInstance() {
 }
 
+String DistrhoPluginInstance::_get_uri() {
+    if (has_method("get_uri")) {
+        return call("get_uri");
+    } else {
+        return "https://github.com/nonameentername/godot-distrho";
+    }
+}
+
 String DistrhoPluginInstance::_get_label() {
     if (has_method("get_label")) {
         return call("get_label");
@@ -194,6 +202,7 @@ Dictionary DistrhoPluginInstance::get_json() {
         output_ports.append(output_port);
     }
 
+    result["uri"] = _get_uri();
     result["label"] = _get_label();
     result["description"] = _get_description();
     result["maker"] = _get_maker();

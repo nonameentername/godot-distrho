@@ -3,6 +3,7 @@
 #include "distrho_shared_memory_rpc.h"
 #include "godot_distrho_schema.capnp.h"
 #include "godot_distrho_utils.h"
+#include "godot_distrho_dynamic_info.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <capnp/serialize.h>
@@ -17,7 +18,7 @@ GodotDistrhoPluginClient::GodotDistrhoPluginClient(DistrhoCommon::DISTRHO_MODULE
     int memory_size = audio_memory.get_memory_size() + rpc_memory.get_memory_size() + godot_rpc_memory.get_memory_size();
 
     shared_memory.initialize("", memory_size);
-    audio_memory.initialize(&shared_memory, DISTRHO_PLUGIN_NUM_INPUTS, DISTRHO_PLUGIN_NUM_OUTPUTS);
+    audio_memory.initialize(&shared_memory, GodotDistrhoDynamicInfo::get_instance().get_number_inputs(), GodotDistrhoDynamicInfo::get_instance().get_number_outputs());
     rpc_memory.initialize(&shared_memory, godot::RPC_BUFFER_NAME);
     godot_rpc_memory.initialize(&shared_memory, godot::GODOT_RPC_BUFFER_NAME);
     shared_memory_region.initialize(&shared_memory);
@@ -105,7 +106,7 @@ void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32
             //reinitialize = true;
         }
     } else {
-        for (int channel = 0; channel < DISTRHO_PLUGIN_NUM_OUTPUTS; channel++) {
+        for (int channel = 0; channel < audio_memory.num_output_channels; channel++) {
             for (int frame = 0; frame < num_samples; frame++) {
                 outputs[channel][frame] = 0;
             }
