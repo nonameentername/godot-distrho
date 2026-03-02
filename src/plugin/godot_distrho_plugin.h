@@ -15,6 +15,7 @@ START_NAMESPACE_DISTRHO
 
 class GodotDistrhoPluginState {
 public:
+    std::string name;
     std::string label;
     std::string description;
     std::string maker;
@@ -40,6 +41,8 @@ public:
     ~GodotDistrhoPlugin();
 
 protected:
+    const char *getName() const override;
+
     const char *getLabel() const override;
 
     const char *getDescription() const override;

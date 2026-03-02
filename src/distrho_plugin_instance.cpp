@@ -13,6 +13,14 @@ DistrhoPluginInstance::DistrhoPluginInstance() {
 DistrhoPluginInstance::~DistrhoPluginInstance() {
 }
 
+String DistrhoPluginInstance::_get_plugin_name() {
+    if (has_method("get_plugin_name")) {
+        return call("get_plugin_name");
+    } else {
+        return "GodotDistrho";
+    }
+}
+
 String DistrhoPluginInstance::_get_uri() {
     if (has_method("get_uri")) {
         return call("get_uri");

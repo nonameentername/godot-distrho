@@ -11,6 +11,7 @@ class DistrhoPluginInfo;
 class GodotDistrhoDynamicInfo {
 private:
     DistrhoPluginInfo *plugin_info;
+    String plugin_name = String(DISTRHO_PLUGIN_NAME);
     String plugin_uri = String(DISTRHO_PLUGIN_URI);
     String ui_uri = String(DISTRHO_PLUGIN_URI "#DPF_UI");
     int number_inputs = DISTRHO_PLUGIN_NUM_INPUTS;
@@ -21,6 +22,7 @@ public:
     GodotDistrhoDynamicInfo();
     ~GodotDistrhoDynamicInfo();
 
+    String get_plugin_name();
     String get_plugin_uri();
     String get_ui_uri();
 

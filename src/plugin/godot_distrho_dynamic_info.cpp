@@ -10,6 +10,7 @@ GodotDistrhoDynamicInfo::GodotDistrhoDynamicInfo() {
     plugin_info = new DistrhoPluginInfo;
     plugin_info->load();
 
+    plugin_name = String(plugin_info->name.c_str());
     plugin_uri = String(plugin_info->uri.c_str());
 
     std::string temp = plugin_info->uri + std::string("#DPF_UI");
@@ -26,6 +27,10 @@ GodotDistrhoDynamicInfo::~GodotDistrhoDynamicInfo() {
 GodotDistrhoDynamicInfo &GodotDistrhoDynamicInfo::get_instance() {
     static GodotDistrhoDynamicInfo instance;
     return instance;
+}
+
+String GodotDistrhoDynamicInfo::get_plugin_name() {
+    return plugin_name;
 }
 
 String GodotDistrhoDynamicInfo::get_plugin_uri() {

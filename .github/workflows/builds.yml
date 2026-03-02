@@ -29,7 +29,7 @@ jobs:
           submodules: recursive
 
       - name: Bootstrap VCPKG
-        run: ./vcpkg/bootstrap-vcpkg.sh
+        run: ./modules/vcpkg/bootstrap-vcpkg.sh
 
       - name: Build Dependencies
         uses: nonameentername/docker-run-action@v3
@@ -70,7 +70,7 @@ jobs:
           submodules: recursive
 
       - name: Bootstrap VCPKG
-        run: ./vcpkg/bootstrap-vcpkg.sh
+        run: ./modules/vcpkg/bootstrap-vcpkg.sh
 
       - name: Update minor version
         id: tag
@@ -134,7 +134,7 @@ jobs:
           submodules: recursive
 
       - name: Bootstrap VCPKG
-        run: ./vcpkg/bootstrap-vcpkg.sh
+        run: ./modules/vcpkg/bootstrap-vcpkg.sh
 
       - name: Update minor version
         id: tag
@@ -193,7 +193,7 @@ jobs:
           submodules: recursive
 
       - name: Bootstrap VCPKG
-        run: ./vcpkg/bootstrap-vcpkg.sh
+        run: ./modules/vcpkg/bootstrap-vcpkg.sh
 
       - name: Update minor version
         id: tag
