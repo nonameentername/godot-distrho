@@ -2,4 +2,4 @@
 
 dir=$(realpath .)
 
-vcpkg/vcpkg install
+modules/vcpkg/vcpkg install
