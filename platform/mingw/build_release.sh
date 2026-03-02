@@ -18,7 +18,7 @@ mkdir -p $build_dir
 mkdir -p $build_dir/bin
 cd $build_dir
 
-cmake -DCMAKE_TOOLCHAIN_FILE=$dir/vcpkg/scripts/buildsystems/vcpkg.cmake \
+cmake -DCMAKE_TOOLCHAIN_FILE=$dir/modules/vcpkg/scripts/buildsystems/vcpkg.cmake \
     -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$dir/vcpkg/scripts/toolchains/mingw.cmake \
     -DCMAKE_MAKE_PROGRAM=gmake \
     -DCMAKE_BUILD_TYPE=Release \
