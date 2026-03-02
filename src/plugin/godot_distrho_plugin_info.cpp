@@ -107,6 +107,10 @@ void DistrhoPluginInfo::load() {
 
     boost::json::object& obj = json_value.as_object();
 
+	if (obj.contains("name")) {
+		name = boost::json::value_to<std::string>(obj.at("name"));
+	}
+
 	if (obj.contains("uri")) {
 		uri = boost::json::value_to<std::string>(obj.at("uri"));
 	}

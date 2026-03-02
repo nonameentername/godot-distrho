@@ -43,6 +43,10 @@ GodotDistrhoPlugin::~GodotDistrhoPlugin() {
     }
 }
 
+const char *GodotDistrhoPlugin::getName() const {
+    return state->name.c_str();
+}
+
 const char *GodotDistrhoPlugin::getLabel() const {
     return state->label.c_str();
 }
@@ -153,6 +157,7 @@ Plugin *createPlugin() {
     uint32_t program_count = 0;
     uint32_t state_count = plugin_info->state_values.size();
 
+    state->name = plugin_info->name;
     state->label = plugin_info->label;
     state->description = plugin_info->description;
     state->maker = plugin_info->maker;
