@@ -36,6 +36,12 @@ GodotDistrhoUI::~GodotDistrhoUI() {
     }
 }
 
+void GodotDistrhoUI::programLoaded(uint32_t index) {
+    if (client != NULL) {
+        client->program_loaded(index);
+    }
+}
+
 void GodotDistrhoUI::parameterChanged(const uint32_t index, const float value) {
     if (client != NULL) {
         client->parameter_changed(index, value);

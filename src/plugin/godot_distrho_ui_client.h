@@ -44,6 +44,8 @@ public:
 
     int64_t get_native_window_id();
 
+    void program_loaded(int p_index);
+
     void parameter_changed(int p_index, float p_value);
 
     void state_changed(std::string p_index, std::string p_value);

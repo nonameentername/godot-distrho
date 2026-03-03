@@ -17,6 +17,7 @@ func _ready() -> void:
 	DistrhoPluginServer.midi_note_off.connect(_on_midi_note_off)
 	DistrhoPluginServer.midi_cc.connect(_on_midi_cc)
 	DistrhoPluginServer.midi_program_change.connect(_on_midi_program_change)
+	DistrhoPluginServer.load_program.connect(_on_load_program)
 
 
 func _on_parameter_changed(index: int, value: float) -> void:
@@ -64,3 +65,12 @@ func _on_midi_cc(channel: int, controller: int, value: int, frame: int) -> void:
 
 func _on_midi_program_change(channel: int, program: int, frame: int) -> void:
 	print("Program Change: channel: ", channel, " program: ", program, " frame: ", frame)
+
+
+func _on_load_program(index: int) -> void:
+	print("Plugin: Load Program: index: ", index)
+
+	if index == 0:
+		DistrhoPluginServer.set_parameter_value(0, 1)
+	elif index == 1:
+		DistrhoPluginServer.set_parameter_value(0, 0.5)

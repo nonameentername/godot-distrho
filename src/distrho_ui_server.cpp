@@ -34,7 +34,7 @@ DistrhoUIServer::DistrhoUIServer() {
         module_type = std::to_string(DistrhoCommon::UI_TYPE).c_str();
     }
 
-    is_ui = std::stoi(module_type) == DistrhoCommon::UI_TYPE;
+    is_ui = std::stoi(module_type) != DistrhoCommon::PLUGIN_TYPE;
 
     initialized = false;
     active = false;
@@ -72,10 +72,10 @@ DistrhoUIServer::~DistrhoUIServer() {
         scoped_lock<interprocess_mutex> lock(godot_rpc_memory->buffer->mutex);
         exit_thread = true;
         godot_rpc_memory->buffer->input_condition.notify_all();
-    }
 
-    if (rpc_thread != NULL && rpc_thread->is_alive()) {
-        rpc_thread->wait_to_finish();
+        if (rpc_thread != NULL && rpc_thread->is_alive()) {
+            rpc_thread->wait_to_finish();
+        }
     }
 
     //TODO: delete missing for these?
@@ -95,7 +95,7 @@ DistrhoUIServer *DistrhoUIServer::get_singleton() {
 }
 
 void DistrhoUIServer::initialize() {
-    if (!initialized) {
+    if (!initialized && is_ui) {
         // TODO: Does the ui need a node?
         Node *distrho_server_node = memnew(DistrhoUIServerNode);
         SceneTree *tree = Object::cast_to<SceneTree>(Engine::get_singleton()->get_main_loop());
@@ -110,10 +110,10 @@ void DistrhoUIServer::initialize() {
             parameters.set(i, default_parameters.get(i)->get_default_value());
             shared_memory_region->write_parameter_value(i, default_parameters.get(i)->get_default_value());
         }
-    }
 
-    start();
-    initialized = true;
+        start();
+        initialized = true;
+    }
 }
 
 template <typename T, typename R>
@@ -149,6 +149,14 @@ void DistrhoUIServer::rpc_thread_func() {
                     int64_t value = DisplayServer::get_singleton()->window_get_native_handle(DisplayServer::WINDOW_HANDLE, 0);
                     response.setId(value);
                 });
+                break;
+            }
+
+            case ProgramLoadedRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<ProgramLoadedRequest, ProgramLoadedResponse>(
+                    [this](auto &request, auto &response) {
+                        call_deferred("emit_signal", "program_loaded", request.getIndex());
+                    });
                 break;
             }
 
@@ -199,7 +207,6 @@ void DistrhoUIServer::process() {
         if (parameters[i] != value) {
             parameters.ptrw()[i] = value;
             call_deferred("emit_signal", "parameter_changed", i, value);
-            shared_memory_region->write_parameter_value(i, parameters[i]);
         }
     }
 }
@@ -222,7 +229,7 @@ void DistrhoUIServer::set_state_value(String p_key, String p_value) {
 }
 
 Error DistrhoUIServer::start() {
-    if (!godot::Engine::get_singleton()->is_editor_hint()) {
+    if (!godot::Engine::get_singleton()->is_editor_hint() && is_ui) {
         rpc_thread.instantiate();
         rpc_thread->start(callable_mp(this, &DistrhoUIServer::rpc_thread_func), Thread::PRIORITY_NORMAL);
     }
@@ -275,6 +282,8 @@ void DistrhoUIServer::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("get_version"), &DistrhoUIServer::get_version);
     ClassDB::bind_method(D_METHOD("get_build"), &DistrhoUIServer::get_build);
+
+    ADD_SIGNAL(MethodInfo("program_loaded", PropertyInfo(Variant::INT, "index")));
 
     ADD_SIGNAL(
         MethodInfo("parameter_changed", PropertyInfo(Variant::INT, "index"), PropertyInfo(Variant::FLOAT, "value")));

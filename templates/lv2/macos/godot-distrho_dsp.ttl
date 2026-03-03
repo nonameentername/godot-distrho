@@ -19,7 +19,8 @@
 
     lv2:extensionData opts:interface ,
                       <http://lv2plug.in/ns/ext/state#interface> ,
-                      <http://lv2plug.in/ns/ext/worker#interface> ;
+                      <http://lv2plug.in/ns/ext/worker#interface> ,
+                      <http://kxstudio.sf.net/ns/lv2ext/programs#Interface> ;
 
     lv2:optionalFeature <http://lv2plug.in/ns/lv2core#hardRTCapable> ,
                         <http://lv2plug.in/ns/ext/buf-size#boundedBlockLength> ,
@@ -104,7 +105,6 @@
         rdfs:comment "Volume used to change how loud sound is played" ;
         lv2:portProperty <http://lv2plug.in/ns/ext/port-props#expensive> ,
                          <http://kxstudio.sf.net/ns/lv2ext/props#NonAutomatable> ;
-        pg:group <https://github.com/nonameentername/godot-distrho#portGroup_> ;
     ] ;
 
     rdfs:comment "Godot DISTRHO plugin" ;

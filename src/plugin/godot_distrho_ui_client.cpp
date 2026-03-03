@@ -97,6 +97,14 @@ int64_t GodotDistrhoUIClient::get_native_window_id() {
     return native_window_id;
 }
 
+void GodotDistrhoUIClient::program_loaded(int p_index) {
+    bool result;
+    capnp::FlatArrayMessageReader reader =
+        rpc_call<ProgramLoadedRequest, ProgramLoadedResponse>(result, [p_index](auto &req) {
+            req.setIndex(p_index);
+        });
+}
+
 void GodotDistrhoUIClient::parameter_changed(int p_index, float p_value) {
     bool result;
     capnp::FlatArrayMessageReader reader =

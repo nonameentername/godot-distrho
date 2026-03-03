@@ -55,6 +55,7 @@ public:
     std::vector<DistrhoAudioPort> output_ports;
 
     std::map<std::string, std::string> state_values;
+    std::vector<String> programs;
 
     DistrhoPluginInfo();
     ~DistrhoPluginInfo();

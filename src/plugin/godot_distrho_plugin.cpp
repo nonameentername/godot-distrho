@@ -75,6 +75,16 @@ int64_t GodotDistrhoPlugin::getUniqueId() const {
     return state->unique_id;
 }
 
+void GodotDistrhoPlugin::initProgramName(uint32_t index, String& programName) {
+    programName = state->programs[index];
+}
+
+void GodotDistrhoPlugin::loadProgram(uint32_t index) {
+    if (client != NULL) {
+        client->load_program(index);
+    }
+}
+
 void GodotDistrhoPlugin::initAudioPort(const bool input, const uint32_t index, AudioPort &port) {
     if (input) {
         if (!state->input_ports[index]->name.isEmpty()) {
@@ -121,6 +131,18 @@ void GodotDistrhoPlugin::activate() {
     }
 }
 
+String GodotDistrhoPlugin::getState(const char* key) const {
+    if (client != NULL) {
+        return String(client->get_state_value(key));
+    } else {
+        if (state->state_lookup.count(key)) {
+            return state->state_values[state->state_lookup[key]]->defaultValue;
+        } else {
+            return String("");
+        }
+    }
+}
+
 void GodotDistrhoPlugin::setState(const char* key, const char* value) {
     if (client != NULL) {
         client->set_state_value(key, value);
@@ -153,8 +175,7 @@ Plugin *createPlugin() {
     plugin_info->load();
 
     uint32_t parameter_count = plugin_info->parameters.size();;
-    //TODO: add to plugin_info
-    uint32_t program_count = 0;
+    uint32_t program_count = plugin_info->programs.size();
     uint32_t state_count = plugin_info->state_values.size();
 
     state->name = plugin_info->name;
@@ -195,7 +216,12 @@ Plugin *createPlugin() {
         state->state_values.push_back(std::make_unique<State>());
         state->state_values[state_index]->key = state_value.first.c_str();
         state->state_values[state_index]->defaultValue = state_value.second.c_str();
+        state->state_lookup[state_value.first] = state_index;
         state_index++;
+    }
+
+    for (const auto& program : plugin_info->programs) {
+        state->programs.push_back(program);
     }
 
     GodotDistrhoPlugin *const plugin = new GodotDistrhoPlugin(state, parameter_count, program_count, state_count);
