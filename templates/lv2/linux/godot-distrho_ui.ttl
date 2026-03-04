@@ -5,7 +5,8 @@
 <https://github.com/nonameentername/godot-distrho#DPF_UI>
     lv2:extensionData opts:interface ,
                       ui:idleInterface ,
-                      ui:showInterface ;
+                      ui:showInterface ,
+                      <http://kxstudio.sf.net/ns/lv2ext/programs#UIInterface> ;
 
     lv2:optionalFeature ui:noUserResize ,
                         ui:parent ,

@@ -52,7 +52,7 @@ DistrhoPluginServer::DistrhoPluginServer() {
         module_type = std::to_string(DistrhoCommon::PLUGIN_TYPE).c_str();
     }
 
-    is_plugin = std::stoi(module_type) == DistrhoCommon::PLUGIN_TYPE;
+    is_plugin = std::stoi(module_type) != DistrhoCommon::UI_TYPE;
 
     initialized = false;
     active = false;
@@ -134,7 +134,7 @@ DistrhoPluginServer *DistrhoPluginServer::get_singleton() {
 }
 
 void DistrhoPluginServer::initialize() {
-    if (!initialized) {
+    if (!initialized && is_plugin) {
         Node *distrho_server_node = memnew(DistrhoPluginServerNode);
         SceneTree *tree = Object::cast_to<SceneTree>(Engine::get_singleton()->get_main_loop());
         tree->get_root()->add_child(distrho_server_node);
@@ -147,10 +147,10 @@ void DistrhoPluginServer::initialize() {
             parameters.set(i, distrho_plugin->_get_parameters().get(i)->get_default_value());
             shared_memory_region->write_parameter_value(i, distrho_plugin->_get_parameters().get(i)->get_default_value());
         }
-    }
 
-    start();
-    initialized = true;
+        start();
+        initialized = true;
+    }
 }
 
 void DistrhoPluginServer::audio_thread_func() {
@@ -259,6 +259,24 @@ void DistrhoPluginServer::rpc_thread_func() {
 
         if (result) {
             switch (rpc_memory->buffer->request_id) {
+
+            case LoadProgramRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<LoadProgramRequest, LoadProgramResponse>(
+                    [this](auto &request, auto &response) {
+                        call_deferred("emit_signal", "load_program", request.getIndex());
+                    });
+                break;
+            }
+
+            case GetStateValueRequest::_capnpPrivate::typeId: {
+                handle_rpc_call<GetStateValueRequest, GetStateValueResponse>(
+                    [this](auto &request, auto &response) {
+                        String value = state_values[request.getKey().cStr()];
+                        response.setValue(std::string(value.ascii()));
+                        response.setResult(true);
+                    });
+                break;
+            }
 
             case SetStateValueRequest::_capnpPrivate::typeId: {
                 handle_rpc_call<SetStateValueRequest, SetStateValueResponse>(
@@ -629,7 +647,7 @@ int DistrhoPluginServer::get_channel_sample(AudioFrame *p_buffer, float p_rate, 
 }
 
 Error DistrhoPluginServer::start() {
-    if (!godot::Engine::get_singleton()->is_editor_hint()) {
+    if (!godot::Engine::get_singleton()->is_editor_hint() && is_plugin) {
         if (is_plugin) {
             audio_thread.instantiate();
             audio_mutex.instantiate();
@@ -664,9 +682,9 @@ void DistrhoPluginServer::finish() {
         exit_thread = true;
         if (is_plugin) {
             audio_thread->wait_to_finish();
+            rpc_thread->wait_to_finish();
+            client_thread->wait_to_finish();
         }
-        rpc_thread->wait_to_finish();
-        client_thread->wait_to_finish();
     }
 }
 
@@ -771,6 +789,8 @@ void DistrhoPluginServer::_bind_methods() {
 
     ADD_SIGNAL(
         MethodInfo("parameter_changed", PropertyInfo(Variant::INT, "index"), PropertyInfo(Variant::FLOAT, "value")));
+
+    ADD_SIGNAL(MethodInfo("load_program", PropertyInfo(Variant::INT, "index")));
 
     ADD_SIGNAL(MethodInfo("state_changed", PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::STRING, "value")));
 

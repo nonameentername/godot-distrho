@@ -4,6 +4,7 @@
 #include "distrho_audio_port.h"
 #include "distrho_parameter.h"
 #include "godot_cpp/variant/dictionary.hpp"
+#include "godot_cpp/variant/array.hpp"
 #include <godot_cpp/classes/node.hpp>
 
 namespace godot {
@@ -32,6 +33,8 @@ public:
     Vector<Ref<DistrhoAudioPort>> _get_output_ports();
 
     Dictionary _get_state_values();
+
+    Array _get_programs();
 
     Dictionary get_json();
 

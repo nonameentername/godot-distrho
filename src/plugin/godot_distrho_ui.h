@@ -34,6 +34,8 @@ public:
     // void onDisplay() override;
 
 protected:
+    void programLoaded(uint32_t index) override;
+
     void parameterChanged(const uint32_t index, const float value) override;
 
     void uiIdle() override;

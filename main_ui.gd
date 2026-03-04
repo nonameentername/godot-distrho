@@ -10,6 +10,7 @@ func _ready() -> void:
 	)
 	DistrhoUIServer.parameter_changed.connect(_on_parameter_changed)
 	DistrhoUIServer.state_changed.connect(_on_state_changed)
+	DistrhoUIServer.program_loaded.connect(_on_program_loaded)
 
 
 func _on_parameter_changed(index: int, value: float) -> void:
@@ -18,6 +19,15 @@ func _on_parameter_changed(index: int, value: float) -> void:
 
 func _on_state_changed(key: String, value: String) -> void:
 	print("UI: State Changed: key: ", key, " value: ", value)
+
+
+func _on_program_loaded(index: int) -> void:
+	print("UI: Program Loaded: index: ", index)
+
+	if index == 0:
+		DistrhoUIServer.set_parameter_value(0, 1)
+	elif index == 1:
+		DistrhoUIServer.set_parameter_value(0, 0.5)
 
 
 func _on_note_on_button_pressed() -> void:

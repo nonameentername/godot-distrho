@@ -106,3 +106,8 @@ func get_state_values() -> Dictionary:
 		midi_keys[str(i)] = "false"
 
 	return midi_keys
+
+func get_programs() -> Array:
+	return [
+		"default", "custom"
+	]

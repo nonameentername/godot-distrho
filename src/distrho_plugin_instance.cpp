@@ -164,6 +164,21 @@ Dictionary DistrhoPluginInstance::_get_state_values() {
     return result;
 }
 
+Array DistrhoPluginInstance::_get_programs() {
+    Array result;
+
+    if (has_method("get_programs")) {
+        Variant v = call("get_programs");
+        if (v.get_type() == Variant::ARRAY) {
+            Array array = v;
+            for (int i = 0; i < array.size(); i++) {
+                result.push_back(array[i]);
+            }
+        }
+    }
+
+    return result;
+}
 
 Dictionary DistrhoPluginInstance::get_json() {
     Dictionary result;
@@ -221,7 +236,8 @@ Dictionary DistrhoPluginInstance::get_json() {
     result["parameters"] = parameters;
     result["input_ports"] = input_ports;
     result["output_ports"] = output_ports;
-    result["state_values"] = _get_state_values();;
+    result["state_values"] = _get_state_values();
+    result["programs"] = _get_programs();
 
     return result;
 }

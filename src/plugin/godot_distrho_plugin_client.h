@@ -54,8 +54,12 @@ public:
     void run(const float **inputs, float **outputs, uint32_t numSamples, const MidiEvent *input_midi,
              int input_midi_size, MidiEvent *output_midi, int &output_midi_size);
 
+    void load_program(int p_index);
+
     float get_parameter_value(int p_index) const;
     void set_parameter_value(int p_index, float p_value);
+
+    const char* get_state_value(const char* p_key);
 
     void set_state_value(const char* p_key, const char* p_value);
 

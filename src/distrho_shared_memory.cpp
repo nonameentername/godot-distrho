@@ -27,7 +27,8 @@ DistrhoSharedMemory::~DistrhoSharedMemory() {
     }
 }
 
-void DistrhoSharedMemory::initialize( std::string p_shared_memory_name, int size) {
+void DistrhoSharedMemory::initialize(std::string p_shared_memory_name, int p_size) {
+
     if (p_shared_memory_name.length() == 0) {
         is_host = true;
         boost::uuids::uuid uuid = uuid_gen()();
@@ -39,11 +40,11 @@ void DistrhoSharedMemory::initialize( std::string p_shared_memory_name, int size
 
 #ifdef _WIN32
         shared_memory = std::make_unique<boost::interprocess::managed_windows_shared_memory>(
-            bip::create_only, shared_memory_name.c_str(), size);
+            bip::create_only, shared_memory_name.c_str(), p_size);
 #else
         bip::shared_memory_object::remove(shared_memory_name.c_str());
         shared_memory = std::make_unique<boost::interprocess::managed_shared_memory>(
-            bip::create_only, shared_memory_name.c_str(), size);
+            bip::create_only, shared_memory_name.c_str(), p_size);
 #endif
     } else {
         is_host = false;

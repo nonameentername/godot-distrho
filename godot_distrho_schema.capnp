@@ -2,6 +2,22 @@
 
 # DistrhoPluginServer (godot)
 
+struct LoadProgramRequest {
+  index @0 :UInt32;
+}
+
+struct LoadProgramResponse {
+}
+
+struct GetStateValueRequest {
+  key @0 :Text;
+}
+
+struct GetStateValueResponse {
+  result @0 :Bool;
+  value @1 :Text;
+}
+
 struct SetStateValueRequest {
   key @0 :Text;
   value @1 :Text;
@@ -43,6 +59,13 @@ struct StateChangedResponse {
 }
 
 # GodotDistrhoUIServer (distrho)
+
+struct ProgramLoadedRequest {
+  index @0 :UInt32;
+}
+
+struct ProgramLoadedResponse {
+}
 
 struct EditParameterRequest {
   index @0 :UInt32;

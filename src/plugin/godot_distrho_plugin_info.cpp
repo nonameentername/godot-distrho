@@ -267,6 +267,15 @@ void DistrhoPluginInfo::load() {
             state_values.insert_or_assign(state_value.key(), boost::json::value_to<std::string>(state_value.value()));
         }
     }
+
+    if (obj.contains("programs")) {
+        boost::json::array& programs_array = obj.at("programs").as_array();
+        programs.resize(programs_array.size());
+
+        for (size_t i = 0; i < programs_array.size(); ++i) {
+            programs[i] = programs_array[i].as_string().c_str();
+        }
+    }
 }
 
 END_NAMESPACE_DISTRHO

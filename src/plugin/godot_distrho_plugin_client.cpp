@@ -114,12 +114,34 @@ void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32
     }
 }
 
+void GodotDistrhoPluginClient::load_program(int p_index) {
+    bool result;
+    capnp::FlatArrayMessageReader reader =
+        rpc_call<LoadProgramRequest, LoadProgramResponse>(result, [p_index](auto &req) {
+            req.setIndex(p_index);
+        });
+}
+
 float GodotDistrhoPluginClient::get_parameter_value(int p_index) const {
     return shared_memory_region.read_parameter_value(p_index);
 }
 
 void GodotDistrhoPluginClient::set_parameter_value(int p_index, float p_value) {
     shared_memory_region.write_parameter_value(p_index, p_value);
+}
+
+const char* GodotDistrhoPluginClient::get_state_value(const char* p_key) {
+    bool result;
+    capnp::FlatArrayMessageReader reader =
+        rpc_call<GetStateValueRequest, GetStateValueResponse>(result, [p_key](auto &req) {
+            req.setKey(p_key);
+        });
+    if (result) {
+        GetStateValueResponse::Reader response = reader.getRoot<GetStateValueResponse>();
+        return response.getValue().cStr();
+    } else {
+        return "";
+    }
 }
 
 void GodotDistrhoPluginClient::set_state_value(const char* p_key, const char* p_value) {

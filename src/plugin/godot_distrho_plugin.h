@@ -27,6 +27,8 @@ public:
     std::vector<std::unique_ptr<AudioPort>> input_ports;
     std::vector<std::unique_ptr<AudioPort>> output_ports;
     std::vector<std::unique_ptr<State>> state_values;
+    std::map<std::string, int> state_lookup;
+    std::vector<String> programs;
 };
 
 class GodotDistrhoPlugin : public Plugin {
@@ -57,6 +59,10 @@ protected:
 
     int64_t getUniqueId() const override;
 
+    void initProgramName(uint32_t index, String& programName) override;
+
+    void loadProgram(uint32_t index) override;
+
     void initAudioPort(const bool input, const uint32_t index, AudioPort &port) override;
 
     void initParameter(const uint32_t index, Parameter &parameter) override;
@@ -64,6 +70,8 @@ protected:
     float getParameterValue(const uint32_t index) const override;
 
     void setParameterValue(const uint32_t index, const float value) override;
+
+    String getState(const char* key) const override;
 
     void setState(const char* key, const char* value) override;
 
