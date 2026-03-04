@@ -16,7 +16,6 @@
 
 namespace godot {
 
-
 class DistrhoSharedMemory {
 
 private:

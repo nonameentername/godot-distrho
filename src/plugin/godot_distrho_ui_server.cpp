@@ -12,7 +12,8 @@ using namespace boost::posix_time;
 
 START_NAMESPACE_DISTRHO
 
-GodotDistrhoUIServer::GodotDistrhoUIServer(UI *p_godot_distrho_ui, godot::DistrhoSharedMemoryRPC *p_godot_rpc_memory, godot::DistrhoSharedMemoryRegion *p_shared_memory_region) {
+GodotDistrhoUIServer::GodotDistrhoUIServer(UI *p_godot_distrho_ui, godot::DistrhoSharedMemoryRPC *p_godot_rpc_memory,
+                                           godot::DistrhoSharedMemoryRegion *p_shared_memory_region) {
     exit_thread = false;
     godot_distrho_ui = p_godot_distrho_ui;
     godot_rpc_memory = p_godot_rpc_memory;
@@ -37,7 +38,7 @@ void GodotDistrhoUIServer::handle_rpc_call(
 void GodotDistrhoUIServer::process_thread_func() {
     auto sleep_ms = std::chrono::milliseconds(16);
 
-    while(!exit_thread) {
+    while (!exit_thread) {
         for (int i = 0; i < shared_memory_region->get_parameter_count(); i++) {
             float value = shared_memory_region->read_parameter_value(i);
             if (parameters[i] != value) {
@@ -87,10 +88,9 @@ void GodotDistrhoUIServer::rpc_thread_func() {
                         break;
                     }
                     case SetStateRequest::_capnpPrivate::typeId: {
-                        handle_rpc_call<SetStateRequest, SetStateResponse>(
-                            [this](auto &request, auto &response) {
-                                godot_distrho_ui->setState(request.getKey().cStr(), request.getValue().cStr());
-                            });
+                        handle_rpc_call<SetStateRequest, SetStateResponse>([this](auto &request, auto &response) {
+                            godot_distrho_ui->setState(request.getKey().cStr(), request.getValue().cStr());
+                        });
                         break;
                     }
                     default: {
@@ -100,7 +100,7 @@ void GodotDistrhoUIServer::rpc_thread_func() {
                     }
                     godot_rpc_memory->buffer->request_id = 0;
                 } else {
-                    //printf("Timed out waiting for request_id\n");
+                    // printf("Timed out waiting for request_id\n");
                 }
             }
         }

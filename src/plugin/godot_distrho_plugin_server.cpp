@@ -12,7 +12,8 @@ using namespace boost::posix_time;
 
 START_NAMESPACE_DISTRHO
 
-GodotDistrhoPluginServer::GodotDistrhoPluginServer(Plugin *p_godot_distrho_plugin, godot::DistrhoSharedMemoryRPC *p_godot_rpc_memory) {
+GodotDistrhoPluginServer::GodotDistrhoPluginServer(Plugin *p_godot_distrho_plugin,
+                                                   godot::DistrhoSharedMemoryRPC *p_godot_rpc_memory) {
     exit_thread = false;
     godot_distrho_plugin = p_godot_distrho_plugin;
     godot_rpc_memory = p_godot_rpc_memory;
@@ -67,20 +68,21 @@ void GodotDistrhoPluginServer::rpc_thread_func() {
 
                 if (!result) {
                     // TODO: log in debug mode
-                    //printf("Processing request_id: %ld\n", godot_rpc_memory->buffer->request_id);
+                    // printf("Processing request_id: %ld\n", godot_rpc_memory->buffer->request_id);
 
                     switch (godot_rpc_memory->buffer->request_id) {
                     case UpdateStateValueRequest::_capnpPrivate::typeId: {
                         handle_rpc_call<UpdateStateValueRequest, UpdateStateValueResponse>(
                             [this](auto &request, auto &response) {
                                 if (godot_distrho_plugin != NULL) {
-                                    godot_distrho_plugin->updateStateValue(request.getKey().cStr(), request.getValue().cStr());
+                                    godot_distrho_plugin->updateStateValue(request.getKey().cStr(),
+                                                                           request.getValue().cStr());
                                 }
                             });
                         break;
                     }
                     default: {
-                        //printf("Unknown request_id: %ld\n", godot_rpc_memory->buffer->request_id);
+                        // printf("Unknown request_id: %ld\n", godot_rpc_memory->buffer->request_id);
                         break;
                     }
                     }

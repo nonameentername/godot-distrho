@@ -3,8 +3,8 @@
 
 #include "DistrhoPlugin.hpp"
 
-#include <string>
 #include <map>
+#include <string>
 #include <vector>
 
 START_NAMESPACE_DISTRHO

@@ -2,8 +2,8 @@
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
 
-#include "distrho_shared_memory_audio.h"
 #include "distrho_shared_memory.h"
+#include "distrho_shared_memory_audio.h"
 
 using namespace godot;
 
@@ -20,8 +20,8 @@ DistrhoSharedMemoryAudio::DistrhoSharedMemoryAudio() {
 DistrhoSharedMemoryAudio::~DistrhoSharedMemoryAudio() {
 }
 
-void DistrhoSharedMemoryAudio::initialize(DistrhoSharedMemory *p_distrho_shared_memory,
-        int p_number_of_input_channels, int p_number_of_output_channels) {
+void DistrhoSharedMemoryAudio::initialize(DistrhoSharedMemory *p_distrho_shared_memory, int p_number_of_input_channels,
+                                          int p_number_of_output_channels) {
     if (p_distrho_shared_memory->get_is_host()) {
         buffer = p_distrho_shared_memory->create_buffer<AudioBuffer>("AudioBuffer");
         buffer->num_input_channels = p_number_of_input_channels;

@@ -1,6 +1,6 @@
 #include "distrho_common.h"
-//#include "godot_cpp/classes/display_server.hpp"
-//#include "godot_cpp/variant/dictionary.hpp"
+// #include "godot_cpp/classes/display_server.hpp"
+// #include "godot_cpp/variant/dictionary.hpp"
 #include "godot_distrho_utils.h"
 #include "libgodot_distrho.h"
 
@@ -10,16 +10,15 @@
 
 #if defined(_WIN32)
 #elif defined(__APPLE__)
+#include <errno.h>
+#include <signal.h>
 #include <sys/event.h>
 #include <sys/time.h>
-#include <unistd.h>
-#include <signal.h>
-#include <errno.h>
 #include <thread>
+#include <unistd.h>
 #else
 #include <sys/prctl.h>
 #endif
-
 
 extern LibGodot libgodot;
 
@@ -30,19 +29,13 @@ USE_NAMESPACE_DISTRHO
 static int watch_parent_with_kqueue(pid_t parent_pid) {
     int kq = kqueue();
 
-	if (kq == -1) {
-		return -1;
-	}
+    if (kq == -1) {
+        return -1;
+    }
 
     struct kevent ev;
 
-    EV_SET(&ev,
-           parent_pid,
-           EVFILT_PROC,
-           EV_ADD | EV_ENABLE | EV_ONESHOT,
-           NOTE_EXIT,
-           0,
-           nullptr);
+    EV_SET(&ev, parent_pid, EVFILT_PROC, EV_ADD | EV_ENABLE | EV_ONESHOT, NOTE_EXIT, 0, nullptr);
 
     if (kevent(kq, &ev, 1, nullptr, 0, nullptr) == -1) {
         close(kq);
@@ -59,7 +52,7 @@ static int watch_parent_with_kqueue(pid_t parent_pid) {
 }
 
 static void start_parent_death_watcher() {
-	pid_t parent_pid = getppid();
+    pid_t parent_pid = getppid();
 
     std::thread([parent_pid]() {
         int kq = watch_parent_with_kqueue(parent_pid);
@@ -85,12 +78,12 @@ int main(int argc, char **argv) {
 
 #if defined(_WIN32)
 #elif defined(__APPLE__)
-	start_parent_death_watcher();
+    start_parent_death_watcher();
 #else
-	prctl(PR_SET_PDEATHSIG, SIGTERM);
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
 
     if (getppid() == 1) {
-        exit(0); 
+        exit(0);
     }
 #endif
 
@@ -126,9 +119,9 @@ int main(int argc, char **argv) {
                 "--rendering-driver",
                 "opengl3",
                 "--display-driver",
-#if defined (_WIN32)
+#if defined(_WIN32)
                 "windows",
-#elif defined (__APPLE__)
+#elif defined(__APPLE__)
                 "macos",
 #else
                 "x11",

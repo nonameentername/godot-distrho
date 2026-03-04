@@ -5,7 +5,6 @@
 
 START_NAMESPACE_DISTRHO
 
-
 GodotDistrhoDynamicInfo::GodotDistrhoDynamicInfo() {
     plugin_info = new DistrhoPluginInfo;
     plugin_info->load();
@@ -41,11 +40,11 @@ String GodotDistrhoDynamicInfo::get_ui_uri() {
     return ui_uri;
 }
 
-const char* GodotDistrhoDynamicInfo::get_plugin_uri_cstr() {
+const char *GodotDistrhoDynamicInfo::get_plugin_uri_cstr() {
     return plugin_uri;
 }
 
-const char* GodotDistrhoDynamicInfo::get_ui_uri_cstr() {
+const char *GodotDistrhoDynamicInfo::get_ui_uri_cstr() {
     return ui_uri;
 }
 

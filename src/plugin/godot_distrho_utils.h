@@ -1,9 +1,9 @@
 #ifndef GODOT_DISTRHO_UTILS_H
 #define GODOT_DISTRHO_UTILS_H
 
+#include "src/DistrhoDefines.h"
 #include <boost/process/v1/child.hpp>
 #include <boost/process/v1/env.hpp>
-#include "src/DistrhoDefines.h"
 
 #if defined(_WIN32)
 #include <winsock2.h>
@@ -21,9 +21,9 @@ typedef unsigned long XID;
 typedef XID Window;
 
 #ifdef _WIN32
-    typedef boost::process::v1::wenvironment process_env_t;
+typedef boost::process::v1::wenvironment process_env_t;
 #else
-    typedef boost::process::v1::environment process_env_t;
+typedef boost::process::v1::environment process_env_t;
 #endif
 
 START_NAMESPACE_DISTRHO

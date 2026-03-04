@@ -13,7 +13,8 @@ using namespace boost::posix_time;
 START_NAMESPACE_DISTRHO
 
 GodotDistrhoUIClient::GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type, int64_t p_parent_window_id) {
-    int memory_size = rpc_memory.get_memory_size() + godot_rpc_memory.get_memory_size() + shared_memory_region.get_memory_size();
+    int memory_size =
+        rpc_memory.get_memory_size() + godot_rpc_memory.get_memory_size() + shared_memory_region.get_memory_size();
 
     shared_memory.initialize("", memory_size);
     rpc_memory.initialize(&shared_memory, godot::RPC_BUFFER_NAME);
@@ -25,7 +26,8 @@ GodotDistrhoUIClient::GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_
     boost::process::v1::wenvironment env = boost::this_process::wenvironment();
 
     env[L"DISTRHO_MODULE_TYPE"] = std::to_wstring(p_type);
-    env[L"DISTRHO_SHARED_MEMORY_UUID"] = std::wstring(shared_memory.shared_memory_name.begin(), shared_memory.shared_memory_name.end());
+    env[L"DISTRHO_SHARED_MEMORY_UUID"] =
+        std::wstring(shared_memory.shared_memory_name.begin(), shared_memory.shared_memory_name.end());
     if (p_parent_window_id > 0) {
         env[L"GODOT_PARENT_WINDOW_ID"] = std::to_wstring(p_parent_window_id);
     }
@@ -47,15 +49,15 @@ GodotDistrhoUIClient::GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_
 #endif
 #endif
 
-    //while (!rpc_memory.buffer->ready) {
-    //    sleep(1);
-    //}
+    // while (!rpc_memory.buffer->ready) {
+    //     sleep(1);
+    // }
 
-    //std::string some_text = get_some_text();
-    //printf("%s\n", some_text.c_str());
+    // std::string some_text = get_some_text();
+    // printf("%s\n", some_text.c_str());
 
-    //native_window_id = get_native_window_id();
-    //printf("native_window_id = %ld\n", native_window_id);
+    // native_window_id = get_native_window_id();
+    // printf("native_window_id = %ld\n", native_window_id);
 }
 
 GodotDistrhoUIClient::~GodotDistrhoUIClient() {
@@ -100,9 +102,7 @@ int64_t GodotDistrhoUIClient::get_native_window_id() {
 void GodotDistrhoUIClient::program_loaded(int p_index) {
     bool result;
     capnp::FlatArrayMessageReader reader =
-        rpc_call<ProgramLoadedRequest, ProgramLoadedResponse>(result, [p_index](auto &req) {
-            req.setIndex(p_index);
-        });
+        rpc_call<ProgramLoadedRequest, ProgramLoadedResponse>(result, [p_index](auto &req) { req.setIndex(p_index); });
 }
 
 void GodotDistrhoUIClient::parameter_changed(int p_index, float p_value) {

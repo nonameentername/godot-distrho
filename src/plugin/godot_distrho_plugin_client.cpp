@@ -1,9 +1,9 @@
 #include "godot_distrho_plugin_client.h"
 #include "distrho_common.h"
 #include "distrho_shared_memory_rpc.h"
+#include "godot_distrho_dynamic_info.h"
 #include "godot_distrho_schema.capnp.h"
 #include "godot_distrho_utils.h"
-#include "godot_distrho_dynamic_info.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <capnp/serialize.h>
@@ -15,10 +15,12 @@ using namespace boost::posix_time;
 START_NAMESPACE_DISTRHO
 
 GodotDistrhoPluginClient::GodotDistrhoPluginClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type) {
-    int memory_size = audio_memory.get_memory_size() + rpc_memory.get_memory_size() + godot_rpc_memory.get_memory_size();
+    int memory_size =
+        audio_memory.get_memory_size() + rpc_memory.get_memory_size() + godot_rpc_memory.get_memory_size();
 
     shared_memory.initialize("", memory_size);
-    audio_memory.initialize(&shared_memory, GodotDistrhoDynamicInfo::get_instance().get_number_inputs(), GodotDistrhoDynamicInfo::get_instance().get_number_outputs());
+    audio_memory.initialize(&shared_memory, GodotDistrhoDynamicInfo::get_instance().get_number_inputs(),
+                            GodotDistrhoDynamicInfo::get_instance().get_number_outputs());
     rpc_memory.initialize(&shared_memory, godot::RPC_BUFFER_NAME);
     godot_rpc_memory.initialize(&shared_memory, godot::GODOT_RPC_BUFFER_NAME);
     shared_memory_region.initialize(&shared_memory);
@@ -28,7 +30,8 @@ GodotDistrhoPluginClient::GodotDistrhoPluginClient(DistrhoCommon::DISTRHO_MODULE
     boost::process::v1::wenvironment env = boost::this_process::wenvironment();
 
     env[L"DISTRHO_MODULE_TYPE"] = std::to_wstring(p_type);
-    env[L"DISTRHO_SHARED_MEMORY_UUID"] = std::wstring(shared_memory.shared_memory_name.begin(), shared_memory.shared_memory_name.end());
+    env[L"DISTRHO_SHARED_MEMORY_UUID"] =
+        std::wstring(shared_memory.shared_memory_name.begin(), shared_memory.shared_memory_name.end());
 
     plugin = GodotDistrhoUtils::launch_process("godot-plugin.exe", env, windows_group);
 #else
@@ -54,7 +57,7 @@ GodotDistrhoPluginClient::~GodotDistrhoPluginClient() {
     is_shutting_down.store(true);
 
     if (audio_memory.buffer) {
-        audio_memory.buffer->output_condition.notify_all(); 
+        audio_memory.buffer->output_condition.notify_all();
     }
 
 #if DISTRHO_PLUGIN_ENABLE_SUBPROCESS
@@ -78,7 +81,7 @@ capnp::FlatArrayMessageReader GodotDistrhoPluginClient::rpc_call(
 void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32_t num_samples,
                                    const MidiEvent *input_midi, int input_midi_size, MidiEvent *output_midi,
                                    int &output_midi_size) {
-    //bool reinitialize = false;
+    // bool reinitialize = false;
 
     if (audio_memory.buffer->ready) {
         scoped_lock<interprocess_mutex> lock(audio_memory.buffer->mutex);
@@ -103,7 +106,7 @@ void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32
             audio_memory.advance_output_read_index(num_samples);
             output_midi_size = audio_memory.read_output_midi(output_midi);
         } else {
-            //reinitialize = true;
+            // reinitialize = true;
         }
     } else {
         for (int channel = 0; channel < audio_memory.num_output_channels; channel++) {
@@ -117,9 +120,7 @@ void GodotDistrhoPluginClient::run(const float **inputs, float **outputs, uint32
 void GodotDistrhoPluginClient::load_program(int p_index) {
     bool result;
     capnp::FlatArrayMessageReader reader =
-        rpc_call<LoadProgramRequest, LoadProgramResponse>(result, [p_index](auto &req) {
-            req.setIndex(p_index);
-        });
+        rpc_call<LoadProgramRequest, LoadProgramResponse>(result, [p_index](auto &req) { req.setIndex(p_index); });
 }
 
 float GodotDistrhoPluginClient::get_parameter_value(int p_index) const {
@@ -130,12 +131,10 @@ void GodotDistrhoPluginClient::set_parameter_value(int p_index, float p_value) {
     shared_memory_region.write_parameter_value(p_index, p_value);
 }
 
-const char* GodotDistrhoPluginClient::get_state_value(const char* p_key) {
+const char *GodotDistrhoPluginClient::get_state_value(const char *p_key) {
     bool result;
     capnp::FlatArrayMessageReader reader =
-        rpc_call<GetStateValueRequest, GetStateValueResponse>(result, [p_key](auto &req) {
-            req.setKey(p_key);
-        });
+        rpc_call<GetStateValueRequest, GetStateValueResponse>(result, [p_key](auto &req) { req.setKey(p_key); });
     if (result) {
         GetStateValueResponse::Reader response = reader.getRoot<GetStateValueResponse>();
         return response.getValue().cStr();
@@ -144,7 +143,7 @@ const char* GodotDistrhoPluginClient::get_state_value(const char* p_key) {
     }
 }
 
-void GodotDistrhoPluginClient::set_state_value(const char* p_key, const char* p_value) {
+void GodotDistrhoPluginClient::set_state_value(const char *p_key, const char *p_value) {
     bool result;
     capnp::FlatArrayMessageReader reader =
         rpc_call<SetStateValueRequest, SetStateValueResponse>(result, [p_key, p_value](auto &req) {

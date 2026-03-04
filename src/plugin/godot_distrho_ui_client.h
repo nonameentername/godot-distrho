@@ -4,8 +4,8 @@
 #include "DistrhoDetails.hpp"
 #include "DistrhoPlugin.hpp"
 #include "distrho_common.h"
-#include "distrho_shared_memory_rpc.h"
 #include "distrho_shared_memory_region.h"
+#include "distrho_shared_memory_rpc.h"
 #include "godot_distrho_schema.capnp.h"
 
 #if defined(_WIN32)
@@ -13,9 +13,9 @@
 #endif
 
 #include <boost/process.hpp>
-#include <cstdint>
-#include <boost/process/v1/group.hpp>
 #include <boost/process/v1/child.hpp>
+#include <boost/process/v1/group.hpp>
+#include <cstdint>
 
 START_NAMESPACE_DISTRHO
 
@@ -31,7 +31,8 @@ private:
 
 protected:
     template <typename T, typename R>
-    capnp::FlatArrayMessageReader rpc_call(bool &result, std::function<void(typename T::Builder &)> build_request = nullptr) const;
+    capnp::FlatArrayMessageReader rpc_call(bool &result,
+                                           std::function<void(typename T::Builder &)> build_request = nullptr) const;
 
 public:
     GodotDistrhoUIClient(DistrhoCommon::DISTRHO_MODULE_TYPE p_type, int64_t p_parent_window_id);

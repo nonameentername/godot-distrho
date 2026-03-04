@@ -5,7 +5,8 @@
 
 using namespace godot;
 
-DistrhoUIClient::DistrhoUIClient(DistrhoSharedMemoryRPC *p_rpc_memory, DistrhoSharedMemoryRegion *p_shared_memory_region) {
+DistrhoUIClient::DistrhoUIClient(DistrhoSharedMemoryRPC *p_rpc_memory,
+                                 DistrhoSharedMemoryRegion *p_shared_memory_region) {
     rpc_memory = p_rpc_memory;
     shared_memory_region = p_shared_memory_region;
 }

@@ -83,8 +83,7 @@ void AudioEffectSetDistrhoChannelInstance::_process(const void *p_src_frames, Au
     DistrhoPluginServer *distrho_server = DistrhoPluginServer::get_singleton();
 
     if (distrho_server != NULL) {
-        distrho_server->set_channel_sample(src_frames, p_rate, p_frame_count, base->channel_left,
-                base->channel_right);
+        distrho_server->set_channel_sample(src_frames, p_rate, p_frame_count, base->channel_left, base->channel_right);
     }
 }
 

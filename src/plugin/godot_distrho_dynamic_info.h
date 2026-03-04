@@ -17,7 +17,6 @@ private:
     int number_inputs = DISTRHO_PLUGIN_NUM_INPUTS;
     int number_outputs = DISTRHO_PLUGIN_NUM_OUTPUTS;
 
-
 public:
     GodotDistrhoDynamicInfo();
     ~GodotDistrhoDynamicInfo();
@@ -26,8 +25,8 @@ public:
     String get_plugin_uri();
     String get_ui_uri();
 
-    const char* get_plugin_uri_cstr();
-    const char* get_ui_uri_cstr();
+    const char *get_plugin_uri_cstr();
+    const char *get_ui_uri_cstr();
 
     const int get_number_inputs();
     const int get_number_outputs();

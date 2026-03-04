@@ -6,8 +6,8 @@
 #include "distrho_common.h"
 #include "distrho_shared_memory.h"
 #include "distrho_shared_memory_audio.h"
-#include "distrho_shared_memory_rpc.h"
 #include "distrho_shared_memory_region.h"
+#include "distrho_shared_memory_rpc.h"
 #include "godot_distrho_schema.capnp.h"
 
 #if defined(_WIN32)
@@ -15,8 +15,8 @@
 #endif
 
 #include <boost/process.hpp>
-#include <boost/process/v1/group.hpp>
 #include <boost/process/v1/child.hpp>
+#include <boost/process/v1/group.hpp>
 
 START_NAMESPACE_DISTRHO
 
@@ -42,7 +42,8 @@ private:
 
 protected:
     template <typename T, typename R>
-    capnp::FlatArrayMessageReader rpc_call(bool &result, std::function<void(typename T::Builder &)> build_request = nullptr) const;
+    capnp::FlatArrayMessageReader rpc_call(bool &result,
+                                           std::function<void(typename T::Builder &)> build_request = nullptr) const;
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GodotDistrhoPluginClient)
 
@@ -59,9 +60,9 @@ public:
     float get_parameter_value(int p_index) const;
     void set_parameter_value(int p_index, float p_value);
 
-    const char* get_state_value(const char* p_key);
+    const char *get_state_value(const char *p_key);
 
-    void set_state_value(const char* p_key, const char* p_value);
+    void set_state_value(const char *p_key, const char *p_value);
 
     bool shutdown();
 

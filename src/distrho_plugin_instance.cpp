@@ -142,7 +142,6 @@ Vector<Ref<DistrhoAudioPort>> DistrhoPluginInstance::_get_output_ports() {
     return result;
 }
 
-
 Dictionary DistrhoPluginInstance::_get_state_values() {
     Dictionary result;
 
@@ -186,7 +185,7 @@ Dictionary DistrhoPluginInstance::get_json() {
     Array input_ports;
     Array output_ports;
 
-    for (const Ref<DistrhoParameter>& p : _get_parameters()) {
+    for (const Ref<DistrhoParameter> &p : _get_parameters()) {
         Dictionary parameter;
         parameter["hints"] = p->get_hints();
         parameter["name"] = p->get_name();
@@ -205,7 +204,7 @@ Dictionary DistrhoPluginInstance::get_json() {
         parameters.append(parameter);
     }
 
-    for (const Ref<DistrhoAudioPort>& p : _get_input_ports()) {
+    for (const Ref<DistrhoAudioPort> &p : _get_input_ports()) {
         Dictionary input_port;
         input_port["hints"] = p->get_hints();
         input_port["name"] = p->get_name();
@@ -215,7 +214,7 @@ Dictionary DistrhoPluginInstance::get_json() {
         input_ports.append(input_port);
     }
 
-    for (const Ref<DistrhoAudioPort>& p : _get_output_ports()) {
+    for (const Ref<DistrhoAudioPort> &p : _get_output_ports()) {
         Dictionary output_port;
         output_port["hints"] = p->get_hints();
         output_port["name"] = p->get_name();
