@@ -6,8 +6,8 @@
 #include "DistrhoUI.hpp"
 #include "distrho_common.h"
 #include "distrho_shared_memory_audio.h"
-#include "distrho_shared_memory_rpc.h"
 #include "distrho_shared_memory_region.h"
+#include "distrho_shared_memory_rpc.h"
 #include "godot_distrho_schema.capnp.h"
 
 #if defined(_WIN32)
@@ -38,7 +38,8 @@ protected:
     void handle_rpc_call(std::function<void(typename T::Reader &, typename R::Builder &)> handle_request);
 
 public:
-    GodotDistrhoUIServer(UI *p_godot_distrho_ui, godot::DistrhoSharedMemoryRPC *p_godot_rpc_memory, godot::DistrhoSharedMemoryRegion *p_shared_memory_region);
+    GodotDistrhoUIServer(UI *p_godot_distrho_ui, godot::DistrhoSharedMemoryRPC *p_godot_rpc_memory,
+                         godot::DistrhoSharedMemoryRegion *p_shared_memory_region);
 
     ~GodotDistrhoUIServer();
 

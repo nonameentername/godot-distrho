@@ -18,8 +18,6 @@
 #include "godot_cpp/classes/os.hpp"
 #include "godot_cpp/classes/scene_tree.hpp"
 #include "godot_cpp/classes/time.hpp"
-#include <godot_cpp/classes/json.hpp>
-#include <godot_cpp/classes/file_access.hpp>
 #include "godot_cpp/core/class_db.hpp"
 #include "godot_cpp/core/memory.hpp"
 #include "godot_cpp/variant/dictionary.hpp"
@@ -30,6 +28,8 @@
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <capnp/serialize.h>
 #include <cstdlib>
+#include <godot_cpp/classes/file_access.hpp>
+#include <godot_cpp/classes/json.hpp>
 #include <godot_cpp/classes/mutex.hpp>
 #include <godot_cpp/core/mutex_lock.hpp>
 #include <kj/string.h>
@@ -74,7 +74,8 @@ DistrhoPluginServer::DistrhoPluginServer() {
         godot_rpc_memory = new DistrhoSharedMemoryRPC();
         shared_memory_region = new DistrhoSharedMemoryRegion();
 
-        int memory_size = audio_memory->get_memory_size() + rpc_memory->get_memory_size() + godot_rpc_memory->get_memory_size() + shared_memory_region->get_memory_size();
+        int memory_size = audio_memory->get_memory_size() + rpc_memory->get_memory_size() +
+                          godot_rpc_memory->get_memory_size() + shared_memory_region->get_memory_size();
 
         shared_memory->initialize(shared_memory_uuid, memory_size);
         audio_memory->initialize(shared_memory, 0, 0);
@@ -145,7 +146,8 @@ void DistrhoPluginServer::initialize() {
 
         for (int i = 0; i < distrho_plugin->_get_parameters().size(); i++) {
             parameters.set(i, distrho_plugin->_get_parameters().get(i)->get_default_value());
-            shared_memory_region->write_parameter_value(i, distrho_plugin->_get_parameters().get(i)->get_default_value());
+            shared_memory_region->write_parameter_value(i,
+                                                        distrho_plugin->_get_parameters().get(i)->get_default_value());
         }
 
         start();
@@ -261,29 +263,26 @@ void DistrhoPluginServer::rpc_thread_func() {
             switch (rpc_memory->buffer->request_id) {
 
             case LoadProgramRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<LoadProgramRequest, LoadProgramResponse>(
-                    [this](auto &request, auto &response) {
-                        call_deferred("emit_signal", "load_program", request.getIndex());
-                    });
+                handle_rpc_call<LoadProgramRequest, LoadProgramResponse>([this](auto &request, auto &response) {
+                    call_deferred("emit_signal", "load_program", request.getIndex());
+                });
                 break;
             }
 
             case GetStateValueRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetStateValueRequest, GetStateValueResponse>(
-                    [this](auto &request, auto &response) {
-                        String value = state_values[request.getKey().cStr()];
-                        response.setValue(std::string(value.ascii()));
-                        response.setResult(true);
-                    });
+                handle_rpc_call<GetStateValueRequest, GetStateValueResponse>([this](auto &request, auto &response) {
+                    String value = state_values[request.getKey().cStr()];
+                    response.setValue(std::string(value.ascii()));
+                    response.setResult(true);
+                });
                 break;
             }
 
             case SetStateValueRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<SetStateValueRequest, SetStateValueResponse>(
-                    [this](auto &request, auto &response) {
-                        state_values.set(request.getKey().cStr(), request.getValue().cStr());
-                        call_deferred("emit_signal", "state_changed", request.getKey().cStr(), request.getValue().cStr());
-                    });
+                handle_rpc_call<SetStateValueRequest, SetStateValueResponse>([this](auto &request, auto &response) {
+                    state_values.set(request.getKey().cStr(), request.getValue().cStr());
+                    call_deferred("emit_signal", "state_changed", request.getKey().cStr(), request.getValue().cStr());
+                });
                 break;
             }
 
@@ -525,7 +524,7 @@ void DistrhoPluginServer::set_parameter_value(int p_index, float p_value) {
 void DistrhoPluginServer::update_state_value(String p_key, String p_value) {
     std::lock_guard<std::mutex> lock(state_mutex);
 
-    state_queue.push({p_key, p_value}); 
+    state_queue.push({p_key, p_value});
 }
 
 void DistrhoPluginServer::start_buffer_processing() {
@@ -712,11 +711,11 @@ void DistrhoPluginServer::set_distrho_plugin(DistrhoPluginInstance *p_distrho_pl
     distrho_plugin = p_distrho_plugin;
 
     if (godot::Engine::get_singleton()->is_editor_hint()) {
-         Ref<FileAccess> file = godot::FileAccess::open("res://distrho_plugin_info.json", godot::FileAccess::WRITE);
-         if (file.is_valid()) {
-             String json = godot::JSON::stringify(distrho_plugin->get_json());
-             file->store_string(json);
-         }
+        Ref<FileAccess> file = godot::FileAccess::open("res://distrho_plugin_info.json", godot::FileAccess::WRITE);
+        if (file.is_valid()) {
+            String json = godot::JSON::stringify(distrho_plugin->get_json());
+            file->store_string(json);
+        }
     }
 }
 
@@ -792,7 +791,8 @@ void DistrhoPluginServer::_bind_methods() {
 
     ADD_SIGNAL(MethodInfo("load_program", PropertyInfo(Variant::INT, "index")));
 
-    ADD_SIGNAL(MethodInfo("state_changed", PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::STRING, "value")));
+    ADD_SIGNAL(
+        MethodInfo("state_changed", PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::STRING, "value")));
 
     ADD_SIGNAL(MethodInfo("midi_event",
                           PropertyInfo(Variant::OBJECT, "event", PROPERTY_HINT_RESOURCE_TYPE, "DistrhoMidiEvent")));

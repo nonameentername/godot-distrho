@@ -8,16 +8,16 @@ START_NAMESPACE_DGL
 
 class GodotDistrhoGuiWidget : public TopLevelWidget {
 private:
-	uintptr_t window_id;
+    uintptr_t window_id;
 
 protected:
     void onDisplay() override;
 
-    bool onKeyboard(const Widget::KeyboardEvent&) override;
-    bool onCharacterInput(const Widget::CharacterInputEvent&) override;
-    bool onMouse(const Widget::MouseEvent&) override;
-    bool onMotion(const Widget::MotionEvent&) override;
-    bool onScroll(const Widget::ScrollEvent&) override;
+    bool onKeyboard(const Widget::KeyboardEvent &) override;
+    bool onCharacterInput(const Widget::CharacterInputEvent &) override;
+    bool onMouse(const Widget::MouseEvent &) override;
+    bool onMotion(const Widget::MotionEvent &) override;
+    bool onScroll(const Widget::ScrollEvent &) override;
 
 public:
     GodotDistrhoGuiWidget(Window &p_window);

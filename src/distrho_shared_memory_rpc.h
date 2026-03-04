@@ -10,10 +10,9 @@
 #include <memory>
 #include <random>
 
+#include "distrho_shared_memory.h"
 #include <capnp/message.h>
 #include <capnp/serialize-packed.h>
-#include "distrho_shared_memory.h"
-
 
 namespace godot {
 

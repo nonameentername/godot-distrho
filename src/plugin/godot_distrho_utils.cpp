@@ -74,7 +74,7 @@ child *GodotDistrhoUtils::launch_process(const std::string &p_name, process_env_
 
     std::string executable = get_full_path(p_name);
 
-    //TODO: set config option to show/hide the logs
+    // TODO: set config option to show/hide the logs
 
 #ifdef _WIN32
     return new child(executable, p_args, env = p_env, p_group, windows::create_no_window);
@@ -82,8 +82,8 @@ child *GodotDistrhoUtils::launch_process(const std::string &p_name, process_env_
     return new child(executable, p_args, env = p_env);
 #endif
 
-    //return new child(executable, boost::process::std_out > boost::process::null,
-                     //boost::process::std_err > boost::process::null, args(p_args), env = p_env);
+    // return new child(executable, boost::process::std_out > boost::process::null,
+    // boost::process::std_err > boost::process::null, args(p_args), env = p_env);
 }
 
 std::string GodotDistrhoUtils::find_godot_package() {

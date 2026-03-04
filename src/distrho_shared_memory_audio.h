@@ -12,7 +12,6 @@
 
 #include "distrho_shared_memory.h"
 
-
 namespace godot {
 
 const int BUFFER_SIZE = 4096;
@@ -67,7 +66,8 @@ public:
     DistrhoSharedMemoryAudio();
     ~DistrhoSharedMemoryAudio();
 
-    void initialize(DistrhoSharedMemory *p_distrho_shared_memory, int p_number_of_input_channels = 0, int p_number_of_output_channels = 0);
+    void initialize(DistrhoSharedMemory *p_distrho_shared_memory, int p_number_of_input_channels = 0,
+                    int p_number_of_output_channels = 0);
 
     void write_input_channel(const float **p_buffer, int p_frames, int offset = 0);
     void read_input_channel(float **p_buffer, int p_frames, int offset = 0);

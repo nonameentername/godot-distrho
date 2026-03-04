@@ -5,11 +5,14 @@ extends DistrhoPluginInstance
 func _init() -> void:
 	DistrhoPluginServer.set_distrho_plugin(self)
 
+
 func get_plugin_name() -> String:
 	return "GodotDistrho"
 
+
 func get_uri() -> String:
 	return "https://github.com/nonameentername/godot-distrho"
+
 
 func get_label() -> String:
 	return "godot-distrho"
@@ -101,13 +104,12 @@ func get_output_ports() -> Array:
 
 func get_state_values() -> Dictionary:
 	var midi_keys = {}
-	
+
 	for i in range(0, 88):
 		midi_keys[str(i)] = "false"
 
 	return midi_keys
 
+
 func get_programs() -> Array:
-	return [
-		"default", "custom"
-	]
+	return ["default", "custom"]

@@ -78,7 +78,7 @@ DistrhoUIServer::~DistrhoUIServer() {
         }
     }
 
-    //TODO: delete missing for these?
+    // TODO: delete missing for these?
     rpc_memory = nullptr;
     godot_rpc_memory = nullptr;
     shared_memory_region = nullptr;
@@ -102,7 +102,8 @@ void DistrhoUIServer::initialize() {
         tree->get_root()->add_child(distrho_server_node);
         distrho_server_node->set_process(true);
 
-        Vector<Ref<DistrhoParameter>> default_parameters = DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_parameters();
+        Vector<Ref<DistrhoParameter>> default_parameters =
+            DistrhoPluginServer::get_singleton()->get_distrho_plugin()->_get_parameters();
         parameters.resize(default_parameters.size());
         shared_memory_region->initialize_parameters(default_parameters.size());
 
@@ -145,18 +146,19 @@ void DistrhoUIServer::rpc_thread_func() {
             switch (rpc_memory->buffer->request_id) {
 
             case GetNativeWindowIdRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<GetNativeWindowIdRequest, GetNativeWindowIdResponse>([this](auto &request, auto &response) {
-                    int64_t value = DisplayServer::get_singleton()->window_get_native_handle(DisplayServer::WINDOW_HANDLE, 0);
-                    response.setId(value);
-                });
+                handle_rpc_call<GetNativeWindowIdRequest, GetNativeWindowIdResponse>(
+                    [this](auto &request, auto &response) {
+                        int64_t value =
+                            DisplayServer::get_singleton()->window_get_native_handle(DisplayServer::WINDOW_HANDLE, 0);
+                        response.setId(value);
+                    });
                 break;
             }
 
             case ProgramLoadedRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<ProgramLoadedRequest, ProgramLoadedResponse>(
-                    [this](auto &request, auto &response) {
-                        call_deferred("emit_signal", "program_loaded", request.getIndex());
-                    });
+                handle_rpc_call<ProgramLoadedRequest, ProgramLoadedResponse>([this](auto &request, auto &response) {
+                    call_deferred("emit_signal", "program_loaded", request.getIndex());
+                });
                 break;
             }
 
@@ -169,10 +171,9 @@ void DistrhoUIServer::rpc_thread_func() {
             }
 
             case StateChangedRequest::_capnpPrivate::typeId: {
-                handle_rpc_call<StateChangedRequest, StateChangedResponse>(
-                    [this](auto &request, auto &response) {
-                        call_deferred("emit_signal", "state_changed", request.getKey().cStr(), request.getValue().cStr());
-                    });
+                handle_rpc_call<StateChangedRequest, StateChangedResponse>([this](auto &request, auto &response) {
+                    call_deferred("emit_signal", "state_changed", request.getKey().cStr(), request.getValue().cStr());
+                });
                 break;
             }
 
@@ -288,5 +289,6 @@ void DistrhoUIServer::_bind_methods() {
     ADD_SIGNAL(
         MethodInfo("parameter_changed", PropertyInfo(Variant::INT, "index"), PropertyInfo(Variant::FLOAT, "value")));
 
-    ADD_SIGNAL(MethodInfo("state_changed", PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::STRING, "value")));
+    ADD_SIGNAL(
+        MethodInfo("state_changed", PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::STRING, "value")));
 }

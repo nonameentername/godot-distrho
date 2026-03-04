@@ -1,9 +1,9 @@
-#include "godot_distrho_gui_widget.h"
 #include "godot_distrho_ui.h"
+#include "godot_distrho_gui_widget.h"
 #include "godot_distrho_plugin.h"
 #include "godot_distrho_utils.h"
 
-//#include "Window.hpp"
+// #include "Window.hpp"
 #include <string>
 
 START_NAMESPACE_DISTRHO
@@ -49,15 +49,15 @@ void GodotDistrhoUI::parameterChanged(const uint32_t index, const float value) {
 }
 
 void GodotDistrhoUI::uiIdle() {
-	if (client != NULL && godot_window_id == 0) {
-		if (client->is_ready()) {
-			godot_window_id = client->get_native_window_id();
-    		fprintf(stderr, "GodotWindowHandle = %ld\n", godot_window_id);
-		}
-	}
+    if (client != NULL && godot_window_id == 0) {
+        if (client->is_ready()) {
+            godot_window_id = client->get_native_window_id();
+            fprintf(stderr, "GodotWindowHandle = %ld\n", godot_window_id);
+        }
+    }
 }
 
-void GodotDistrhoUI::stateChanged(const char* key, const char* value) {
+void GodotDistrhoUI::stateChanged(const char *key, const char *value) {
     if (client != NULL) {
         client->state_changed(key, value);
     }
@@ -76,7 +76,7 @@ void GodotDistrhoUI::visibilityChanged(const bool p_visible) {
     if (p_visible) {
         if (client == NULL) {
             client = new GodotDistrhoUIClient(DistrhoCommon::UI_TYPE, window_id);
-            //window_id = client->get_native_window_id();
+            // window_id = client->get_native_window_id();
             server = new GodotDistrhoUIServer(this, client->get_godot_rpc_memory(), client->get_shared_memory_region());
         }
     } else {
@@ -97,7 +97,7 @@ void GodotDistrhoUI::visibilityChanged(const bool p_visible) {
 }
 
 uintptr_t GodotDistrhoUI::get_window_id() {
-    //return window_id;
+    // return window_id;
     return 0;
 }
 

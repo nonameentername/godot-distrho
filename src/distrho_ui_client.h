@@ -1,8 +1,8 @@
 #ifndef DISTRHO_UI_CLIENT_H
 #define DISTRHO_UI_CLIENT_H
 
-#include "distrho_shared_memory_rpc.h"
 #include "distrho_shared_memory_region.h"
+#include "distrho_shared_memory_rpc.h"
 #include <functional>
 #include <godot_cpp/classes/node.hpp>
 
@@ -16,7 +16,8 @@ private:
 
 protected:
     template <typename T, typename R>
-    capnp::FlatArrayMessageReader rpc_call(bool &result, std::function<void(typename T::Builder &)> build_request = nullptr) const;
+    capnp::FlatArrayMessageReader rpc_call(bool &result,
+                                           std::function<void(typename T::Builder &)> build_request = nullptr) const;
 
 public:
     DistrhoUIClient(DistrhoSharedMemoryRPC *p_rpc_memory, DistrhoSharedMemoryRegion *p_shared_memory_region);

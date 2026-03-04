@@ -4,8 +4,8 @@
 
 #include "distrho_shared_memory.h"
 #include "distrho_shared_memory_audio.h"
-#include "distrho_shared_memory_rpc.h"
 #include "distrho_shared_memory_region.h"
+#include "distrho_shared_memory_rpc.h"
 
 using namespace godot;
 
@@ -51,7 +51,8 @@ void DistrhoSharedMemory::initialize(std::string p_shared_memory_name, int p_siz
         shared_memory_name = std::move(p_shared_memory_name);
 
 #ifdef _WIN32
-        shared_memory = std::make_unique<bip::managed_windows_shared_memory>(bip::open_only, shared_memory_name.c_str());
+        shared_memory =
+            std::make_unique<bip::managed_windows_shared_memory>(bip::open_only, shared_memory_name.c_str());
 #else
         shared_memory = std::make_unique<bip::managed_shared_memory>(bip::open_only, shared_memory_name.c_str());
 #endif
@@ -72,6 +73,6 @@ template <class T> T *DistrhoSharedMemory::create_buffer(const std::string &p_na
     return buffer;
 }
 
-template AudioBuffer* DistrhoSharedMemory::create_buffer<AudioBuffer>(const std::string &p_name);
-template RPCBuffer* DistrhoSharedMemory::create_buffer<RPCBuffer>(const std::string &p_name);
-template SharedMemoryRegion* DistrhoSharedMemory::create_buffer<SharedMemoryRegion>(const std::string &p_name);
+template AudioBuffer *DistrhoSharedMemory::create_buffer<AudioBuffer>(const std::string &p_name);
+template RPCBuffer *DistrhoSharedMemory::create_buffer<RPCBuffer>(const std::string &p_name);
+template SharedMemoryRegion *DistrhoSharedMemory::create_buffer<SharedMemoryRegion>(const std::string &p_name);

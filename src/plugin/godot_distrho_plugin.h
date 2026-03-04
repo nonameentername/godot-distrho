@@ -38,8 +38,8 @@ private:
     GodotDistrhoPluginState *state;
 
 public:
-    GodotDistrhoPlugin(GodotDistrhoPluginState *p_state, uint32_t parameterCount,
-                       uint32_t programCount, uint32_t stateCount);
+    GodotDistrhoPlugin(GodotDistrhoPluginState *p_state, uint32_t parameterCount, uint32_t programCount,
+                       uint32_t stateCount);
     ~GodotDistrhoPlugin();
 
 protected:
@@ -59,7 +59,7 @@ protected:
 
     int64_t getUniqueId() const override;
 
-    void initProgramName(uint32_t index, String& programName) override;
+    void initProgramName(uint32_t index, String &programName) override;
 
     void loadProgram(uint32_t index) override;
 
@@ -71,11 +71,11 @@ protected:
 
     void setParameterValue(const uint32_t index, const float value) override;
 
-    String getState(const char* key) const override;
+    String getState(const char *key) const override;
 
-    void setState(const char* key, const char* value) override;
+    void setState(const char *key, const char *value) override;
 
-    void initState(uint32_t p_index, State& p_state) override;
+    void initState(uint32_t p_index, State &p_state) override;
 
     void activate() override;
 

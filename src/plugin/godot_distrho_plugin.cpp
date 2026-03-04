@@ -1,8 +1,8 @@
 #include "godot_distrho_plugin.h"
 #include "DistrhoDetails.hpp"
 #include "distrho_shared_memory_audio.h"
-#include "godot_distrho_plugin_info.h"
 #include "godot_distrho_plugin_client.h"
+#include "godot_distrho_plugin_info.h"
 #include "godot_distrho_plugin_server.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
@@ -15,8 +15,8 @@ using namespace boost::posix_time;
 
 START_NAMESPACE_DISTRHO
 
-GodotDistrhoPlugin::GodotDistrhoPlugin(GodotDistrhoPluginState *p_state,
-                                       uint32_t parameterCount, uint32_t programCount, uint32_t stateCount)
+GodotDistrhoPlugin::GodotDistrhoPlugin(GodotDistrhoPluginState *p_state, uint32_t parameterCount, uint32_t programCount,
+                                       uint32_t stateCount)
     : Plugin(parameterCount, programCount, stateCount) {
     client = NULL;
     server = NULL;
@@ -56,11 +56,11 @@ const char *GodotDistrhoPlugin::getDescription() const {
 }
 
 const char *GodotDistrhoPlugin::getMaker() const {
-    return state->maker.c_str();;
+    return state->maker.c_str();
 }
 
 const char *GodotDistrhoPlugin::getHomePage() const {
-    return state->home_page.c_str();;
+    return state->home_page.c_str();
 }
 
 const char *GodotDistrhoPlugin::getLicense() const {
@@ -75,7 +75,7 @@ int64_t GodotDistrhoPlugin::getUniqueId() const {
     return state->unique_id;
 }
 
-void GodotDistrhoPlugin::initProgramName(uint32_t index, String& programName) {
+void GodotDistrhoPlugin::initProgramName(uint32_t index, String &programName) {
     programName = state->programs[index];
 }
 
@@ -131,7 +131,7 @@ void GodotDistrhoPlugin::activate() {
     }
 }
 
-String GodotDistrhoPlugin::getState(const char* key) const {
+String GodotDistrhoPlugin::getState(const char *key) const {
     if (client != NULL) {
         return String(client->get_state_value(key));
     } else {
@@ -143,13 +143,13 @@ String GodotDistrhoPlugin::getState(const char* key) const {
     }
 }
 
-void GodotDistrhoPlugin::setState(const char* key, const char* value) {
+void GodotDistrhoPlugin::setState(const char *key, const char *value) {
     if (client != NULL) {
         client->set_state_value(key, value);
     }
 }
 
-void GodotDistrhoPlugin::initState(uint32_t p_index, State& p_state) {
+void GodotDistrhoPlugin::initState(uint32_t p_index, State &p_state) {
     p_state.key = state->state_values[p_index]->key;
     p_state.defaultValue = state->state_values[p_index]->defaultValue;
 }
@@ -174,7 +174,8 @@ Plugin *createPlugin() {
 
     plugin_info->load();
 
-    uint32_t parameter_count = plugin_info->parameters.size();;
+    uint32_t parameter_count = plugin_info->parameters.size();
+    ;
     uint32_t program_count = plugin_info->programs.size();
     uint32_t state_count = plugin_info->state_values.size();
 
@@ -212,7 +213,7 @@ Plugin *createPlugin() {
 
     int state_index = 0;
 
-	for (const auto& state_value : plugin_info->state_values) {
+    for (const auto &state_value : plugin_info->state_values) {
         state->state_values.push_back(std::make_unique<State>());
         state->state_values[state_index]->key = state_value.first.c_str();
         state->state_values[state_index]->defaultValue = state_value.second.c_str();
@@ -220,7 +221,7 @@ Plugin *createPlugin() {
         state_index++;
     }
 
-    for (const auto& program : plugin_info->programs) {
+    for (const auto &program : plugin_info->programs) {
         state->programs.push_back(program);
     }
 
