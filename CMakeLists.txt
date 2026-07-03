@@ -161,6 +161,7 @@ set(GODOT_LIBRARIES_NAMES
   module_webxr
   module_xatlas_unwrap
   module_zip
+  module_visual_shader
   msdfgen_builtin
   freetype_builtin
   graphite_builtin
