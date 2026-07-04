@@ -11,7 +11,7 @@ class DistrhoConfig : public Object {
     GDCLASS(DistrhoConfig, Object);
 
 private:
-    ConfigFile *config_file;
+    Ref<ConfigFile> config_file;
     HashMap<String, String> plugin_values;
     HashMap<String, String> ui_values;
 

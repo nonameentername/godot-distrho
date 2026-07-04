@@ -6,7 +6,7 @@ godot-distrho
 [![builds](https://github.com/nonameentername/godot-distrho/actions/workflows/builds.yml/badge.svg)](https://github.com/nonameentername/godot-distrho/actions/workflows/builds.yml)
 [![docker_builds](https://github.com/nonameentername/godot-distrho/actions/workflows/build_images.yml/badge.svg)](https://github.com/nonameentername/godot-distrho/actions/workflows/build_images.yml)
 
-Godot GDExtension library to allow building audio plugins in Godot.  Currently works with Godot v4.6 stable release.
+Godot GDExtension library to allow building audio plugins in Godot.  Currently works with Godot v4.7 stable release.
 
 How to Install
 --------------
