@@ -18,10 +18,10 @@ if(OSXCROSS_TARGET)
     endif()
 
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(GODOT_LIBRARIES_SUFFIX ".macos.editor.dev.${CMAKE_OSX_ARCHITECTURES}")
+        set(GODOT_LIBRARIES_SUFFIX ".macos.template_debug.dev.${CMAKE_OSX_ARCHITECTURES}")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
     else()
-        set(GODOT_LIBRARIES_SUFFIX ".macos.editor.${CMAKE_OSX_ARCHITECTURES}")
+        set(GODOT_LIBRARIES_SUFFIX ".macos.template_release.${CMAKE_OSX_ARCHITECTURES}")
     endif()
 elseif (CMAKE_SYSTEM_NAME STREQUAL "MinGW" AND UNIX)
     set(VCPKG_TARGET_TRIPLET "x64-mingw-static")
@@ -31,19 +31,19 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL "MinGW" AND UNIX)
     set(VCPKG_TARGET_ARCHITECTURE x64)
 
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(GODOT_LIBRARIES_SUFFIX ".windows.editor.dev.x86_64")
+        set(GODOT_LIBRARIES_SUFFIX ".windows.template_debug.dev.x86_64")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
     else()
-        set(GODOT_LIBRARIES_SUFFIX ".windows.editor.x86_64")
+        set(GODOT_LIBRARIES_SUFFIX ".windows.template_release.x86_64")
     endif()
 elseif(UNIX)
     set(VCPKG_TARGET_TRIPLET "x64-linux")
 
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(GODOT_LIBRARIES_SUFFIX ".linuxbsd.editor.dev.x86_64")
+        set(GODOT_LIBRARIES_SUFFIX ".linuxbsd.template_debug.dev.x86_64")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
     else()
-        set(GODOT_LIBRARIES_SUFFIX ".linuxbsd.editor.x86_64")
+        set(GODOT_LIBRARIES_SUFFIX ".linuxbsd.template_release.x86_64")
     endif()
 endif()
 
@@ -105,7 +105,6 @@ set(GODOT_LIBRARIES_NAMES
   modules
   platform
   drivers
-  editor
   scene
   servers
   core
@@ -113,16 +112,13 @@ set(GODOT_LIBRARIES_NAMES
   module_astcenc
   module_basis_universal
   module_bcdec
-  module_betsy
   module_bmp
   module_camera
   module_csg
-  module_cvtt
   module_dds
   module_enet
   module_etcpak
   module_fbx
-  module_objectdb_profiler
   module_gdscript
   module_glslang
   module_gltf
@@ -135,7 +131,6 @@ set(GODOT_LIBRARIES_NAMES
   module_jpg
   module_jsonrpc
   module_ktx
-  module_lightmapper_rd
   module_meshoptimizer
   module_mp3
   module_mobile_vr
@@ -159,7 +154,6 @@ set(GODOT_LIBRARIES_NAMES
   module_webrtc
   module_websocket
   module_webxr
-  module_xatlas_unwrap
   module_zip
   module_visual_shader
   msdfgen_builtin
@@ -171,10 +165,20 @@ set(GODOT_LIBRARIES_NAMES
   godot
 )
 
+set(GODOT_DEBUG_LIBRARIES_NAMES
+  module_objectdb_profiler
+)
+
 set(GODOT_LIBRARIES "")
 foreach(lib IN LISTS GODOT_LIBRARIES_NAMES)
     list(APPEND GODOT_LIBRARIES "${lib}${GODOT_LIBRARIES_SUFFIX}")
 endforeach()
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    foreach(lib IN LISTS GODOT_DEBUG_LIBRARIES_NAMES)
+        list(APPEND GODOT_LIBRARIES "${lib}${GODOT_LIBRARIES_SUFFIX}")
+    endforeach()
+endif()
 
 #godot-plugin
 
