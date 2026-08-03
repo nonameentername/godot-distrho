@@ -2,12 +2,12 @@ extends SceneTree
 
 
 func _init():
-	var main_ui_scene = preload("res://main_ui.tscn")
+	var main_ui_scene = preload("res://distrho_ui.tscn")
 	change_scene_to_packed(main_ui_scene)
 
 	await create_timer(2.0).timeout
 
-	var main_scene = preload("res://main.tscn")
+	var main_scene = preload("res://distrho_plugin.tscn")
 	change_scene_to_packed(main_scene)
 
 	await create_timer(2.0).timeout
