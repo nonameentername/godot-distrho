@@ -126,10 +126,10 @@ public:
     DistrhoParameter() = default;
     ~DistrhoParameter();
 
-    static Ref<DistrhoParameter> create(DistrhoParameterHint p_hints, String p_name, String p_short_name, String p_symbol,
-                                    String p_unit, String p_description, float p_default_value, float p_min_value,
-                                    float p_max_value, Dictionary p_enumeration_values, int p_designation,
-                                    int p_midi_cc, int p_group_id);
+    static Ref<DistrhoParameter> create(DistrhoParameterHint p_hints, String p_name, String p_short_name,
+                                        String p_symbol, String p_unit, String p_description, float p_default_value,
+                                        float p_min_value, float p_max_value, Dictionary p_enumeration_values,
+                                        int p_designation, int p_midi_cc, int p_group_id);
 
     void set_hints(int p_hints);
     int get_hints();

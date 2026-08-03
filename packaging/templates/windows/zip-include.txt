@@ -1,5 +1,7 @@
 addons/distrho/templates/*
 addons/distrho/bin/windows/debug/bin/*
 addons/distrho/bin/windows/debug/lv2_ttl_generator
+addons/distrho/bin/windows/debug/run_windows_ttl_generator.bat
 addons/distrho/bin/windows/release/bin/*
 addons/distrho/bin/windows/release/lv2_ttl_generator
+addons/distrho/bin/windows/release/run_windows_ttl_generator.bat

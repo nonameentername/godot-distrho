@@ -29,6 +29,10 @@ driver/mix_rate=48000
 GlobalDistrhoPluginInstance="*res://distrho_plugin_instance.gd"
 GlobalDistrhoUiInstance="*res://distrho_ui_instance.gd"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/distrho/plugin.cfg")
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

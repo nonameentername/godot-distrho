@@ -1,5 +1,7 @@
 addons/distrho/templates/*
 addons/distrho/bin/macos/debug/bin/*
 addons/distrho/bin/macos/debug/lv2_ttl_generator
+addons/distrho/bin/macos/debug/run_macos_ttl_generator.sh
 addons/distrho/bin/macos/release/bin/*
 addons/distrho/bin/macos/release/lv2_ttl_generator
+addons/distrho/bin/macos/release/run_macos_ttl_generator.sh

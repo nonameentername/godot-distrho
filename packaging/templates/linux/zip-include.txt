@@ -1,5 +1,7 @@
 addons/distrho/templates/*
 addons/distrho/bin/linux/debug/bin/*
 addons/distrho/bin/linux/debug/lv2_ttl_generator
+addons/distrho/bin/linux/debug/run_linux_ttl_generator.sh
 addons/distrho/bin/linux/release/bin/*
 addons/distrho/bin/linux/release/lv2_ttl_generator
+addons/distrho/bin/linux/release/run_linux_ttl_generator.sh
