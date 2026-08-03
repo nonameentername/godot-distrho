@@ -31,9 +31,10 @@ DistrhoParameter::DistrhoParameter(DistrhoParameterHint p_hints, String p_name, 
 }
 
 Ref<DistrhoParameter> DistrhoParameter::create(DistrhoParameterHint p_hints, String p_name, String p_short_name,
-                                           String p_symbol, String p_unit, String p_description, float p_default_value,
-                                           float p_min_value, float p_max_value, Dictionary p_enumeration_values,
-                                           int p_designation, int p_midi_cc, int p_group_id) {
+                                               String p_symbol, String p_unit, String p_description,
+                                               float p_default_value, float p_min_value, float p_max_value,
+                                               Dictionary p_enumeration_values, int p_designation, int p_midi_cc,
+                                               int p_group_id) {
     return memnew(DistrhoParameter(p_hints, p_name, p_short_name, p_symbol, p_unit, p_description, p_default_value,
                                    p_min_value, p_max_value, p_enumeration_values, p_designation, p_midi_cc,
                                    p_group_id));

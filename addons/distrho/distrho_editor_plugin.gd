@@ -1,7 +1,6 @@
 @tool
 extends EditorPlugin
 
-
 var distrho_lv2_export_plugin: DistrhoLv2ExportPlugin
 
 
