@@ -224,6 +224,7 @@ Dictionary DistrhoPluginInstance::get_json() {
         output_ports.append(output_port);
     }
 
+    result["name"] = _get_plugin_name();
     result["uri"] = _get_uri();
     result["label"] = _get_label();
     result["description"] = _get_description();
