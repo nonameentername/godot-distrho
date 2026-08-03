@@ -8,6 +8,11 @@ godot-distrho
 
 Godot GDExtension library to allow building audio plugins in Godot.  Currently works with Godot v4.7 stable release.
 
+## Projects using godot-distrho
+
+* [godot-distrho-example](https://github.com/nonameentername/godot-distrho-example) - A minimal synthesizer audio plugin example.
+* [godot-synths](https://github.com/nonameentername/godot-synths) - A collection of synthesizers built with Godot. ([demo](https://nonameentername.github.io/godot-synths/godot-synths.html))
+
 How to Install
 --------------
 Download latest [release](https://github.com/nonameentername/godot-distrho/releases/latest) and extract into Godot project.
