@@ -34,14 +34,13 @@ void DistrhoLauncher::initialize() {
 
     const char *module_type = std::getenv("DISTRHO_MODULE_TYPE");
     if (module_type == NULL) {
-        module_type = std::to_string(DistrhoCommon::BOTH_TYPE).c_str();
+        module_type = std::to_string(DistrhoCommon::EDITOR_TYPE).c_str();
     }
 
     printf("DISTRHO_MODULE_TYPE = %s\n", module_type);
 
-    if (std::stoi(module_type) == DistrhoCommon::BOTH_TYPE) {
-        load_scene(config->get_plugin_main_scene(), false);
-        load_scene(config->get_ui_main_scene());
+    if (std::stoi(module_type) == DistrhoCommon::EDITOR_TYPE) {
+        load_scene(config->get_editor_main_scene());
     } else if (std::stoi(module_type) == DistrhoCommon::PLUGIN_TYPE) {
         load_scene(config->get_plugin_main_scene());
     } else {

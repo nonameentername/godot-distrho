@@ -1,11 +1,8 @@
 [gd_scene format=3 uid="uid://3j0mgt1s3jy4"]
 
-[ext_resource type="Script" uid="uid://ba4aigdjlk6pn" path="res://main_ui.gd" id="1_w37m7"]
-[ext_resource type="AudioStream" uid="uid://uc44d5w21u0q" path="res://hello.mp3" id="2_ktt6o"]
+[ext_resource type="Script" uid="uid://ba4aigdjlk6pn" path="res://distrho_ui.gd" id="1_w37m7"]
 
-[sub_resource type="AudioStreamDistrho" id="AudioStreamDistrho_0xm2m"]
-
-[node name="main" type="Node2D" unique_id=603404442]
+[node name="DistrhoUI" type="Node2D" unique_id=603404442]
 script = ExtResource("1_w37m7")
 
 [node name="Control" type="Control" parent="." unique_id=134606107]
@@ -83,15 +80,6 @@ offset_bottom = 215.088
 offset_right = 40.0
 offset_bottom = 23.0
 text = "hello from ui"
-
-[node name="DistrhoPlayer" type="AudioStreamPlayer" parent="." unique_id=909333815]
-stream = SubResource("AudioStreamDistrho_0xm2m")
-autoplay = true
-playback_type = 1
-
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=5051188]
-stream = ExtResource("2_ktt6o")
-autoplay = true
 
 [connection signal="pressed" from="Control/Panel/NoteOnButton" to="." method="_on_note_on_button_pressed"]
 [connection signal="pressed" from="Control/Panel/NoteOffButton" to="." method="_on_note_off_button_pressed"]

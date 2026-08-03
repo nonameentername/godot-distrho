@@ -14,6 +14,7 @@ private:
     Ref<ConfigFile> config_file;
     HashMap<String, String> plugin_values;
     HashMap<String, String> ui_values;
+    HashMap<String, String> editor_values;
 
 protected:
 public:
@@ -23,6 +24,8 @@ public:
     String get_plugin_main_scene();
 
     String get_ui_main_scene();
+
+    String get_editor_main_scene();
 
     static void _bind_methods();
 };

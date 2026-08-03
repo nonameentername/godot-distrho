@@ -33,6 +33,15 @@ DistrhoConfig::DistrhoConfig() {
                 }
                 ui_values.insert(key, config_file->get_value("distrho_ui", key, ""));
             }
+
+            for (const String &key : keys) {
+                if (!config_file->has_section_key("editor", key)) {
+                    godot::UtilityFunctions::printerr("godot-distrho.cfg: Could not find key `", key,
+                                                      "` in section [editor]");
+                }
+                editor_values.insert(key, config_file->get_value("editor", key, ""));
+            }
+
         }
     }
 }
@@ -46,6 +55,10 @@ String DistrhoConfig::get_plugin_main_scene() {
 
 String DistrhoConfig::get_ui_main_scene() {
     return ui_values["main_scene"];
+}
+
+String DistrhoConfig::get_editor_main_scene() {
+    return editor_values["main_scene"];
 }
 
 void DistrhoConfig::_bind_methods() {
