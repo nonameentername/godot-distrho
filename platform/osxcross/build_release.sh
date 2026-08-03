@@ -69,3 +69,5 @@ $dir/scripts/lipo-dir.py  \
     $dir/addons/distrho/bin/macos/release 
 
 zsign -a $dir/addons/distrho/bin/macos/macos.framework/libdistrhogodot.macos.template_release
+
+cp $dir/scripts/run_macos_ttl_generator.sh $dir/addons/distrho/bin/macos/release

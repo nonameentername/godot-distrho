@@ -49,3 +49,5 @@ export DISTRHO_PATH=$dir
 cd $dir/addons/distrho/bin/windows/release
 
 make
+
+cp $dir/scripts/run_windows_ttl_generator.bat $dir/addons/distrho/bin/windows/release
