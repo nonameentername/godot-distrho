@@ -475,8 +475,18 @@ jobs:
         env:
           TAG_VERSION: ${{ steps.tag.outputs.new_tag }}
 
-      - name: Zip godot-distrho templates
-        run: ./scripts/create_zip.sh godot-distrho_templates_${{ env.TAG_VERSION }}.zip packaging/templates/zip-include.txt packaging/templates/zip-ignore.txt
+      - name: Zip godot-distrho templates (Linux)
+        run: ./scripts/create_zip.sh templates_linux_godot-distrho_${{ env.TAG_VERSION }}.zip packaging/templates/linux/zip-include.txt packaging/templates/linux/zip-ignore.txt
+        env:
+          TAG_VERSION: ${{ steps.tag.outputs.new_tag }}
+
+      - name: Zip godot-distrho templates (macOS)
+        run: ./scripts/create_zip.sh templates_macos_godot-distrho_${{ env.TAG_VERSION }}.zip packaging/templates/macos/zip-include.txt packaging/templates/macos/zip-ignore.txt
+        env:
+          TAG_VERSION: ${{ steps.tag.outputs.new_tag }}
+
+      - name: Zip godot-distrho templates (Windows)
+        run: ./scripts/create_zip.sh templates_windows_godot-distrho_${{ env.TAG_VERSION }}.zip packaging/templates/windows/zip-include.txt packaging/templates/windows/zip-ignore.txt
         env:
           TAG_VERSION: ${{ steps.tag.outputs.new_tag }}
 
@@ -490,6 +500,8 @@ jobs:
           preserve_order: true
           files: |
             godot-distrho_${{ env.TAG_VERSION }}.zip
-            godot-distrho_templates_${{ env.TAG_VERSION }}.zip
+            templates_linux_godot-distrho_${{ env.TAG_VERSION }}.zip
+            templates_macos_godot-distrho_${{ env.TAG_VERSION }}.zip
+            templates_windows_godot-distrho_${{ env.TAG_VERSION }}.zip
         env:
           TAG_VERSION: ${{ steps.tag.outputs.new_tag }}

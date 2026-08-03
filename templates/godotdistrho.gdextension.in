@@ -6,7 +6,7 @@ build = "${build}"
 [configuration]
 
 entry_symbol = "godot_distrho_library_init"
-compatibility_minimum = 4.3
+compatibility_minimum = 4.7
 reloadable = true
 
 [libraries]

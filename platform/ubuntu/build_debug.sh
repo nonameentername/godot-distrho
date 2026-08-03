@@ -8,7 +8,7 @@ dir=$(realpath .)
 # build libgodot
 
 cd $dir/modules/godot
-scons platform=linux dev_build=yes debug_symbols=yes library_type=static_library verbose=yes
+scons platform=linux target=template_debug dev_build=yes debug_symbols=yes library_type=static_library verbose=yes disable_path_overrides=no
 
 # configure godot-distrho (distrho)
 

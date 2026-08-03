@@ -16,14 +16,14 @@ export OSXCROSS_ROOT=$OSXCROSS_BASE_DIR
 cd $dir/modules/godot
 
 for ARCH in x86_64 arm64; do
-    scons platform=macos arch=$ARCH dev_build=yes debug_symbols=yes library_type=static_library verbose=yes \
+    scons platform=macos arch=$ARCH target=template_debug dev_build=yes debug_symbols=yes library_type=static_library verbose=yes disable_path_overrides=no \
         osxcross_sdk=$OSXCROSS_TARGET vulkan_sdk_path=/MoltenVK/MoltenVK/static/MoltenVK.xcframework metal=no
 done
 
 $dir/scripts/lipo-dir.py  \
-    $dir/modules/godot/bin/libgodot.macos.editor.dev.arm64.a \
-    $dir/modules/godot/bin/libgodot.macos.editor.dev.x86_64.a \
-    $dir/modules/godot/bin/libgodot.macos.editor.dev.universal.a
+    $dir/modules/godot/bin/libgodot.macos.template_debug.dev.arm64.a \
+    $dir/modules/godot/bin/libgodot.macos.template_debug.dev.x86_64.a \
+    $dir/modules/godot/bin/libgodot.macos.template_debug.dev.universal.a
 
 # configure godot-distrho (distrho)
 
