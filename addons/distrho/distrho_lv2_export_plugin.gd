@@ -3,6 +3,7 @@ class_name DistrhoLv2ExportPlugin
 
 const MODE_EXECUTABLE := 493  # Unix 0755
 
+var lv2_feature_enabled: bool
 var host_platform: String
 var target_platform: String
 var target_path: String
@@ -13,17 +14,19 @@ func _export_begin(features: PackedStringArray, is_debug: bool, path: String, fl
 	host_platform = OS.get_name().to_lower()
 	target_path = path.get_base_dir()
 
-	for platform in ["linux", "macos", "window"]:
+	for platform in ["linux", "macos", "windows"]:
 		if platform in features:
 			target_platform = platform
 
-	if not target_platform in ["linux", "macos", "window"]:
+	if not target_platform in ["linux", "macos", "windows"]:
 		print("Target platform not supported.")
 		return
 
 	build_type = "debug" if is_debug else "release"
+	
+	lv2_feature_enabled = "lv2" in features and target_platform
 
-	if "lv2" in features and target_platform:
+	if lv2_feature_enabled:
 		var src_dir = (
 			"res://addons/distrho/bin/%s/%s/bin/godot-distrho.lv2" % [target_platform, build_type]
 		)
@@ -45,10 +48,13 @@ func _export_begin(features: PackedStringArray, is_debug: bool, path: String, fl
 
 
 func _export_end() -> void:
-	if target_platform in ["linux", "macos", "window"] and host_platform != target_platform:
+	if not lv2_feature_enabled:
+		return
+
+	if target_platform in ["linux", "macos", "windows"] and host_platform != target_platform:
 		print("Target platform does not match host.  Will not export ttl files")
 		return
-	elif not target_platform in ["linux", "macos", "window"]:
+	elif not target_platform in ["linux", "macos", "windows"]:
 		return
 
 	var src_file = "res://addons/distrho/bin/%s/%s/lv2_ttl_generator" % [host_platform, build_type]
