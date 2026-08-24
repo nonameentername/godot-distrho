@@ -37,5 +37,3 @@ export DISTRHO_PATH=$dir
 cd $dir/addons/distrho/bin/linux/debug
 
 make
-
-cp $dir/scripts/run_linux_ttl_generator.sh $dir/addons/distrho/bin/linux/debug
