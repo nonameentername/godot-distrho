@@ -15,3 +15,5 @@ func _init():
 	var result = DistrhoPluginServer.get_property_list()
 
 	print("output result is ", len(result))
+
+	unload_current_scene()
