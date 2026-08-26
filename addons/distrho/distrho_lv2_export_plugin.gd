@@ -35,8 +35,15 @@ func _export_begin(features: PackedStringArray, is_debug: bool, path: String, fl
 		var src_file = (
 			"res://addons/distrho/bin/%s/%s/bin/godot-plugin" % [target_platform, build_type]
 		)
+
+		var dest_file = target_path + "/" + "godot-plugin"
+
+		if target_platform == "windows":
+			src_file = src_file + ".exe"
+			dest_file = dest_file + ".exe"
+
 		var result = DirAccess.copy_absolute(
-			src_file, target_path + "/" + "godot-plugin", MODE_EXECUTABLE
+			src_file, dest_file, MODE_EXECUTABLE
 		)
 		if result != OK:
 			print("Failed to copy file. Error code: ", result)
@@ -51,51 +58,43 @@ func _export_end() -> void:
 	if not lv2_feature_enabled:
 		return
 
-	if target_platform in ["linux", "macos", "windows"] and host_platform != target_platform:
-		print("Target platform does not match host.  Will not export ttl files")
-		return
-	elif not target_platform in ["linux", "macos", "windows"]:
+	if not target_platform in ["linux", "macos", "windows"]:
 		return
 
-	var src_file = "res://addons/distrho/bin/%s/%s/lv2_ttl_generator" % [host_platform, build_type]
-	var dest_file = target_path + "/" + "lv2_ttl_generator"
+	var plugin_extension = "dll" if target_platform == "windows" else "so"
+	if target_platform == "macos":
+		plugin_extension = "dylib"
 
+	var host_extension = "dll" if host_platform == "windows" else "so"
+	if host_platform == "macos":
+		host_extension = "dylib"
+
+	var generator_path := (
+		"res://addons/distrho/bin/%s/%s/lv2_ttl_generator" % [host_platform, build_type]
+	)
+	var generator_library_path = (
+		"res://addons/distrho/bin/%s/%s/bin/godot-distrho.lv2/godot-distrho_dsp.%s"
+		% [host_platform, build_type, host_extension]
+	)
 	if host_platform == "windows":
-		src_file = src_file + ".exe"
-		dest_file = dest_file + ".exe"
+		generator_path += ".exe"
 
-	var result = DirAccess.copy_absolute(src_file, dest_file, MODE_EXECUTABLE)
+	var generator_library_dir = generator_library_path.get_base_dir()
+	var info_result = DirAccess.copy_absolute(
+		"res://distrho_plugin_info.json", generator_library_dir + "/" + "distrho_plugin_info.json"
+	)
+	if info_result != OK:
+		print("Failed to copy plugin info file. Error code: ", info_result)
+
+	var output := []
+	var result := OS.execute(
+		ProjectSettings.globalize_path(generator_path),
+		[ProjectSettings.globalize_path(generator_library_path), target_path, plugin_extension],
+		output,
+		true
+	)
 	if result != OK:
-		print("Failed to copy file. Error code: ", result)
-
-	var src_script: String
-	var dest_script: String
-
-	if host_platform == "windows":
-		src_script = (
-			"res://addons/distrho/bin/%s/%s/run_windows_ttl_generator.bat"
-			% [host_platform, build_type]
-		)
-		dest_script = target_path + "/" + "run_windows_ttl_generator.bat"
-	else:
-		src_script = (
-			"res://addons/distrho/bin/%s/%s/run_%s_ttl_generator.sh"
-			% [host_platform, build_type, host_platform]
-		)
-		dest_script = target_path + "/" + "run_%s_ttl_generator.sh" % [host_platform]
-
-	result = DirAccess.copy_absolute(src_script, dest_script, MODE_EXECUTABLE)
-	if result != OK:
-		print("Failed to copy file. Error code: ", result)
-
-	var output = []
-
-	result = OS.execute(dest_script, [], output)
-	if result != OK:
-		print("Failed to execute. Error code: ", result)
-
-	DirAccess.remove_absolute(dest_file)
-	DirAccess.remove_absolute(dest_script)
+		print("Failed to execute ttl generator. Error code: ", result)
 
 
 func _get_name() -> String:

@@ -17,4 +17,3 @@ func _init():
 	print("output result is ", len(result))
 
 	unload_current_scene()
-	quit()

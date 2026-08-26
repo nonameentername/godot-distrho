@@ -3,7 +3,7 @@
 	url = https://github.com/nonameentername/godot.git
 [submodule "modules/dpf"]
 	path = modules/dpf
-	url = https://github.com/DISTRHO/DPF.git
+	url = https://github.com/nonameentername/DPF.git
 [submodule "godot-cpp"]
 	path = godot-cpp
 	url = https://github.com/godotengine/godot-cpp.git
