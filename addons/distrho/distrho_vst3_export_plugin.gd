@@ -31,25 +31,41 @@ func _export_end() -> void:
 	if not vst3_feature_enabled:
 		return
 
-	if target_platform != "linux":
+	if not target_platform in ["linux", "windows"]:
 		return
 
-	var target_path := root_target_path.path_join("Contents/x86_64-linux")
+	var target_arch_dir := "x86_64-win" if target_platform == "windows" else "x86_64-linux"
+	var target_path := root_target_path.path_join("Contents").path_join(target_arch_dir)
 	var plugin_name := root_target_path.get_file().trim_suffix(".vst3")
+	var plugin_extension := "vst3" if target_platform == "windows" else "so"
 
 	var src_dir = (
 		"res://addons/distrho/bin/%s/%s/bin/godot-distrho.vst3" % [target_platform, build_type]
 	)
 	copy_directory(src_dir, root_target_path)
 
-	var src_file = (
+	var src_file := (
 		"res://addons/distrho/bin/%s/%s/bin/godot-plugin" % [target_platform, build_type]
 	)
-	var result = DirAccess.copy_absolute(
-		src_file, root_target_path + "/" + "godot-plugin", MODE_EXECUTABLE
-	)
+	var dest_file := root_target_path.path_join("godot-plugin")
+
+	if target_platform == "windows":
+		src_file += ".exe"
+		dest_file += ".exe"
+
+	var result := DirAccess.copy_absolute(src_file, dest_file, MODE_EXECUTABLE)
 	if result != OK:
 		print("Failed to copy file. Error code: ", result)
+
+	if target_platform == "windows":
+		for runtime_name in ["libgcc_s_seh-1.dll", "libstdc++-6.dll", "libwinpthread-1.dll"]:
+			src_file = (
+				"res://addons/distrho/bin/%s/%s/bin/%s"
+				% [target_platform, build_type, runtime_name]
+			)
+			result = DirAccess.copy_absolute(src_file, root_target_path.path_join(runtime_name))
+			if result != OK:
+				print("Failed to copy file. Error code: ", result)
 
 	src_file = "res://distrho_plugin_info.json"
 	result = DirAccess.copy_absolute(src_file, root_target_path + "/" + "distrho_plugin_info.json")
@@ -60,8 +76,8 @@ func _export_end() -> void:
 	if err != OK:
 		push_error("Failed to organize VST3 bundle: %s" % error_string(err))
 
-	var library_path := target_path.path_join("godot-distrho.so")
-	var renamed_library_path := target_path.path_join(plugin_name + ".so")
+	var library_path := target_path.path_join("godot-distrho." + plugin_extension)
+	var renamed_library_path := target_path.path_join(plugin_name + "." + plugin_extension)
 
 	err = DirAccess.rename_absolute(library_path, renamed_library_path)
 	if err != OK:
