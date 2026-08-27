@@ -79,6 +79,14 @@ func _export_end() -> void:
 	if host_platform == "windows":
 		generator_path += ".exe"
 
+	var absolute_generator_path := ProjectSettings.globalize_path(generator_path)
+	if host_platform != "windows":
+		var chmod_result := FileAccess.set_unix_permissions(
+			absolute_generator_path, MODE_EXECUTABLE
+		)
+		if chmod_result != OK:
+			print("Failed to set ttl generator as executable. Error code: ", chmod_result)
+
 	var generator_library_dir = generator_library_path.get_base_dir()
 	var info_result = DirAccess.copy_absolute(
 		"res://distrho_plugin_info.json", generator_library_dir + "/" + "distrho_plugin_info.json"
@@ -88,7 +96,7 @@ func _export_end() -> void:
 
 	var output := []
 	var result := OS.execute(
-		ProjectSettings.globalize_path(generator_path),
+		absolute_generator_path,
 		[ProjectSettings.globalize_path(generator_library_path), target_path, plugin_extension],
 		output,
 		true
